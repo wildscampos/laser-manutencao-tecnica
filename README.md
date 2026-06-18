@@ -1,12 +1,12 @@
-# LASER Manutencao Tecnica
+# LASER Manutenção Técnica
 
-Site profissional em Next.js para divulgacao de servicos de manutencao de maquinas laser CO2, com agendamento online integrado ao Firebase Firestore e abertura automatica do WhatsApp apos a reserva.
+Site profissional em Next.js para divulgação de serviços de manutenção de máquinas laser CO2, com agendamento online integrado ao Firebase Firestore e abertura automática do WhatsApp após a reserva.
 
 Site publicado: https://laser-manutencao-tecnica.web.app
 
 ## Tecnologias
 
-- Next.js App Router com export estatico
+- Next.js App Router com export estático
 - TypeScript
 - Tailwind CSS
 - React Hook Form
@@ -17,25 +17,25 @@ Site publicado: https://laser-manutencao-tecnica.web.app
 
 ## Estrutura
 
-- `src/app/page.tsx`: single page application e conteudo do site.
-- `src/components/booking-form.tsx`: formulario de agendamento.
+- `src/app/page.tsx`: single page application e conteúdo do site.
+- `src/components/booking-form.tsx`: formulário de agendamento.
 - `src/lib/client-appointments.ts`: consulta disponibilidade e cria reservas no Firestore.
-- `src/lib/firebase-client.ts`: configuracao publica do Firebase Web SDK.
-- `src/lib/schedule.ts`: regras de dias e horarios.
-- `src/config/whatsapp.ts`: numero e mensagem do WhatsApp.
-- `firestore.rules`: regras que protegem os dados pessoais e impedem sobrescrita de horarios.
-- `firebase.json`: deploy estatico para Firebase Hosting.
+- `src/lib/firebase-client.ts`: configuração pública do Firebase Web SDK.
+- `src/lib/schedule.ts`: regras de dias e horários.
+- `src/config/whatsapp.ts`: número e mensagem do WhatsApp.
+- `firestore.rules`: regras que protegem os dados pessoais e impedem sobrescrita de horários.
+- `firebase.json`: deploy estático para Firebase Hosting.
 
 ## Banco
 
 Projeto Firebase: `laser-manutencao-co2-20260618`
 
-Colecoes:
+Coleções:
 
-- `slots`: publica para disponibilidade. Contem apenas `data`, `horario`, `status` e auditoria basica.
-- `agendamentos`: dados completos do cliente. Escrita permitida apenas na criacao; leitura publica bloqueada.
+- `slots`: pública para disponibilidade. Contém apenas `data`, `horario`, `status` e auditoria básica.
+- `agendamentos`: dados completos do cliente. Escrita permitida apenas na criação; leitura pública bloqueada.
 
-Documento: ID deterministico no formato `YYYY-MM-DD_HH-mm`, garantindo unicidade por `data + horario`.
+Documento: ID determinístico no formato `YYYY-MM-DD_HH-mm`, garantindo unicidade por `data + horario`.
 
 Campos em `agendamentos`:
 
@@ -59,9 +59,9 @@ Campos em `agendamentos`:
 }
 ```
 
-## Configuracao
+## Configuração
 
-As configuracoes publicas do Firebase ja possuem fallback em `src/lib/firebase-client.ts`. Para sobrescrever localmente, crie `.env.local` a partir de `.env.example`.
+As configurações públicas do Firebase já possuem fallback em `src/lib/firebase-client.ts`. Para sobrescrever localmente, crie `.env.local` a partir de `.env.example`.
 
 ```bash
 npm install
@@ -75,9 +75,9 @@ npm run build
 firebase deploy --only firestore:rules,hosting --project laser-manutencao-co2-20260618
 ```
 
-## Atualizacoes
+## Atualizações
 
 - Para trocar o WhatsApp, altere `NEXT_PUBLIC_WHATSAPP_NUMBER` ou `src/config/whatsapp.ts`.
-- Para alterar horarios, edite `src/lib/schedule.ts` e revise `firestore.rules`.
-- Para alterar servicos, edite `src/app/page.tsx` e `src/lib/schedule.ts`.
-- Para revisar reservas, consulte a colecao `agendamentos` no Firestore.
+- Para alterar horários, edite `src/lib/schedule.ts` e revise `firestore.rules`.
+- Para alterar serviços, edite `src/app/page.tsx` e `src/lib/schedule.ts`.
+- Para revisar reservas, consulte a coleção `agendamentos` no Firestore.

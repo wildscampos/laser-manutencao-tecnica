@@ -33,7 +33,7 @@ export function BookingForm() {
       empresa: "",
       cidade: "",
       modeloMaquina: "",
-      servico: "Manutencao Preventiva",
+      servico: "Manutenção Preventiva",
       data: "",
       horario: "",
       observacoes: "",
@@ -87,14 +87,14 @@ export function BookingForm() {
       setFreeTimes((times) => times.filter((time) => time !== values.horario));
     } catch (error) {
       if (error instanceof SlotAlreadyBookedError) {
-        setError("horario", { type: "server", message: "Este horario acabou de ser reservado." });
+        setError("horario", { type: "server", message: "Este horário acabou de ser reservado." });
         setFreeTimes((times) => times.filter((time) => time !== values.horario));
         return;
       }
 
       setError("root", {
         type: "server",
-        message: "Nao foi possivel concluir o agendamento. Tente novamente.",
+        message: "Não foi possível concluir o agendamento. Tente novamente.",
       });
     }
   }
@@ -109,7 +109,7 @@ export function BookingForm() {
         <div>
           <h2 className="text-2xl font-semibold text-white">Agendamento online</h2>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-            Escolha uma data e um horario livre. A reserva e gravada antes da abertura do WhatsApp.
+            Escolha uma data e um horário livre. A reserva é gravada antes da abertura do WhatsApp.
           </p>
         </div>
         <CalendarDays className="mt-1 shrink-0 text-cyan-300" aria-hidden="true" />
@@ -134,10 +134,10 @@ export function BookingForm() {
         <Field label="Cidade" error={errors.cidade?.message}>
           <input className="field" autoComplete="address-level2" {...register("cidade")} />
         </Field>
-        <Field label="Modelo da maquina (opcional)" error={errors.modeloMaquina?.message}>
+        <Field label="Modelo da máquina (opcional)" error={errors.modeloMaquina?.message}>
           <input className="field" {...register("modeloMaquina")} />
         </Field>
-        <Field label="Servico desejado" error={errors.servico?.message}>
+        <Field label="Serviço desejado" error={errors.servico?.message}>
           <select className="field" {...register("servico")}>
             {SERVICES.map((service) => (
               <option key={service} value={service}>
@@ -157,22 +157,22 @@ export function BookingForm() {
       </div>
 
       <div className="mt-5">
-        <span className="text-sm font-medium text-slate-100">Horario</span>
+        <span className="text-sm font-medium text-slate-100">Horário</span>
         <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-5">
           {availabilityStatus === "loading" && (
             <div className="col-span-full flex items-center gap-2 text-sm text-slate-300">
               <Loader2 className="animate-spin" aria-hidden="true" />
-              Consultando horarios...
+              Consultando horários...
             </div>
           )}
           {availabilityStatus === "error" && (
             <div className="col-span-full flex items-center gap-2 text-sm text-rose-200">
               <AlertCircle aria-hidden="true" />
-              Falha ao consultar horarios.
+              Falha ao consultar horários.
             </div>
           )}
           {selectedDate && availabilityStatus === "idle" && freeTimes.length === 0 && (
-            <p className="col-span-full text-sm text-slate-300">Nenhum horario disponivel para esta data.</p>
+            <p className="col-span-full text-sm text-slate-300">Nenhum horário disponível para esta data.</p>
           )}
           {!selectedDate && <p className="col-span-full text-sm text-slate-300">Escolha uma data primeiro.</p>}
           {selectedDate && freeTimes.map((time) => (
@@ -186,7 +186,7 @@ export function BookingForm() {
       </div>
 
       <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <Field label="Observacoes" error={errors.observacoes?.message} wide>
+        <Field label="Observações" error={errors.observacoes?.message} wide>
           <textarea className="field min-h-28 resize-y" {...register("observacoes")} />
         </Field>
         <Field label="Upload de foto (opcional)" error={errors.fotoNome?.message}>

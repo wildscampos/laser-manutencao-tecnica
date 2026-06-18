@@ -12,32 +12,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://laser-manutencao-tecnica.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://laser-manutencao-tecnica.web.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Manutencao Tecnica para Maquinas Laser CO2 | LASER Manutencao Tecnica",
+  title: "Manutenção Técnica para Máquinas Laser CO2 | LASER Manutenção Técnica",
   description:
-    "Servicos de manutencao preventiva e corretiva, alinhamento optico, troca de componentes e configuracao RD Works para maquinas laser CO2.",
+    "Serviços de manutenção preventiva e corretiva, alinhamento óptico, troca de componentes e configuração RD Works para máquinas laser CO2.",
   keywords: [
-    "manutencao laser CO2",
-    "alinhamento optico laser",
+    "manutenção laser CO2",
+    "alinhamento óptico laser",
     "RD Works",
     "troca tubo laser CO2",
-    "manutencao maquina laser",
+    "manutenção máquina laser",
   ],
   openGraph: {
-    title: "LASER Manutencao Tecnica",
+    title: "LASER Manutenção Técnica",
     description:
-      "Agende manutencao tecnica para maquinas laser CO2: alinhamento, limpeza, componentes e RD Works.",
+      "Agende manutenção técnica para máquinas laser CO2: alinhamento, limpeza, componentes e RD Works.",
     url: siteUrl,
-    siteName: "LASER Manutencao Tecnica",
+    siteName: "LASER Manutenção Técnica",
     images: [
       {
         url: "/logo-laser-manutencao.jpg",
         width: 1280,
         height: 1280,
-        alt: "Logo LASER Manutencao Tecnica",
+        alt: "Logo LASER Manutenção Técnica",
       },
     ],
     locale: "pt_BR",

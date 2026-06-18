@@ -2,10 +2,10 @@ export const WEEKDAY_TIMES = ["18:00", "19:00", "20:00"] as const;
 export const SATURDAY_TIMES = ["08:00", "09:00", "10:00", "11:00", "12:00"] as const;
 
 export const SERVICES = [
-  "Manutencao Preventiva",
-  "Manutencao Corretiva",
-  "Alinhamento Optico",
-  "Substituicao de Componentes",
+  "Manutenção Preventiva",
+  "Manutenção Corretiva",
+  "Alinhamento Óptico",
+  "Substituição de Componentes",
   "Software RD Works",
 ] as const;
 

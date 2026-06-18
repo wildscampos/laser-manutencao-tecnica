@@ -11,9 +11,9 @@ export const appointmentSchema = z
     empresa: z.string().trim().max(120).optional().or(z.literal("")),
     cidade: z.string().trim().min(2, "Informe a cidade.").max(100),
     modeloMaquina: z.string().trim().max(120).optional().or(z.literal("")),
-    servico: z.enum(SERVICES, { error: "Selecione o servico desejado." }),
+    servico: z.enum(SERVICES, { error: "Selecione o serviço desejado." }),
     data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Escolha uma data valida."),
-    horario: z.string().regex(/^\d{2}:\d{2}$/, "Escolha um horario valido."),
+    horario: z.string().regex(/^\d{2}:\d{2}$/, "Escolha um horário válido."),
     observacoes: z.string().trim().max(800).optional().or(z.literal("")),
     fotoNome: z.string().trim().max(180).optional().or(z.literal("")),
     website: z.string().max(0).optional().or(z.literal("")),
@@ -24,7 +24,7 @@ export const appointmentSchema = z
       ctx.addIssue({
         code: "custom",
         path: ["horario"],
-        message: "Horario indisponivel para a data selecionada.",
+        message: "Horário indisponível para a data selecionada.",
       });
     }
 

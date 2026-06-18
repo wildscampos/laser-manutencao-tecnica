@@ -14,17 +14,17 @@ type WhatsAppMessageInput = {
 
 export function buildWhatsAppMessage(input: WhatsAppMessageInput) {
   return [
-    "Ola, gostaria de agendar uma manutencao laser.",
+    "Olá, gostaria de agendar uma manutenção laser.",
     "",
     `Nome: ${input.nome}`,
     `Telefone: ${input.telefone}`,
-    `Empresa: ${input.empresa || "Nao informado"}`,
+    `Empresa: ${input.empresa || "Não informado"}`,
     `Cidade: ${input.cidade}`,
-    `Modelo da Maquina: ${input.modeloMaquina || "Nao informado"}`,
-    `Servico: ${input.servico}`,
+    `Modelo da Máquina: ${input.modeloMaquina || "Não informado"}`,
+    `Serviço: ${input.servico}`,
     `Data: ${input.data}`,
-    `Horario: ${input.horario}`,
-    `Observacoes: ${input.observacoes || "Sem observacoes"}`,
+    `Horário: ${input.horario}`,
+    `Observações: ${input.observacoes || "Sem observações"}`,
     "",
     "Valor informado:",
     "Primeira hora R$ 100,00.",

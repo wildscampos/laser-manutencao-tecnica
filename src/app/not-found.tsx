@@ -7,10 +7,10 @@ export default function NotFound() {
         <p className="font-mono text-sm text-cyan-200">404</p>
         <h1 className="mt-3 text-4xl font-semibold text-white">Pagina nao encontrada</h1>
         <p className="mt-4 leading-7 text-slate-300">
-          O endereco acessado nao existe. Volte para o site e agende seu atendimento tecnico.
+          O endereço acessado não existe. Volte para o site e agende seu atendimento técnico.
         </p>
         <Link className="button-primary mt-6" href="/">
-          Voltar ao inicio
+          Voltar ao início
         </Link>
       </div>
     </main>

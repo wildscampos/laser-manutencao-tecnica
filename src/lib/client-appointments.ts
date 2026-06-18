@@ -89,7 +89,7 @@ export async function createClientAppointment(input: AppointmentInput) {
 
 export class SlotAlreadyBookedError extends Error {
   constructor() {
-    super("Horario ja reservado.");
+    super("Horário já reservado.");
     this.name = "SlotAlreadyBookedError";
   }
 }
