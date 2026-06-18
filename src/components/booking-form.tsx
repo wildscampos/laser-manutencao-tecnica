@@ -4,15 +4,9 @@ import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, CalendarDays, CheckCircle2, Loader2, MessageCircle } from "lucide-react";
+import { createClientAppointment, getFreeTimes, SlotAlreadyBookedError } from "@/lib/client-appointments";
 import { SERVICES } from "@/lib/schedule";
 import { appointmentSchema, type AppointmentInput } from "@/lib/validation";
-
-type ApiResponse = {
-  whatsappUrl?: string;
-  message?: string;
-  error?: string;
-  issues?: Record<string, string[]>;
-};
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -62,54 +56,46 @@ export function BookingForm() {
       return;
     }
 
-    const controller = new AbortController();
+    let active = true;
 
-    fetch(`/api/availability?data=${selectedDate}`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("availability_failed");
-        return response.json() as Promise<{ horarios: string[] }>;
-      })
-      .then((data) => {
-        setFreeTimes(data.horarios);
+    getFreeTimes(selectedDate)
+      .then((horarios) => {
+        if (!active) return;
+        setFreeTimes(horarios);
         setAvailabilityDate(selectedDate);
         setAvailabilityError(false);
       })
-      .catch((error) => {
-        if (error.name === "AbortError") return;
+      .catch(() => {
+        if (!active) return;
         setAvailabilityDate(selectedDate);
         setAvailabilityError(true);
         setFreeTimes([]);
       });
 
-    return () => controller.abort();
+    return () => {
+      active = false;
+    };
   }, [selectedDate, setValue]);
 
   async function onSubmit(values: AppointmentInput) {
     setConfirmation("");
 
-    const response = await fetch("/api/appointments", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...values, formStartedAt }),
-    });
-
-    const result = (await response.json()) as ApiResponse;
-
-    if (!response.ok) {
-      if (result.issues) {
-        Object.entries(result.issues).forEach(([field, messages]) => {
-          if (messages?.[0]) {
-            setError(field as keyof AppointmentInput, { type: "server", message: messages[0] });
-          }
-        });
+    try {
+      const result = await createClientAppointment({ ...values, formStartedAt });
+      setConfirmation(result.message);
+      window.open(result.whatsappUrl, "_blank", "noopener,noreferrer");
+      setFreeTimes((times) => times.filter((time) => time !== values.horario));
+    } catch (error) {
+      if (error instanceof SlotAlreadyBookedError) {
+        setError("horario", { type: "server", message: "Este horario acabou de ser reservado." });
+        setFreeTimes((times) => times.filter((time) => time !== values.horario));
+        return;
       }
 
-      throw new Error(result.error || "Nao foi possivel concluir o agendamento.");
-    }
-
-    setConfirmation(result.message || "Agendamento confirmado.");
-    if (result.whatsappUrl) {
-      window.open(result.whatsappUrl, "_blank", "noopener,noreferrer");
+      setError("root", {
+        type: "server",
+        message: "Nao foi possivel concluir o agendamento. Tente novamente.",
+      });
     }
   }
 
@@ -217,6 +203,13 @@ export function BookingForm() {
         <div className="mt-5 flex items-center gap-2 rounded-[4px] border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
           <CheckCircle2 aria-hidden="true" />
           {confirmation}
+        </div>
+      )}
+
+      {errors.root?.message && (
+        <div className="mt-5 flex items-center gap-2 rounded-[4px] border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+          <AlertCircle aria-hidden="true" />
+          {errors.root.message}
         </div>
       )}
 

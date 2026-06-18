@@ -2,8 +2,74 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isValidDate(value) {
+      return value is string && value.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isValidTime(value) {
+      return value in ['08:00', '09:00', '10:00', '11:00', '12:00', '18:00', '19:00', '20:00'];
+    }
+
+    function isStringBetween(value, min, max) {
+      return value is string && value.size() >= min && value.size() <= max;
+    }
+
+    function isOptionalString(value, max) {
+      return value is string && value.size() <= max;
+    }
+
+    match /slots/{slotId} {
+      allow read: if true;
+      allow create: if
+        !exists(/databases/$(database)/documents/slots/$(slotId)) &&
+        request.resource.data.keys().hasOnly(['id', 'data', 'horario', 'status', 'createdAt', 'createdAtIso']) &&
+        request.resource.data.id == slotId &&
+        isValidDate(request.resource.data.data) &&
+        isValidTime(request.resource.data.horario) &&
+        request.resource.data.status == 'agendado' &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.createdAtIso is string;
+      allow update, delete: if false;
+    }
+
     match /agendamentos/{slotId} {
-      allow read, write: if false;
+      allow read: if false;
+      allow create: if
+        !exists(/databases/$(database)/documents/agendamentos/$(slotId)) &&
+        existsAfter(/databases/$(database)/documents/slots/$(slotId)) &&
+        request.resource.data.keys().hasOnly([
+          'id',
+          'nome',
+          'telefone',
+          'whatsapp',
+          'empresa',
+          'cidade',
+          'modeloMaquina',
+          'servico',
+          'data',
+          'horario',
+          'observacoes',
+          'fotoNome',
+          'status',
+          'createdAt',
+          'createdAtIso'
+        ]) &&
+        request.resource.data.id == slotId &&
+        isValidDate(request.resource.data.data) &&
+        isValidTime(request.resource.data.horario) &&
+        request.resource.data.status == 'agendado' &&
+        request.resource.data.createdAt == request.time &&
+        isStringBetween(request.resource.data.nome, 3, 100) &&
+        isStringBetween(request.resource.data.telefone, 8, 20) &&
+        isStringBetween(request.resource.data.whatsapp, 8, 20) &&
+        isStringBetween(request.resource.data.cidade, 2, 100) &&
+        isStringBetween(request.resource.data.servico, 3, 80) &&
+        isOptionalString(request.resource.data.empresa, 120) &&
+        isOptionalString(request.resource.data.modeloMaquina, 120) &&
+        isOptionalString(request.resource.data.observacoes, 800) &&
+        isOptionalString(request.resource.data.fotoNome, 180) &&
+        request.resource.data.createdAtIso is string;
+      allow update, delete: if false;
     }
   }
 }
