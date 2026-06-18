@@ -107,18 +107,17 @@ svg {
 }
 
 .service-card {
-  min-height: 23rem;
   border: 1px solid rgba(51, 65, 85, 0.9);
   border-radius: 6px;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.84));
-  padding: 1.25rem;
+  padding: 1.5rem;
 }
 
 .service-card h3 {
   margin-top: 1rem;
-  min-height: 3rem;
   font-size: 1.1rem;
   font-weight: 700;
+  line-height: 1.35;
   color: #ffffff;
 }
 
