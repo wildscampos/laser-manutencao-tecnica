@@ -43,7 +43,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 dev-server.log
+dev-server-*.log
 .next-dev.pid
 qa/
 .firebase/
 firebase-debug.log
+.codex-remote-attachments/

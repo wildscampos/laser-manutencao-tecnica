@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   ArrowRight,
   BadgeCheck,
@@ -118,6 +119,20 @@ export default function Home() {
         <div className="laser-grid absolute inset-0 opacity-35" />
         <div className="relative mx-auto grid min-h-[86vh] max-w-7xl items-center gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:py-28">
           <div className="min-w-0">
+            <div className="mb-8 flex items-center gap-4">
+              <Image
+                className="hero-logo"
+                src="/logo-laser-manutencao.jpg"
+                alt="Logo LASER Manutencao Tecnica"
+                width={128}
+                height={128}
+                priority
+              />
+              <div className="hidden border-l border-cyan-300/35 pl-4 text-sm leading-6 text-cyan-100 sm:block">
+                <strong className="block text-white">LASER Manutencao Tecnica</strong>
+                Precisao que mantem sua maquina no topo.
+              </div>
+            </div>
             <h1 className="max-w-4xl text-5xl font-semibold leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
               Manutencao Tecnica para Maquinas Laser CO2
             </h1>
@@ -140,7 +155,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(34,211,238,0.10)_48%,transparent_52%)]" />
             <div className="relative flex h-full min-h-[380px] flex-col justify-between">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <span className="font-mono text-sm text-cyan-200">LASER / CO2 SERVICE</span>
+                <span className="font-mono text-sm text-cyan-200">LM LASER / CO2 SERVICE</span>
                 <Gauge className="text-cyan-300" aria-hidden="true" />
               </div>
               <div className="my-8 grid gap-4">
@@ -299,8 +314,16 @@ function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#070b12]/85 backdrop-blur">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8" aria-label="Navegacao principal">
-        <a className="font-mono text-sm font-bold uppercase tracking-[0.16em] text-white" href="#">
-          LASER Manutencao Tecnica
+        <a className="flex min-w-0 items-center gap-3 font-mono text-sm font-bold uppercase tracking-[0.16em] text-white" href="#">
+          <Image
+            className="header-logo"
+            src="/logo-laser-manutencao.jpg"
+            alt="LASER Manutencao Tecnica"
+            width={52}
+            height={52}
+            priority
+          />
+          <span className="truncate">LASER Manutencao Tecnica</span>
         </a>
         <div className="hidden items-center gap-6 text-sm text-slate-300 lg:flex">
           <a href="#servicos">Servicos</a>

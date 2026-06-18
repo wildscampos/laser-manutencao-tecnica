@@ -32,8 +32,20 @@ export const metadata: Metadata = {
       "Agende manutencao tecnica para maquinas laser CO2: alinhamento, limpeza, componentes e RD Works.",
     url: siteUrl,
     siteName: "LASER Manutencao Tecnica",
+    images: [
+      {
+        url: "/logo-laser-manutencao.jpg",
+        width: 1280,
+        height: 1280,
+        alt: "Logo LASER Manutencao Tecnica",
+      },
+    ],
     locale: "pt_BR",
     type: "website",
+  },
+  icons: {
+    icon: "/logo-laser-manutencao.jpg",
+    apple: "/logo-laser-manutencao.jpg",
   },
   robots: {
     index: true,

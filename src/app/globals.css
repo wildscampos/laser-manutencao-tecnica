@@ -42,6 +42,23 @@ svg {
   flex-shrink: 0;
 }
 
+.header-logo {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 4px;
+  object-fit: cover;
+  object-position: center 36%;
+}
+
+.hero-logo {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 6px;
+  border: 1px solid rgba(103, 232, 249, 0.28);
+  object-fit: cover;
+  object-position: center 36%;
+}
+
 .laser-grid {
   background-image:
     linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
@@ -291,6 +308,11 @@ svg {
 }
 
 @media (max-width: 720px) {
+  .hero-logo {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+
   .button-primary,
   .button-secondary {
     width: 100%;
