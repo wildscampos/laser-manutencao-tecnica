@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "laser-manutencao-tecnica",
     "public": "out",
     "ignore": [
       "firebase.json",

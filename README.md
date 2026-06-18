@@ -2,6 +2,8 @@
 
 Site profissional em Next.js para divulgacao de servicos de manutencao de maquinas laser CO2, com agendamento online integrado ao Firebase Firestore e abertura automatica do WhatsApp apos a reserva.
 
+Site publicado: https://laser-manutencao-tecnica.web.app
+
 ## Tecnologias
 
 - Next.js App Router com export estatico
