@@ -42,7 +42,7 @@ export function buildWhatsAppMessage(input: WhatsAppMessageInput) {
     "Primeira hora R$ 100,00.",
     "Horas adicionais R$ 50,00 por hora.",
     hasTravelFee
-      ? `Deslocamento: ${input.deslocamentoKm} km x R$ 2,00 = ${formatCurrency(input.deslocamentoValor || 0)}.`
+      ? `Deslocamento: ${formatCurrency(input.deslocamentoValor || 0)}.`
       : "Deslocamento: sem cobrança para esta cidade.",
   ].join("\n");
 }
