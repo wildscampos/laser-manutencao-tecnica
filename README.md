@@ -1,8 +1,8 @@
-# LASER Manutenção Técnica
+# LaserFix
 
-Site profissional em Next.js para divulgação de serviços de manutenção de máquinas laser CO2, com agendamento online integrado ao Firebase Firestore e abertura automática do WhatsApp após a reserva.
+Site profissional em Next.js para divulgação da LaserFix: manutenção de máquinas de corte a laser CO₂, com agendamento online integrado ao Firebase Firestore e abertura automática do WhatsApp após a reserva.
 
-Site publicado: https://laser-manutencao-tecnica.web.app
+Site publicado: https://laserfix.web.app
 
 ## Tecnologias
 

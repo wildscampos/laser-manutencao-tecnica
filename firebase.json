@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "laser-manutencao-tecnica",
+    "site": "laserfix",
     "public": "out",
     "ignore": [
       "firebase.json",

@@ -30,7 +30,7 @@ const whatsappIntroUrl = buildWhatsAppUrl(
     servico: "Atendimento técnico",
     data: "",
     horario: "",
-    observacoes: "Quero falar sobre manutenção de máquina laser CO2.",
+    observacoes: "Quero falar sobre manutenção de máquina laser CO₂.",
   }),
 );
 
@@ -53,22 +53,27 @@ const services = [
   {
     title: "Substituição de Componentes",
     icon: Cable,
-    items: ["Tubos laser CO2", "Fontes, painéis e controladoras", "Drivers, lentes, espelhos e conexões"],
+    items: ["Tubos laser CO₂", "Fontes, painéis e controladoras", "Drivers, lentes, espelhos e conexões"],
   },
   {
     title: "Software",
     icon: Cpu,
     items: ["Instalação do RD Works", "Configuração do RD Works", "Backup e restauração de parâmetros"],
   },
+  {
+    title: "Artes para Corte e Gravação",
+    icon: Sparkles,
+    items: ["Criação de arquivos para produção", "Ajustes para corte e gravação", "Preparação com foco em aproveitamento"],
+  },
 ];
 
 const benefits = [
-  "Atendimento especializado",
-  "Diagnóstico rápido",
+  "Precisão no corte",
+  "Menos desperdício",
+  "Menos retrabalho",
+  "Mais produtividade",
+  "Menos máquina parada",
   "Agendamento online",
-  "Atendimento programado",
-  "Soluções para máquinas CO2",
-  "Configuração profissional RD Works",
 ];
 
 const maintenancePoints = [
@@ -112,11 +117,11 @@ export default function Home() {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    name: "LASER Manutenção Técnica",
-    description: "Manutenção técnica para máquinas laser CO2, alinhamento óptico, limpeza, troca de componentes e configuração RD Works.",
+    name: "LaserFix",
+    description: "Manutenção de máquinas de corte a laser CO₂, alinhamento óptico, limpeza, troca de componentes e configuração RD Works.",
     telephone: `+${WHATSAPP_NUMBER}`,
     areaServed: "Brasil",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "https://laser-manutencao-tecnica.web.app",
+    url: process.env.NEXT_PUBLIC_SITE_URL || "https://laserfix.web.app",
     priceRange: "R$100 primeira hora; R$50 horas adicionais",
     openingHoursSpecification: [
       {
@@ -135,34 +140,34 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#070b12] text-slate-100">
+    <main className="min-h-screen overflow-hidden bg-[#111111] text-slate-100">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <SiteHeader />
 
       <section className="relative border-b border-slate-800/80">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(34,211,238,0.18),transparent_30%),linear-gradient(135deg,rgba(14,165,233,0.12),transparent_42%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(0,168,255,0.18),transparent_30%),linear-gradient(135deg,rgba(0,168,255,0.12),transparent_42%)]" />
         <div className="laser-grid absolute inset-0 opacity-35" />
         <div className="relative mx-auto grid min-h-[86vh] max-w-7xl items-center gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:py-28">
           <div className="min-w-0">
             <div className="mb-8 flex items-center gap-4">
               <Image
                 className="hero-logo"
-                src="/logo-laser-manutencao.jpg"
-                alt="Logo LASER Manutenção Técnica"
-                width={128}
-                height={128}
+                src="/logo-laserfix.jpg"
+                alt="Logo LaserFix"
+                width={1280}
+                height={720}
                 priority
               />
-              <div className="hidden border-l border-cyan-300/35 pl-4 text-sm leading-6 text-cyan-100 sm:block">
-                <strong className="block text-white">LASER Manutenção Técnica</strong>
-                Precisão que mantém sua máquina no topo.
+              <div className="hidden border-l border-[#00A8FF]/35 pl-4 text-sm leading-6 text-white sm:block">
+                <strong className="block text-white">LaserFix</strong>
+                Seu laser sempre no ponto.
               </div>
             </div>
-            <h1 className="max-w-4xl text-5xl font-semibold leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
-              Manutenção Técnica para Máquinas Laser CO2
+            <h1 className="hero-title max-w-4xl text-5xl font-semibold leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
+              Manutenção de Máquinas de Corte a Laser <span className="whitespace-nowrap">CO₂</span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
-              Alinhamento, limpeza, troca de componentes e configuração RD Works para manter sua máquina operando com máxima precisão.
+              Seu laser sempre no ponto: alinhamento, limpeza, troca de componentes, configuração e ajustes para sua máquina voltar a produzir com qualidade.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <a className="button-primary" href="#agendamento">
@@ -176,17 +181,24 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative min-h-[420px] min-w-0 overflow-hidden rounded-[8px] border border-cyan-300/20 bg-slate-950/70 p-4 shadow-2xl shadow-cyan-950/40 sm:p-6">
-            <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(34,211,238,0.10)_48%,transparent_52%)]" />
+          <div className="relative min-h-[420px] min-w-0 overflow-hidden rounded-[8px] border border-[#00A8FF]/20 bg-slate-950/70 p-4 shadow-2xl shadow-black/40 sm:p-6">
+            <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(0,168,255,0.10)_48%,transparent_52%)]" />
             <div className="relative flex h-full min-h-[380px] flex-col justify-between">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <span className="font-mono text-sm text-cyan-200">LM LASER / CO2 SERVICE</span>
-                <Gauge className="text-cyan-300" aria-hidden="true" />
+                <span className="font-mono text-sm text-[#00A8FF]">LASERFIX / CO₂ SERVICE</span>
+                <Gauge className="text-[#00A8FF]" aria-hidden="true" />
               </div>
               <div className="my-8 grid gap-4">
-                {["Feixe calibrado", "Óptica alinhada", "RD Works configurado", "Teste operacional"].map((item, index) => (
-                  <div className="flex items-center gap-4 border-l border-cyan-300/60 bg-white/[0.03] p-4" key={item}>
-                    <span className="flex size-9 items-center justify-center rounded-[4px] bg-cyan-300 text-sm font-bold text-slate-950">
+                {[
+                  "Alinhamento de lentes, espelhos e tubos CO₂",
+                  "Configuração de motores de passo e sensores",
+                  "Ajustes para máxima precisão de corte",
+                  "Criação de artes para corte e gravação",
+                  "Guaratinguetá e região",
+                  "(12) 98182-3416",
+                ].map((item, index) => (
+                  <div className="flex items-center gap-4 border-l border-[#00A8FF]/60 bg-white/[0.03] p-4" key={item}>
+                    <span className="flex size-9 items-center justify-center rounded-[4px] bg-[#00A8FF] text-sm font-bold text-slate-950">
                       {index + 1}
                     </span>
                     <span className="text-sm font-medium text-slate-100">{item}</span>
@@ -202,11 +214,11 @@ export default function Home() {
         </div>
       </section>
 
-      <Section id="servicos" title="Serviços técnicos" intro="Atendimento focado no desempenho real da máquina: óptica, elétrica, software, componentes e teste operacional.">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <Section id="servicos" title="Serviços técnicos" intro="A LaserFix atua no que realmente importa: precisão, menos retrabalho, mais produtividade e menos máquina parada.">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => (
             <article className="service-card" key={service.title}>
-              <service.icon className="text-cyan-300" aria-hidden="true" />
+              <service.icon className="text-[#00A8FF]" aria-hidden="true" />
               <h3>{service.title}</h3>
               <ul>
                 {service.items.map((item) => (
@@ -224,7 +236,7 @@ export default function Home() {
       <Section
         id="importancia"
         title="Importância da manutenção"
-        intro="Máquinas laser CO2 exigem limpeza, calibração e inspeção periódica para manter precisão, produtividade e segurança no uso diário."
+        intro="Máquinas laser CO₂ exigem limpeza, calibração e inspeção periódica para manter precisão, produtividade e segurança no uso diário."
       >
         <div className="importance-panel">
           <div className="importance-copy">
@@ -253,7 +265,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section id="beneficios" title="Benefícios" intro="Mais controle sobre paradas, manutenções e ajustes críticos para corte e gravação.">
+      <Section id="beneficios" title="Benefícios" intro="O cliente não quer apenas alinhamento de espelhos. Ele quer voltar a produzir com qualidade.">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {benefits.map((benefit) => (
             <div className="benefit-row" key={benefit}>
@@ -284,10 +296,10 @@ export default function Home() {
               <PriceLine label="Primeira hora" value="R$ 100,00" />
               <PriceLine label="Horas adicionais" value="R$ 50,00 por hora" />
             </div>
-            <p className="mt-5 text-sm font-semibold text-cyan-100">+ deslocamento, quando aplicável</p>
+            <p className="mt-5 text-sm font-semibold text-white">+ deslocamento, quando aplicável</p>
           </div>
           <div className="note-panel">
-            <Sparkles className="text-cyan-300" aria-hidden="true" />
+            <Sparkles className="text-[#00A8FF]" aria-hidden="true" />
             <p>
               Peças, componentes e materiais utilizados durante o reparo poderão ser cobrados separadamente mediante aprovação prévia do cliente.
             </p>
@@ -295,7 +307,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <section id="agendamento" className="relative border-y border-cyan-300/15 bg-slate-950/70">
+      <section id="agendamento" className="relative border-y border-[#00A8FF]/15 bg-slate-950/70">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.78fr_1.22fr]">
           <div>
             <h2 className="text-4xl font-semibold text-white">Reserve um horário técnico</h2>
@@ -311,7 +323,7 @@ export default function Home() {
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="about-copy">
             <p>
-              Meu nome é Wilds Campos e trabalho com manutenção de máquinas laser CO2, atendendo empresas e profissionais que dependem da máquina funcionando todos os dias para produzir e vender.
+              Meu nome é Wilds Campos e trabalho com manutenção de máquinas laser CO₂, atendendo empresas e profissionais que dependem da máquina funcionando todos os dias para produzir e vender.
             </p>
             <p>
               Sei que uma máquina parada significa atraso, prejuízo e dor de cabeça. Por isso, procuro oferecer um atendimento rápido, transparente e focado na solução real do problema.
@@ -351,7 +363,7 @@ export default function Home() {
         <div className="contact-band">
           <Headphones aria-hidden="true" />
           <div>
-            <p className="font-mono text-sm text-cyan-200">WhatsApp</p>
+            <p className="font-mono text-sm text-[#00A8FF]">WhatsApp</p>
             <p className="mt-1 text-2xl font-semibold text-white">+{WHATSAPP_NUMBER}</p>
           </div>
           <a className="button-primary ml-auto" href={whatsappIntroUrl} target="_blank" rel="noopener noreferrer">
@@ -362,8 +374,8 @@ export default function Home() {
       </Section>
 
       <section className="px-5 pb-20 sm:px-8">
-        <div className="mx-auto max-w-7xl rounded-[8px] border border-cyan-300/25 bg-cyan-300 p-8 text-slate-950 md:p-12">
-          <h2 className="max-w-3xl text-4xl font-semibold">Coloque sua laser CO2 de volta em operação com atendimento técnico programado.</h2>
+        <div className="mx-auto max-w-7xl rounded-[8px] border border-[#00A8FF]/25 bg-[#00A8FF] p-8 text-slate-950 md:p-12">
+          <h2 className="max-w-3xl text-4xl font-semibold">Coloque sua laser CO₂ de volta em operação com atendimento técnico programado.</h2>
           <a className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-[4px] bg-slate-950 px-5 text-sm font-bold uppercase tracking-[0.12em] text-white" href="#agendamento">
             Agendar Manutenção
             <ArrowRight aria-hidden="true" />

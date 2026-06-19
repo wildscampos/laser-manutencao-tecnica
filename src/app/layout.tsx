@@ -12,40 +12,40 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://laser-manutencao-tecnica.web.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://laserfix.web.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Manutenção Técnica para Máquinas Laser CO2 | LASER Manutenção Técnica",
+  title: "Manutenção de Máquinas de Corte a Laser CO₂ | LaserFix",
   description:
-    "Serviços de manutenção preventiva e corretiva, alinhamento óptico, troca de componentes e configuração RD Works para máquinas laser CO2.",
+    "LaserFix: manutenção de máquinas de corte a laser CO₂, alinhamento óptico, troca de componentes, configuração e ajustes de precisão.",
   keywords: [
-    "manutenção laser CO2",
+    "manutenção laser CO₂",
     "alinhamento óptico laser",
     "RD Works",
-    "troca tubo laser CO2",
+    "troca tubo laser CO₂",
     "manutenção máquina laser",
   ],
   openGraph: {
-    title: "LASER Manutenção Técnica",
+    title: "LaserFix",
     description:
-      "Agende manutenção técnica para máquinas laser CO2: alinhamento, limpeza, componentes e RD Works.",
+      "Seu laser sempre no ponto. Manutenção de máquinas de corte a laser CO₂ em Guaratinguetá e região.",
     url: siteUrl,
-    siteName: "LASER Manutenção Técnica",
+    siteName: "LaserFix",
     images: [
       {
-        url: "/logo-laser-manutencao.jpg",
+        url: "/logo-laserfix.jpg",
         width: 1280,
-        height: 1280,
-        alt: "Logo LASER Manutenção Técnica",
+        height: 720,
+        alt: "Logo LaserFix",
       },
     ],
     locale: "pt_BR",
     type: "website",
   },
   icons: {
-    icon: "/logo-laser-manutencao.jpg",
-    apple: "/logo-laser-manutencao.jpg",
+    icon: "/logo-laserfix.jpg",
+    apple: "/logo-laserfix.jpg",
   },
   robots: {
     index: true,

@@ -195,10 +195,10 @@ export function BookingForm() {
 
   return (
     <form
-      className="relative overflow-hidden rounded-[6px] border border-slate-700/80 bg-slate-950/88 p-5 shadow-2xl shadow-cyan-950/30 backdrop-blur md:p-7"
+      className="relative overflow-hidden rounded-[6px] border border-slate-700/80 bg-slate-950/88 p-5 shadow-2xl shadow-black/30 backdrop-blur md:p-7"
       onSubmit={handleSubmit(onSubmit)}
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00A8FF] to-transparent" />
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-white">Agendamento online</h2>
@@ -206,7 +206,7 @@ export function BookingForm() {
             Escolha uma data e um horário livre. A reserva é gravada antes da abertura do WhatsApp.
           </p>
         </div>
-        <CalendarDays className="mt-1 shrink-0 text-cyan-300" aria-hidden="true" />
+        <CalendarDays className="mt-1 shrink-0 text-[#00A8FF]" aria-hidden="true" />
       </div>
 
       <input type="text" tabIndex={-1} autoComplete="off" className="hidden" {...register("website")} />
@@ -402,7 +402,7 @@ export function BookingForm() {
         </div>
       )}
 
-      <button className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[4px] bg-cyan-300 px-5 text-sm font-bold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting}>
+      <button className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[4px] bg-[#00A8FF] px-5 text-sm font-bold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A8FF] focus:ring-offset-2 focus:ring-offset-[#111111] disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting}>
         {isSubmitting ? <Loader2 className="animate-spin" aria-hidden="true" /> : <MessageCircle aria-hidden="true" />}
         Enviar agendamento pelo WhatsApp
       </button>

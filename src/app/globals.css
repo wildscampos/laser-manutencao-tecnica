@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #070b12;
+  --background: #111111;
   --foreground: #f8fafc;
 }
 
@@ -32,7 +32,7 @@ input,
 select,
 textarea,
 summary {
-  outline-color: #67e8f9;
+  outline-color: #00A8FF;
   outline-offset: 3px;
 }
 
@@ -43,11 +43,11 @@ svg {
 }
 
 .header-logo {
-  width: 2.25rem;
+  width: 4.25rem;
   height: 2.25rem;
   border-radius: 4px;
-  object-fit: cover;
-  object-position: center 36%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .mobile-menu-button {
@@ -56,7 +56,7 @@ svg {
   min-width: 2.75rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(103, 232, 249, 0.5);
+  border: 1px solid rgba(0, 168, 255, 0.5);
   border-radius: 4px;
   color: #e0faff;
   transition:
@@ -66,8 +66,8 @@ svg {
 }
 
 .mobile-menu-button:hover {
-  border-color: rgba(103, 232, 249, 0.95);
-  background: rgba(103, 232, 249, 0.12);
+  border-color: rgba(0, 168, 255, 0.95);
+  background: rgba(0, 168, 255, 0.12);
 }
 
 .mobile-menu {
@@ -91,7 +91,7 @@ svg {
 }
 
 .mobile-menu a:hover {
-  color: #67e8f9;
+  color: #00A8FF;
 }
 
 .mobile-menu .mobile-menu-cta {
@@ -99,7 +99,7 @@ svg {
   margin-top: 0.75rem;
   border: 0;
   border-radius: 4px;
-  background: #67e8f9;
+  background: #00A8FF;
   color: #07111f;
   font-size: 0.82rem;
   font-weight: 850;
@@ -113,12 +113,18 @@ svg {
 }
 
 .hero-logo {
-  width: 8rem;
-  height: 8rem;
+  width: min(18rem, 62vw);
+  height: auto;
+  aspect-ratio: 16 / 9;
   border-radius: 6px;
-  border: 1px solid rgba(103, 232, 249, 0.28);
-  object-fit: cover;
-  object-position: center 36%;
+  border: 1px solid rgba(0, 168, 255, 0.28);
+  background: #111111;
+  object-fit: contain;
+  object-position: center;
+}
+
+.hero-title {
+  text-wrap: balance;
 }
 
 .laser-grid {
@@ -149,12 +155,12 @@ svg {
 }
 
 .button-primary {
-  background: #67e8f9;
+  background: #00A8FF;
   color: #07111f;
 }
 
 .button-secondary {
-  border: 1px solid rgba(103, 232, 249, 0.48);
+  border: 1px solid rgba(0, 168, 255, 0.48);
   color: #e0faff;
 }
 
@@ -164,8 +170,8 @@ svg {
 }
 
 .button-secondary:hover {
-  background: rgba(103, 232, 249, 0.12);
-  border-color: rgba(103, 232, 249, 0.85);
+  background: rgba(0, 168, 255, 0.12);
+  border-color: rgba(0, 168, 255, 0.85);
 }
 
 .service-card {
@@ -202,7 +208,7 @@ svg {
 
 .service-card li svg,
 .benefit-row svg {
-  color: #67e8f9;
+  color: #00A8FF;
   margin-top: 0.1rem;
 }
 
@@ -220,9 +226,9 @@ svg {
   display: grid;
   gap: 2rem;
   align-items: start;
-  border-block: 1px solid rgba(103, 232, 249, 0.22);
+  border-block: 1px solid rgba(0, 168, 255, 0.22);
   background:
-    linear-gradient(90deg, rgba(103, 232, 249, 0.08), transparent 46%),
+    linear-gradient(90deg, rgba(0, 168, 255, 0.08), transparent 46%),
     rgba(15, 23, 42, 0.42);
   padding: clamp(1.25rem, 3vw, 2rem);
 }
@@ -261,7 +267,7 @@ svg {
 
 .importance-item > svg {
   margin-top: 0.15rem;
-  color: #67e8f9;
+  color: #00A8FF;
 }
 
 .importance-item h3 {
@@ -279,7 +285,7 @@ svg {
 
 .step {
   min-height: 10rem;
-  border-left: 1px solid rgba(103, 232, 249, 0.55);
+  border-left: 1px solid rgba(0, 168, 255, 0.55);
   background: rgba(15, 23, 42, 0.62);
   padding: 1.25rem;
 }
@@ -287,7 +293,7 @@ svg {
 .step span {
   font-family: var(--font-geist-mono), monospace;
   font-size: 0.75rem;
-  color: #67e8f9;
+  color: #00A8FF;
   text-transform: uppercase;
 }
 
@@ -312,7 +318,7 @@ svg {
 }
 
 .price-panel > svg {
-  color: #67e8f9;
+  color: #00A8FF;
   width: 2rem;
   height: 2rem;
 }
@@ -359,7 +365,7 @@ svg {
 .contact-band > svg {
   width: 2rem;
   height: 2rem;
-  color: #67e8f9;
+  color: #00A8FF;
 }
 
 .faq-item {
@@ -409,8 +415,8 @@ svg {
 }
 
 .field:focus {
-  border-color: #67e8f9;
-  box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.14);
+  border-color: #00A8FF;
+  box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.14);
 }
 
 .field::placeholder {
@@ -429,7 +435,7 @@ svg {
 }
 
 .date-trigger svg {
-  color: #67e8f9;
+  color: #00A8FF;
 }
 
 .calendar-popover {
@@ -438,7 +444,7 @@ svg {
   right: 0;
   top: calc(100% + 0.5rem);
   z-index: 30;
-  border: 1px solid rgba(103, 232, 249, 0.34);
+  border: 1px solid rgba(0, 168, 255, 0.34);
   border-radius: 6px;
   background: #020617;
   padding: 1rem;
@@ -468,8 +474,8 @@ svg {
 }
 
 .calendar-header button:hover {
-  border-color: rgba(103, 232, 249, 0.8);
-  background: rgba(103, 232, 249, 0.12);
+  border-color: rgba(0, 168, 255, 0.8);
+  background: rgba(0, 168, 255, 0.12);
 }
 
 .calendar-weekdays,
@@ -528,8 +534,8 @@ svg {
 }
 
 .calendar-day-selected {
-  border-color: #67e8f9;
-  background: #67e8f9;
+  border-color: #00A8FF;
+  background: #00A8FF;
   color: #07111f;
 }
 
@@ -574,7 +580,7 @@ svg {
 .file-picker button {
   min-height: 2.7rem;
   border-radius: 4px;
-  background: #22d3ee;
+  background: #00A8FF;
   padding-inline: 0.9rem;
   color: #07111f;
   font-size: 0.9rem;
@@ -617,8 +623,8 @@ svg {
 
 .slot-option input:focus-visible + span,
 .slot-option input:checked + span {
-  border-color: #67e8f9;
-  background: #67e8f9;
+  border-color: #00A8FF;
+  background: #00A8FF;
   color: #07111f;
 }
 
@@ -641,8 +647,13 @@ svg {
 
 @media (max-width: 720px) {
   .hero-logo {
-    width: 5.5rem;
-    height: 5.5rem;
+    width: min(12rem, 58vw);
+    height: auto;
+  }
+
+  .hero-title {
+    font-size: 2.85rem;
+    line-height: 1.05;
   }
 
   .button-primary,
