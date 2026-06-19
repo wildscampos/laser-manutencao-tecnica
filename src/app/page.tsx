@@ -17,6 +17,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { BookingForm } from "@/components/booking-form";
+import { SiteHeader } from "@/components/site-header";
 import { WHATSAPP_NUMBER, buildWhatsAppMessage, buildWhatsAppUrl } from "@/config/whatsapp";
 
 const whatsappIntroUrl = buildWhatsAppUrl(
@@ -136,7 +137,7 @@ export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#070b12] text-slate-100">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <Header />
+      <SiteHeader />
 
       <section className="relative border-b border-slate-800/80">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(34,211,238,0.18),transparent_30%),linear-gradient(135deg,rgba(14,165,233,0.12),transparent_42%)]" />
@@ -359,37 +360,6 @@ export default function Home() {
         <p>© {currentYear} Wilds Campos. Todos os direitos reservados.</p>
       </footer>
     </main>
-  );
-}
-
-function Header() {
-  return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#070b12]/85 backdrop-blur">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8" aria-label="Navegação principal">
-        <a className="flex min-w-0 items-center gap-3 font-mono text-sm font-bold uppercase tracking-[0.16em] text-white" href="#">
-          <Image
-            className="header-logo"
-            src="/logo-laser-manutencao.jpg"
-            alt="LASER Manutenção Técnica"
-            width={52}
-            height={52}
-            priority
-          />
-          <span className="truncate">LASER Manutenção Técnica</span>
-        </a>
-        <div className="hidden items-center gap-6 text-sm text-slate-300 lg:flex">
-          <a href="#servicos">Serviços</a>
-          <a href="#importancia">Manutenção</a>
-          <a href="#precos">Preços</a>
-          <a href="#agendamento">Agendamento</a>
-          <a href="#faq">FAQ</a>
-          <a href="#contato">Contato</a>
-        </div>
-        <a className="hidden rounded-[4px] border border-cyan-300/60 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-300 hover:text-slate-950 sm:inline-flex" href="#agendamento">
-          Agendar
-        </a>
-      </nav>
-    </header>
   );
 }
 

@@ -50,6 +50,68 @@ svg {
   object-position: center 36%;
 }
 
+.mobile-menu-button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(103, 232, 249, 0.5);
+  border-radius: 4px;
+  color: #e0faff;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.mobile-menu-button:hover {
+  border-color: rgba(103, 232, 249, 0.95);
+  background: rgba(103, 232, 249, 0.12);
+}
+
+.mobile-menu {
+  display: none;
+  border-top: 1px solid rgba(51, 65, 85, 0.75);
+  background: rgba(2, 6, 23, 0.97);
+}
+
+.mobile-menu-open {
+  display: block;
+}
+
+.mobile-menu a {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.65);
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.mobile-menu a:hover {
+  color: #67e8f9;
+}
+
+.mobile-menu .mobile-menu-cta {
+  justify-content: center;
+  margin-top: 0.75rem;
+  border: 0;
+  border-radius: 4px;
+  background: #67e8f9;
+  color: #07111f;
+  font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mobile-menu .mobile-menu-cta:hover {
+  color: #07111f;
+  background: #ffffff;
+}
+
 .hero-logo {
   width: 8rem;
   height: 8rem;
