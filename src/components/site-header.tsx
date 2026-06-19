@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const navigationItems = [
   { href: "#servicos", label: "Serviços" },
@@ -16,21 +16,46 @@ const navigationItems = [
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   function closeMenu() {
     setMenuOpen(false);
   }
 
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function handleOutsidePointer(event: PointerEvent) {
+      if (!headerRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handleOutsidePointer);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", handleOutsidePointer);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [menuOpen]);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#111111]/85 backdrop-blur">
+    <header ref={headerRef} className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#111111]/85 backdrop-blur">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8" aria-label="Navegação principal">
         <a className="flex min-h-11 min-w-0 items-center gap-3 font-mono text-sm font-bold uppercase tracking-[0.16em] text-white" href="#" onClick={closeMenu}>
           <Image
             className="header-logo"
             src="/logo-laserfix.jpg"
             alt=""
-            width={1090}
-            height={575}
+            width={1280}
+            height={720}
             priority
           />
           <span className="truncate">LaserFix</span>

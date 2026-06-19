@@ -154,8 +154,8 @@ export default function Home() {
                 className="hero-logo"
                 src="/logo-laserfix.jpg"
                 alt="Logo LaserFix"
-                width={1090}
-                height={575}
+                width={1280}
+                height={720}
                 priority
               />
             </div>

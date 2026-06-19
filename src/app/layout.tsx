@@ -35,8 +35,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/logo-laserfix.jpg",
-        width: 1090,
-        height: 575,
+        width: 1280,
+        height: 720,
         alt: "Logo LaserFix",
       },
     ],
