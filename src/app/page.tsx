@@ -149,7 +149,7 @@ export default function Home() {
         <div className="laser-grid absolute inset-0 opacity-35" />
         <div className="relative mx-auto grid min-h-[86vh] max-w-7xl items-center gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:py-28">
           <div className="min-w-0">
-            <div className="mb-8 flex items-center gap-4">
+            <div className="mb-8 flex justify-center sm:mb-10 lg:justify-start">
               <Image
                 className="hero-logo"
                 src="/logo-laserfix.jpg"
@@ -158,10 +158,6 @@ export default function Home() {
                 height={720}
                 priority
               />
-              <div className="hidden border-l border-[#00A8FF]/35 pl-4 text-sm leading-6 text-white sm:block">
-                <strong className="block text-white">LaserFix</strong>
-                Seu laser sempre no ponto.
-              </div>
             </div>
             <h1 className="hero-title max-w-4xl text-5xl font-semibold leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
               Manutenção de Máquinas de Corte a Laser <span className="whitespace-nowrap">CO₂</span>
