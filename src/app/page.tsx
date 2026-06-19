@@ -181,7 +181,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(0,168,255,0.10)_48%,transparent_52%)]" />
             <div className="relative flex h-full min-h-[380px] flex-col justify-between">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <span className="font-mono text-sm text-[#00A8FF]">LASERFIX / CO₂ SERVICE</span>
+                <span className="font-mono text-sm text-[#00A8FF]">LaserFix</span>
                 <Gauge className="text-[#00A8FF]" aria-hidden="true" />
               </div>
               <div className="my-8 grid gap-4">
