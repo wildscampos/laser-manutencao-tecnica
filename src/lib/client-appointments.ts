@@ -10,6 +10,7 @@ import {
 import { buildWhatsAppMessage, buildWhatsAppUrl } from "@/config/whatsapp";
 import { db } from "./firebase-client";
 import { getAvailableTimesForDate } from "./schedule";
+import { getTravelFee } from "./service-area";
 import type { AppointmentInput } from "./validation";
 
 export function slotId(data: string, horario: string) {
@@ -53,6 +54,7 @@ export async function createClientAppointment(input: AppointmentInput) {
   const slotRef = doc(db, "slots", id);
   const appointmentRef = doc(db, "agendamentos", id);
   const createdAtIso = new Date().toISOString();
+  const travelFee = getTravelFee(input.cidade);
 
   await runTransaction(db, async (transaction) => {
     const slot = await transaction.get(slotRef);
@@ -75,6 +77,9 @@ export async function createClientAppointment(input: AppointmentInput) {
       telefone: input.telefone,
       whatsapp: input.whatsapp,
       empresa: input.empresa || "",
+      rua: input.rua,
+      numero: input.numero,
+      bairro: input.bairro,
       cidade: input.cidade,
       modeloMaquina: input.modeloMaquina || "",
       servico: input.servico,
@@ -82,6 +87,8 @@ export async function createClientAppointment(input: AppointmentInput) {
       horario: input.horario,
       observacoes: input.observacoes || "",
       fotoNome: input.fotoNome || "",
+      deslocamentoKm: travelFee.distanceKm,
+      deslocamentoValor: travelFee.fee,
       status: "agendado",
       createdAt: serverTimestamp(),
       createdAtIso,
@@ -92,12 +99,17 @@ export async function createClientAppointment(input: AppointmentInput) {
     nome: input.nome,
     telefone: input.telefone,
     empresa: input.empresa,
+    rua: input.rua,
+    numero: input.numero,
+    bairro: input.bairro,
     cidade: input.cidade,
     modeloMaquina: input.modeloMaquina,
     servico: input.servico,
     data: input.data,
     horario: input.horario,
     observacoes: input.observacoes,
+    deslocamentoKm: travelFee.distanceKm,
+    deslocamentoValor: travelFee.fee,
   });
 
   return {

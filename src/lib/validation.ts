@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SERVICES, isValidSlot } from "./schedule";
+import { SERVICE_CITIES } from "./service-area";
 
 const phoneRegex = /^[0-9+()\-\s]{8,20}$/;
 
@@ -9,7 +10,10 @@ export const appointmentSchema = z
     telefone: z.string().trim().regex(phoneRegex, "Informe um telefone valido."),
     whatsapp: z.string().trim().regex(phoneRegex, "Informe um WhatsApp valido."),
     empresa: z.string().trim().max(120).optional().or(z.literal("")),
-    cidade: z.string().trim().min(2, "Informe a cidade.").max(100),
+    rua: z.string().trim().min(3, "Informe a rua.").max(120),
+    numero: z.string().trim().min(1, "Informe o número.").max(20),
+    bairro: z.string().trim().min(2, "Informe o bairro.").max(80),
+    cidade: z.enum(SERVICE_CITIES, { error: "Selecione a cidade." }),
     modeloMaquina: z.string().trim().max(120).optional().or(z.literal("")),
     servico: z.enum(SERVICES, { error: "Selecione o serviço desejado." }),
     data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Escolha uma data valida."),

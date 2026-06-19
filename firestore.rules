@@ -10,6 +10,26 @@ service cloud.firestore {
       return value in ['08:00', '09:00', '10:00', '11:00', '12:00', '18:00', '19:00', '20:00'];
     }
 
+    function isValidCity(value) {
+      return value in ['Aparecida', 'Cachoeira Paulista', 'Canas', 'Guaratinguetá', 'Lorena', 'Potim'];
+    }
+
+    function isValidTravelFee(city, km, value) {
+      return (
+        city in ['Aparecida', 'Guaratinguetá', 'Lorena', 'Potim'] &&
+        km == 0 &&
+        value == 0
+      ) || (
+        city == 'Canas' &&
+        km == 22 &&
+        value == 44
+      ) || (
+        city == 'Cachoeira Paulista' &&
+        km == 27 &&
+        value == 54
+      );
+    }
+
     function isStringBetween(value, min, max) {
       return value is string && value.size() >= min && value.size() <= max;
     }
@@ -43,6 +63,9 @@ service cloud.firestore {
           'telefone',
           'whatsapp',
           'empresa',
+          'rua',
+          'numero',
+          'bairro',
           'cidade',
           'modeloMaquina',
           'servico',
@@ -50,6 +73,8 @@ service cloud.firestore {
           'horario',
           'observacoes',
           'fotoNome',
+          'deslocamentoKm',
+          'deslocamentoValor',
           'status',
           'createdAt',
           'createdAtIso'
@@ -62,8 +87,18 @@ service cloud.firestore {
         isStringBetween(request.resource.data.nome, 3, 100) &&
         isStringBetween(request.resource.data.telefone, 8, 20) &&
         isStringBetween(request.resource.data.whatsapp, 8, 20) &&
-        isStringBetween(request.resource.data.cidade, 2, 100) &&
+        isStringBetween(request.resource.data.rua, 3, 120) &&
+        isStringBetween(request.resource.data.numero, 1, 20) &&
+        isStringBetween(request.resource.data.bairro, 2, 80) &&
+        isValidCity(request.resource.data.cidade) &&
         isStringBetween(request.resource.data.servico, 3, 80) &&
+        request.resource.data.deslocamentoKm is number &&
+        request.resource.data.deslocamentoValor is number &&
+        isValidTravelFee(
+          request.resource.data.cidade,
+          request.resource.data.deslocamentoKm,
+          request.resource.data.deslocamentoValor
+        ) &&
         isOptionalString(request.resource.data.empresa, 120) &&
         isOptionalString(request.resource.data.modeloMaquina, 120) &&
         isOptionalString(request.resource.data.observacoes, 800) &&

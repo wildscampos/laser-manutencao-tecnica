@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Loader2, MessageCircle } from "lucide-react";
 import { createClientAppointment, getBookedTimesByDate, getFreeTimes, SlotAlreadyBookedError } from "@/lib/client-appointments";
 import { getAvailableTimesForDate, SERVICES, toBrazilianDate } from "@/lib/schedule";
+import { getTravelFee, SERVICE_CITIES } from "@/lib/service-area";
 import { appointmentSchema, type AppointmentInput } from "@/lib/validation";
 
 const monthNames = [
@@ -90,7 +91,9 @@ export function BookingForm() {
       telefone: "",
       whatsapp: "",
       empresa: "",
-      cidade: "",
+      rua: "",
+      numero: "",
+      bairro: "",
       modeloMaquina: "",
       servico: "Manutenção Preventiva",
       data: "",
@@ -103,9 +106,11 @@ export function BookingForm() {
   });
 
   const selectedDate = useWatch({ control, name: "data" });
+  const selectedCity = useWatch({ control, name: "cidade" });
   const selectedAllowedTimes = useMemo(() => (selectedDate ? getAvailableTimesForDate(selectedDate) : []), [selectedDate]);
   const selectedBookedTimes = bookedTimesByDate[selectedDate] || [];
   const calendarDays = useMemo(() => getCalendarDays(calendarMonth), [calendarMonth]);
+  const travelFee = useMemo(() => getTravelFee(selectedCity || ""), [selectedCity]);
   const availabilityStatus =
     availabilityError && selectedDate === availabilityDate
       ? "error"
@@ -159,8 +164,8 @@ export function BookingForm() {
   }, [selectedDate, setValue]);
 
   function selectDate(dateValue: string) {
-    setValue("data", dateValue, { shouldDirty: true, shouldValidate: true });
-    setValue("horario", "", { shouldDirty: true, shouldValidate: true });
+    setValue("data", dateValue, { shouldDirty: true });
+    setValue("horario", "", { shouldDirty: true });
     setCalendarOpen(false);
   }
 
@@ -222,8 +227,24 @@ export function BookingForm() {
         <Field label="Empresa (opcional)" error={errors.empresa?.message}>
           <input className="field" autoComplete="organization" {...register("empresa")} />
         </Field>
+        <Field label="Rua" error={errors.rua?.message}>
+          <input className="field" autoComplete="address-line1" {...register("rua")} />
+        </Field>
+        <Field label="Número" error={errors.numero?.message}>
+          <input className="field" autoComplete="address-line2" {...register("numero")} />
+        </Field>
+        <Field label="Bairro" error={errors.bairro?.message}>
+          <input className="field" autoComplete="address-level3" {...register("bairro")} />
+        </Field>
         <Field label="Cidade" error={errors.cidade?.message}>
-          <input className="field" autoComplete="address-level2" {...register("cidade")} />
+          <select className="field" autoComplete="address-level2" {...register("cidade")}>
+            <option value="">Selecione a cidade</option>
+            {SERVICE_CITIES.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Modelo da máquina (opcional)" error={errors.modeloMaquina?.message}>
           <input className="field" {...register("modeloMaquina")} />
@@ -302,6 +323,19 @@ export function BookingForm() {
             )}
           </div>
         </Field>
+      </div>
+
+      <div className="mt-4 rounded-[4px] border border-slate-700 bg-slate-900/45 px-4 py-3 text-sm leading-6 text-slate-300">
+        <p>Outras cidades precisam ser negociadas pelo WhatsApp antes do agendamento.</p>
+        {selectedCity && !travelFee.hasTravelFee && (
+          <p className="mt-1 text-emerald-200">Nesta cidade, não há cobrança de deslocamento.</p>
+        )}
+        {travelFee.hasTravelFee && (
+          <p className="mt-1 text-cyan-100">
+            Deslocamento para {selectedCity}: {travelFee.distanceKm} km x R$ 2,00 ={" "}
+            {new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" }).format(travelFee.fee)}.
+          </p>
+        )}
       </div>
 
       <div className="mt-5">

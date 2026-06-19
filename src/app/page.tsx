@@ -286,9 +286,14 @@ export default function Home() {
           </div>
           <div className="note-panel">
             <Sparkles className="text-cyan-300" aria-hidden="true" />
-            <p>
-              Peças, componentes e materiais utilizados durante o reparo poderão ser cobrados separadamente mediante aprovação prévia do cliente.
-            </p>
+            <div>
+              <p>
+                Peças, componentes e materiais utilizados durante o reparo poderão ser cobrados separadamente mediante aprovação prévia do cliente.
+              </p>
+              <p className="mt-4">
+                Lorena, Guaratinguetá, Aparecida e Potim não têm cobrança de deslocamento. Para Canas e Cachoeira Paulista, o deslocamento é calculado a R$ 2,00 por km. Outras cidades devem ser negociadas pelo WhatsApp.
+              </p>
+            </div>
           </div>
         </div>
       </Section>

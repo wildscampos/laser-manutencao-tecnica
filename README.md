@@ -22,6 +22,7 @@ Site publicado: https://laser-manutencao-tecnica.web.app
 - `src/lib/client-appointments.ts`: consulta disponibilidade e cria reservas no Firestore.
 - `src/lib/firebase-client.ts`: configuração pública do Firebase Web SDK.
 - `src/lib/schedule.ts`: regras de dias e horários.
+- `src/lib/service-area.ts`: cidades atendidas e cálculo interno de deslocamento.
 - `src/config/whatsapp.ts`: número e mensagem do WhatsApp.
 - `firestore.rules`: regras que protegem os dados pessoais e impedem sobrescrita de horários.
 - `firebase.json`: deploy estático para Firebase Hosting.
@@ -46,6 +47,9 @@ Campos em `agendamentos`:
   "telefone": "string",
   "whatsapp": "string",
   "empresa": "string",
+  "rua": "string",
+  "numero": "string",
+  "bairro": "string",
   "cidade": "string",
   "modeloMaquina": "string",
   "servico": "string",
@@ -53,6 +57,8 @@ Campos em `agendamentos`:
   "horario": "HH:mm",
   "observacoes": "string",
   "fotoNome": "string",
+  "deslocamentoKm": "number",
+  "deslocamentoValor": "number",
   "status": "agendado",
   "createdAt": "timestamp",
   "createdAtIso": "string"
@@ -79,5 +85,6 @@ firebase deploy --only firestore:rules,hosting --project laser-manutencao-co2-20
 
 - Para trocar o WhatsApp, altere `NEXT_PUBLIC_WHATSAPP_NUMBER` ou `src/config/whatsapp.ts`.
 - Para alterar horários, edite `src/lib/schedule.ts` e revise `firestore.rules`.
+- Para alterar cidades, distância ou taxa de deslocamento, edite `src/lib/service-area.ts` e revise `firestore.rules`.
 - Para alterar serviços, edite `src/app/page.tsx` e `src/lib/schedule.ts`.
 - Para revisar reservas, consulte a coleção `agendamentos` no Firestore.
