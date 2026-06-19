@@ -307,14 +307,28 @@ export default function Home() {
         </div>
       </section>
 
-      <Section id="sobre" title="Sobre o técnico" intro="Atendimento transparente, eficiente e focado em devolver o máximo desempenho à sua máquina.">
+      <Section id="sobre" title="Sobre mim" intro="Atendimento direto com Wilds Campos, sem intermediários e com clareza sobre o que precisa ser feito.">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <p className="text-lg leading-8 text-slate-300">
-            Sou técnico especializado em manutenção de máquinas laser CO2, atuando com diagnóstico, alinhamento óptico, limpeza técnica, substituição de componentes e configuração de software. Meu objetivo é oferecer um atendimento transparente, eficiente e focado em devolver o máximo desempenho à sua máquina.
-          </p>
+          <div className="about-copy">
+            <p>
+              Meu nome é Wilds Campos e trabalho com manutenção de máquinas laser CO2, atendendo empresas e profissionais que dependem da máquina funcionando todos os dias para produzir e vender.
+            </p>
+            <p>
+              Sei que uma máquina parada significa atraso, prejuízo e dor de cabeça. Por isso, procuro oferecer um atendimento rápido, transparente e focado na solução real do problema.
+            </p>
+            <p>
+              Realizo diagnósticos, alinhamento óptico, limpeza técnica, troca de componentes, configurações de software e ajustes de desempenho para que sua máquina volte a operar com segurança e precisão.
+            </p>
+            <p>
+              Em cada atendimento, você fala diretamente comigo. Sem intermediários, sem enrolação e com total clareza sobre o que precisa ser feito.
+            </p>
+            <p>
+              Seu equipamento merece cuidado técnico. Seu negócio merece confiança.
+            </p>
+          </div>
           <div className="tech-panel">
             <Bot aria-hidden="true" />
-            <span>Diagnóstico técnico, óptica e software em um atendimento programado.</span>
+            <span>Atendimento técnico direto, transparente e focado em colocar sua máquina de volta em operação.</span>
           </div>
         </div>
       </Section>
