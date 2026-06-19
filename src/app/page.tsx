@@ -71,6 +71,29 @@ const benefits = [
   "Configuração profissional RD Works",
 ];
 
+const maintenancePoints = [
+  {
+    title: "Precisão de corte e gravação",
+    text: "Ajustes e alinhamento óptico ajudam a manter o feixe estável, reduzindo perda de qualidade no acabamento.",
+    icon: Crosshair,
+  },
+  {
+    title: "Menos paradas inesperadas",
+    text: "A verificação preventiva identifica desgaste em lentes, espelhos, tubo laser, fonte e conexões antes da falha.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Vida útil do equipamento",
+    text: "Limpeza técnica e calibração reduzem esforço dos componentes e preservam o desempenho da máquina.",
+    icon: Gauge,
+  },
+  {
+    title: "Atendimento com método",
+    text: "Diagnóstico, correção e testes operacionais deixam o serviço mais transparente e seguro para sua operação.",
+    icon: Wrench,
+  },
+];
+
 const faq = [
   ["Você troca tubo laser?", "Sim. A troca pode ser feita após avaliação do modelo, potência e compatibilidade da máquina."],
   ["Você troca fonte?", "Sim. Realizo diagnóstico da fonte de alimentação e substituição quando necessário."],
@@ -193,6 +216,38 @@ export default function Home() {
               </ul>
             </article>
           ))}
+        </div>
+      </Section>
+
+      <Section
+        id="importancia"
+        title="Importância da manutenção"
+        intro="Máquinas laser CO2 exigem limpeza, calibração e inspeção periódica para manter precisão, produtividade e segurança no uso diário."
+      >
+        <div className="importance-panel">
+          <div className="importance-copy">
+            <p>
+              A manutenção de máquinas de corte e gravação a laser evita que pequenos desgastes se transformem em paradas de produção. O serviço técnico envolve ajustes, limpeza, verificação de componentes e testes que preservam a qualidade dos cortes, a estabilidade do feixe e a confiabilidade da operação.
+            </p>
+            <p>
+              Com a manutenção preventiva em dia, empresas de comunicação visual, estamparias, gráficas, escolas técnicas e pequenas indústrias reduzem custos com reparos emergenciais e prolongam a vida útil do equipamento. Quando há falha, o diagnóstico correto acelera a correção e ajuda a recuperar o desempenho da máquina com mais previsibilidade.
+            </p>
+            <a className="button-secondary importance-cta" href="#agendamento">
+              Agendar manutenção preventiva
+              <ArrowRight aria-hidden="true" />
+            </a>
+          </div>
+          <div className="importance-list" aria-label="Pontos principais da manutenção">
+            {maintenancePoints.map((point) => (
+              <div className="importance-item" key={point.title}>
+                <point.icon aria-hidden="true" />
+                <div>
+                  <h3>{point.title}</h3>
+                  <p>{point.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </Section>
 
@@ -327,6 +382,7 @@ function Header() {
         </a>
         <div className="hidden items-center gap-6 text-sm text-slate-300 lg:flex">
           <a href="#servicos">Serviços</a>
+          <a href="#importancia">Manutenção</a>
           <a href="#precos">Preços</a>
           <a href="#agendamento">Agendamento</a>
           <a href="#faq">FAQ</a>
