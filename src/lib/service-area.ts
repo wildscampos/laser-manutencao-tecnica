@@ -12,8 +12,10 @@ export type ServiceCity = (typeof SERVICE_CITIES)[number];
 const TRAVEL_FEE_PER_KM = 2;
 
 const paidTravelDistances: Partial<Record<ServiceCity, number>> = {
+  Aparecida: 8,
   "Cachoeira Paulista": 27,
   Canas: 22,
+  Potim: 9,
 };
 
 function roundUpToTen(value: number) {

@@ -16,9 +16,13 @@ service cloud.firestore {
 
     function isValidTravelFee(city, km, value) {
       return (
-        city in ['Aparecida', 'Guaratinguetá', 'Lorena', 'Potim'] &&
+        city in ['Guaratinguetá', 'Lorena'] &&
         km == 0 &&
         value == 0
+      ) || (
+        city == 'Aparecida' &&
+        km == 8 &&
+        value == 20
       ) || (
         city == 'Canas' &&
         km == 22 &&
@@ -27,6 +31,10 @@ service cloud.firestore {
         city == 'Cachoeira Paulista' &&
         km == 27 &&
         value == 60
+      ) || (
+        city == 'Potim' &&
+        km == 9 &&
+        value == 20
       );
     }
 
