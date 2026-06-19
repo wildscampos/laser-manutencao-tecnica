@@ -1,21 +1,80 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, CalendarDays, CheckCircle2, Loader2, MessageCircle } from "lucide-react";
-import { createClientAppointment, getFreeTimes, SlotAlreadyBookedError } from "@/lib/client-appointments";
-import { SERVICES } from "@/lib/schedule";
+import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Loader2, MessageCircle } from "lucide-react";
+import { createClientAppointment, getBookedTimesByDate, getFreeTimes, SlotAlreadyBookedError } from "@/lib/client-appointments";
+import { getAvailableTimesForDate, SERVICES, toBrazilianDate } from "@/lib/schedule";
 import { appointmentSchema, type AppointmentInput } from "@/lib/validation";
 
-const today = new Date().toISOString().slice(0, 10);
+const monthNames = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+function toDateValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+const today = toDateValue(new Date());
+
+function getMonthRange(monthDate: Date) {
+  const first = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const last = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+  return { first: toDateValue(first), last: toDateValue(last) };
+}
+
+function getCalendarDays(monthDate: Date) {
+  const first = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const last = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+  const days: Array<{ date: Date; value: string; inMonth: boolean }> = [];
+
+  for (let index = first.getDay(); index > 0; index -= 1) {
+    const date = new Date(first);
+    date.setDate(first.getDate() - index);
+    days.push({ date, value: toDateValue(date), inMonth: false });
+  }
+
+  for (let day = 1; day <= last.getDate(); day += 1) {
+    const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
+    days.push({ date, value: toDateValue(date), inMonth: true });
+  }
+
+  while (days.length % 7 !== 0) {
+    const date = new Date(last);
+    date.setDate(last.getDate() + (days.length % 7) + 1);
+    days.push({ date, value: toDateValue(date), inMonth: false });
+  }
+
+  return days;
+}
 
 export function BookingForm() {
   const [freeTimes, setFreeTimes] = useState<string[]>([]);
+  const [bookedTimesByDate, setBookedTimesByDate] = useState<Record<string, string[]>>({});
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [availabilityDate, setAvailabilityDate] = useState("");
   const [availabilityError, setAvailabilityError] = useState(false);
   const [confirmation, setConfirmation] = useState<string>("");
+  const [selectedFileName, setSelectedFileName] = useState("");
   const [formStartedAt] = useState(() => Date.now());
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -44,12 +103,34 @@ export function BookingForm() {
   });
 
   const selectedDate = useWatch({ control, name: "data" });
+  const selectedAllowedTimes = useMemo(() => (selectedDate ? getAvailableTimesForDate(selectedDate) : []), [selectedDate]);
+  const selectedBookedTimes = bookedTimesByDate[selectedDate] || [];
+  const calendarDays = useMemo(() => getCalendarDays(calendarMonth), [calendarMonth]);
   const availabilityStatus =
     availabilityError && selectedDate === availabilityDate
       ? "error"
       : selectedDate && availabilityDate !== selectedDate
         ? "loading"
         : "idle";
+
+  useEffect(() => {
+    let active = true;
+    const { first, last } = getMonthRange(calendarMonth);
+
+    getBookedTimesByDate(first, last)
+      .then((bookedTimes) => {
+        if (!active) return;
+        setBookedTimesByDate(bookedTimes);
+      })
+      .catch(() => {
+        if (!active) return;
+        setBookedTimesByDate({});
+      })
+
+    return () => {
+      active = false;
+    };
+  }, [calendarMonth]);
 
   useEffect(() => {
     if (!selectedDate) {
@@ -76,6 +157,16 @@ export function BookingForm() {
       active = false;
     };
   }, [selectedDate, setValue]);
+
+  function selectDate(dateValue: string) {
+    setValue("data", dateValue, { shouldDirty: true, shouldValidate: true });
+    setValue("horario", "", { shouldDirty: true, shouldValidate: true });
+    setCalendarOpen(false);
+  }
+
+  function changeMonth(offset: number) {
+    setCalendarMonth((current) => new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  }
 
   async function onSubmit(values: AppointmentInput) {
     setConfirmation("");
@@ -147,12 +238,69 @@ export function BookingForm() {
           </select>
         </Field>
         <Field label="Data" error={errors.data?.message}>
-          <input
-            className="field"
-            type="date"
-            min={today}
-            {...register("data", { onChange: () => setValue("horario", "") })}
-          />
+          <div className="date-picker">
+            <input type="hidden" {...register("data")} />
+            <button className="field date-trigger" type="button" onClick={() => setCalendarOpen((open) => !open)}>
+              <span className={selectedDate ? "text-white" : "text-slate-300"}>
+                {selectedDate ? toBrazilianDate(selectedDate) : "dd/mm/aaaa"}
+              </span>
+              <CalendarDays aria-hidden="true" />
+            </button>
+            {calendarOpen && (
+              <div className="calendar-popover" role="dialog" aria-label="Selecionar data">
+                <div className="calendar-header">
+                  <button type="button" onClick={() => changeMonth(-1)} aria-label="Mês anterior">
+                    <ChevronLeft aria-hidden="true" />
+                  </button>
+                  <strong>
+                    {monthNames[calendarMonth.getMonth()]} {calendarMonth.getFullYear()}
+                  </strong>
+                  <button type="button" onClick={() => changeMonth(1)} aria-label="Próximo mês">
+                    <ChevronRight aria-hidden="true" />
+                  </button>
+                </div>
+                <div className="calendar-weekdays" aria-hidden="true">
+                  {weekDays.map((day) => (
+                    <span key={day}>{day}</span>
+                  ))}
+                </div>
+                <div className="calendar-grid">
+                  {calendarDays.map((day) => {
+                    const allowedTimes = getAvailableTimesForDate(day.value);
+                    const bookedTimes = bookedTimesByDate[day.value] || [];
+                    const isPast = day.value < today;
+                    const isFullyBooked = allowedTimes.length > 0 && bookedTimes.length >= allowedTimes.length;
+                    const unavailable = !day.inMonth || isPast || allowedTimes.length === 0 || isFullyBooked;
+                    const className = [
+                      "calendar-day",
+                      day.inMonth ? "" : "calendar-day-muted",
+                      unavailable ? "calendar-day-unavailable" : "",
+                      selectedDate === day.value ? "calendar-day-selected" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+
+                    return (
+                      <button
+                        className={className}
+                        disabled={unavailable}
+                        key={day.value}
+                        onClick={() => selectDate(day.value)}
+                        type="button"
+                        title={unavailable ? "Data indisponível" : "Data disponível"}
+                      >
+                        {day.date.getDate()}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="calendar-legend">
+                  <span><i className="available" /> Disponível</span>
+                  <span><i className="unavailable" /> Indisponível</span>
+                </div>
+              </div>
+            )}
+          </div>
         </Field>
       </div>
 
@@ -175,12 +323,19 @@ export function BookingForm() {
             <p className="col-span-full text-sm text-slate-300">Nenhum horário disponível para esta data.</p>
           )}
           {!selectedDate && <p className="col-span-full text-sm text-slate-300">Escolha uma data primeiro.</p>}
-          {selectedDate && freeTimes.map((time) => (
-            <label key={time} className="slot-option">
-              <input className="peer sr-only" type="radio" value={time} {...register("horario")} />
-              <span>{time}</span>
-            </label>
-          ))}
+          {selectedDate && availabilityStatus === "idle" && selectedAllowedTimes.map((time) => {
+            const booked = selectedBookedTimes.includes(time) || !freeTimes.includes(time);
+
+            return (
+              <label key={time} className={booked ? "slot-option slot-option-unavailable" : "slot-option"}>
+                <input className="peer sr-only" disabled={booked} type="radio" value={time} {...register("horario")} />
+                <span>{time}</span>
+              </label>
+            );
+          })}
+          {selectedDate && availabilityStatus === "idle" && selectedAllowedTimes.length > freeTimes.length && (
+            <p className="col-span-full text-xs text-rose-200">Horários em vermelho já estão reservados.</p>
+          )}
         </div>
         {errors.horario?.message && <p className="mt-2 text-sm text-rose-200">{errors.horario.message}</p>}
       </div>
@@ -190,12 +345,23 @@ export function BookingForm() {
           <textarea className="field min-h-28 resize-y" {...register("observacoes")} />
         </Field>
         <Field label="Upload de foto (opcional)" error={errors.fotoNome?.message}>
-          <input
-            className="field file:mr-4 file:rounded-[4px] file:border-0 file:bg-cyan-400 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-slate-950"
-            type="file"
-            accept="image/*"
-            onChange={(event) => setValue("fotoNome", event.target.files?.[0]?.name || "")}
-          />
+          <div className="file-picker field">
+            <button type="button" onClick={() => fileInputRef.current?.click()}>
+              Escolher arquivo
+            </button>
+            <span>{selectedFileName || "Nenhum arquivo selecionado"}</span>
+            <input
+              ref={fileInputRef}
+              className="sr-only"
+              type="file"
+              accept="image/*"
+              onChange={(event) => {
+                const fileName = event.target.files?.[0]?.name || "";
+                setSelectedFileName(fileName);
+                setValue("fotoNome", fileName, { shouldDirty: true, shouldValidate: true });
+              }}
+            />
+          </div>
         </Field>
       </div>
 

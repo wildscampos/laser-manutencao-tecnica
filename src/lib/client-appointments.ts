@@ -28,6 +28,26 @@ export async function getFreeTimes(data: string) {
   return allowedTimes.filter((time) => !bookedTimes.has(time));
 }
 
+export async function getBookedTimesByDate(startDate: string, endDate: string) {
+  const snapshot = await getDocs(
+    query(
+      collection(db, "slots"),
+      where("data", ">=", startDate),
+      where("data", "<=", endDate),
+    ),
+  );
+
+  return snapshot.docs.reduce<Record<string, string[]>>((bookedByDate, slot) => {
+    const slotData = slot.data();
+    if (slotData.status !== "agendado") return bookedByDate;
+
+    const data = slotData.data as string;
+    const horario = slotData.horario as string;
+    bookedByDate[data] = [...(bookedByDate[data] || []), horario];
+    return bookedByDate;
+  }, {});
+}
+
 export async function createClientAppointment(input: AppointmentInput) {
   const id = slotId(input.data, input.horario);
   const slotRef = doc(db, "slots", id);

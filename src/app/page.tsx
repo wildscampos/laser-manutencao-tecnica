@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   Sparkles,
   Wrench,
-  Zap,
 } from "lucide-react";
 import { BookingForm } from "@/components/booking-form";
 import { WHATSAPP_NUMBER, buildWhatsAppMessage, buildWhatsAppUrl } from "@/config/whatsapp";
@@ -105,6 +104,8 @@ const faq = [
   ["Posso enviar fotos antes do atendimento?", "Sim. O formulário permite informar foto e o WhatsApp fica aberto para envio de imagens."],
   ["Como funciona o agendamento?", "Você escolhe uma data e horário livre; o sistema salva a reserva e abre o WhatsApp para confirmar."],
 ];
+
+const currentYear = new Date().getFullYear();
 
 export default function Home() {
   const structuredData = {
@@ -299,14 +300,6 @@ export default function Home() {
             <p className="mt-5 text-lg leading-8 text-slate-300">
               Horários disponíveis: segunda a sexta às 18:00, 19:00 e 20:00; sábado das 08:00 às 12:00. Domingo indisponível.
             </p>
-            <div className="mt-8 grid gap-3">
-              {["Busca horários livres no banco", "Bloqueia horários reservados", "Impede reserva duplicada", "Abre o WhatsApp após salvar"].map((item) => (
-                <div className="flex items-center gap-3 text-sm text-slate-200" key={item}>
-                  <Zap className="text-cyan-300" aria-hidden="true" />
-                  {item}
-                </div>
-              ))}
-            </div>
           </div>
           <BookingForm />
         </div>
@@ -361,6 +354,10 @@ export default function Home() {
           </a>
         </div>
       </section>
+
+      <footer className="border-t border-slate-800 px-5 py-6 text-center text-sm text-slate-400 sm:px-8">
+        <p>© {currentYear} Wilds Campos. Todos os direitos reservados.</p>
+      </footer>
     </main>
   );
 }
