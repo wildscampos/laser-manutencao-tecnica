@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Loader2, MessageCircle } from "lucide-react";
 import { createClientAppointment, getBookedTimesByDate, getFreeTimes, SlotAlreadyBookedError } from "@/lib/client-appointments";
 import { getAvailableTimesForDate, SERVICES, toBrazilianDate } from "@/lib/schedule";
-import { getTravelFee, SERVICE_CITIES } from "@/lib/service-area";
+import { SERVICE_CITIES } from "@/lib/service-area";
 import { appointmentSchema, type AppointmentInput } from "@/lib/validation";
 
 const monthNames = [
@@ -106,11 +106,9 @@ export function BookingForm() {
   });
 
   const selectedDate = useWatch({ control, name: "data" });
-  const selectedCity = useWatch({ control, name: "cidade" });
   const selectedAllowedTimes = useMemo(() => (selectedDate ? getAvailableTimesForDate(selectedDate) : []), [selectedDate]);
   const selectedBookedTimes = bookedTimesByDate[selectedDate] || [];
   const calendarDays = useMemo(() => getCalendarDays(calendarMonth), [calendarMonth]);
-  const travelFee = useMemo(() => getTravelFee(selectedCity || ""), [selectedCity]);
   const availabilityStatus =
     availabilityError && selectedDate === availabilityDate
       ? "error"
@@ -327,15 +325,6 @@ export function BookingForm() {
 
       <div className="mt-4 rounded-[4px] border border-slate-700 bg-slate-900/45 px-4 py-3 text-sm leading-6 text-slate-300">
         <p>Outras cidades precisam ser negociadas pelo WhatsApp antes do agendamento.</p>
-        {selectedCity && !travelFee.hasTravelFee && (
-          <p className="mt-1 text-emerald-200">Nesta cidade, não há cobrança de deslocamento.</p>
-        )}
-        {travelFee.hasTravelFee && (
-          <p className="mt-1 text-cyan-100">
-            Deslocamento para {selectedCity}: {travelFee.distanceKm} km x R$ 2,00 ={" "}
-            {new Intl.NumberFormat("pt-BR", { currency: "BRL", style: "currency" }).format(travelFee.fee)}.
-          </p>
-        )}
       </div>
 
       <div className="mt-5">
