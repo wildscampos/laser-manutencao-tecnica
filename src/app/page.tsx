@@ -307,7 +307,7 @@ export default function Home() {
         </div>
       </section>
 
-      <Section id="sobre" title="Sobre mim" intro="Atendimento direto com Wilds Campos, sem intermediários e com clareza sobre o que precisa ser feito.">
+      <Section id="sobre" title="Sobre mim" intro="Atendimento direto, sem intermediários e com clareza sobre o que precisa ser feito." introStrong>
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="about-copy">
             <p>
@@ -323,7 +323,7 @@ export default function Home() {
               Em cada atendimento, você fala diretamente comigo. Sem intermediários, sem enrolação e com total clareza sobre o que precisa ser feito.
             </p>
             <p>
-              Seu equipamento merece cuidado técnico. Seu negócio merece confiança.
+              <strong>Seu equipamento merece cuidado técnico. Seu negócio merece confiança.</strong>
             </p>
           </div>
           <div className="tech-panel">
@@ -378,12 +378,12 @@ export default function Home() {
   );
 }
 
-function Section({ id, title, intro, children }: { id: string; title: string; intro: string; children: React.ReactNode }) {
+function Section({ id, title, intro, children, introStrong }: { id: string; title: string; intro: string; children: React.ReactNode; introStrong?: boolean }) {
   return (
     <section id={id} className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
       <div className="mb-10 max-w-3xl">
         <h2 className="text-4xl font-semibold tracking-normal text-white">{title}</h2>
-        <p className="mt-4 text-lg leading-8 text-slate-300">{intro}</p>
+        <p className={introStrong ? "mt-4 text-lg font-bold leading-8 text-slate-300" : "mt-4 text-lg leading-8 text-slate-300"}>{intro}</p>
       </div>
       {children}
     </section>
