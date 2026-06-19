@@ -284,6 +284,7 @@ export default function Home() {
               <PriceLine label="Primeira hora" value="R$ 100,00" />
               <PriceLine label="Horas adicionais" value="R$ 50,00 por hora" />
             </div>
+            <p className="mt-5 text-sm font-semibold text-cyan-100">+ deslocamento, quando aplicável</p>
           </div>
           <div className="note-panel">
             <Sparkles className="text-cyan-300" aria-hidden="true" />
