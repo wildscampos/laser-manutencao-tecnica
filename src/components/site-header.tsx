@@ -24,11 +24,11 @@ export function SiteHeader() {
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#111111]/85 backdrop-blur">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8" aria-label="Navegação principal">
-        <a className="flex min-w-0 items-center gap-3 font-mono text-sm font-bold uppercase tracking-[0.16em] text-white" href="#" onClick={closeMenu}>
+        <a className="flex min-h-11 min-w-0 items-center gap-3 font-mono text-sm font-bold uppercase tracking-[0.16em] text-white" href="#" onClick={closeMenu}>
           <Image
             className="header-logo"
             src="/logo-laserfix.jpg"
-            alt="LaserFix"
+            alt=""
             width={1090}
             height={575}
             priority
@@ -36,7 +36,7 @@ export function SiteHeader() {
           <span className="truncate">LaserFix</span>
         </a>
 
-        <div className="hidden items-center gap-6 text-sm text-slate-300 lg:flex">
+        <div className="desktop-nav hidden items-center gap-6 text-sm text-slate-300 lg:flex">
           {navigationItems
             .filter((item) => item.href !== "#beneficios")
             .map((item) => (
@@ -46,7 +46,7 @@ export function SiteHeader() {
             ))}
         </div>
 
-        <a className="hidden rounded-[4px] border border-[#00A8FF]/60 px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#00A8FF] hover:text-slate-950 sm:inline-flex" href="#agendamento">
+        <a className="hidden min-h-11 items-center rounded-[4px] border border-[#00A8FF]/60 px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#00A8FF] hover:text-slate-950 sm:inline-flex" href="#agendamento">
           Agendar
         </a>
 

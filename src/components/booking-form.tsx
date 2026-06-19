@@ -209,7 +209,7 @@ export function BookingForm() {
         <CalendarDays className="mt-1 shrink-0 text-[#00A8FF]" aria-hidden="true" />
       </div>
 
-      <input type="text" tabIndex={-1} autoComplete="off" className="hidden" {...register("website")} />
+      <input type="text" tabIndex={-1} autoComplete="off" hidden aria-hidden="true" {...register("website")} />
       <input type="hidden" {...register("formStartedAt", { valueAsNumber: true })} />
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -374,7 +374,9 @@ export function BookingForm() {
             <span>{selectedFileName || "Nenhum arquivo selecionado"}</span>
             <input
               ref={fileInputRef}
-              className="sr-only"
+              hidden
+              aria-hidden="true"
+              tabIndex={-1}
               type="file"
               accept="image/*"
               onChange={(event) => {

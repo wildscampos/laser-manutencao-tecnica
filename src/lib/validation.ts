@@ -7,8 +7,8 @@ const phoneRegex = /^[0-9+()\-\s]{8,20}$/;
 export const appointmentSchema = z
   .object({
     nome: z.string().trim().min(3, "Informe seu nome completo.").max(100),
-    telefone: z.string().trim().regex(phoneRegex, "Informe um telefone valido."),
-    whatsapp: z.string().trim().regex(phoneRegex, "Informe um WhatsApp valido."),
+    telefone: z.string().trim().regex(phoneRegex, "Informe um telefone válido."),
+    whatsapp: z.string().trim().regex(phoneRegex, "Informe um WhatsApp válido."),
     empresa: z.string().trim().max(120).optional().or(z.literal("")),
     rua: z.string().trim().min(3, "Informe a rua.").max(120),
     numero: z.string().trim().min(1, "Informe o número.").max(20),
@@ -16,7 +16,7 @@ export const appointmentSchema = z
     cidade: z.enum(SERVICE_CITIES, { error: "Selecione a cidade." }),
     modeloMaquina: z.string().trim().max(120).optional().or(z.literal("")),
     servico: z.enum(SERVICES, { error: "Selecione o serviço desejado." }),
-    data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Escolha uma data valida."),
+    data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Escolha uma data válida."),
     horario: z.string().regex(/^\d{2}:\d{2}$/, "Escolha um horário válido."),
     observacoes: z.string().trim().max(800).optional().or(z.literal("")),
     fotoNome: z.string().trim().max(180).optional().or(z.literal("")),
