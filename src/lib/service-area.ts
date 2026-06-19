@@ -16,9 +16,14 @@ const paidTravelDistances: Partial<Record<ServiceCity, number>> = {
   Canas: 22,
 };
 
+function roundUpToTen(value: number) {
+  return Math.ceil(value / 10) * 10;
+}
+
 export function getTravelFee(cidade: string) {
   const distanceKm = paidTravelDistances[cidade as ServiceCity] ?? 0;
-  const fee = distanceKm * TRAVEL_FEE_PER_KM;
+  const rawFee = distanceKm * TRAVEL_FEE_PER_KM;
+  const fee = rawFee > 0 ? roundUpToTen(rawFee) : 0;
 
   return {
     distanceKm,
