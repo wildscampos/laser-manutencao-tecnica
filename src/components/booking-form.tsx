@@ -243,6 +243,9 @@ export function BookingForm() {
               </option>
             ))}
           </select>
+          <span className="mt-2 block rounded-[4px] border border-slate-700 bg-slate-900/45 px-3 py-2 text-sm leading-6 text-slate-300">
+            Outras cidades precisam ser negociadas pelo WhatsApp antes do agendamento.
+          </span>
         </Field>
         <Field label="Modelo da máquina (opcional)" error={errors.modeloMaquina?.message}>
           <input className="field" {...register("modeloMaquina")} />
@@ -321,10 +324,6 @@ export function BookingForm() {
             )}
           </div>
         </Field>
-      </div>
-
-      <div className="mt-4 rounded-[4px] border border-slate-700 bg-slate-900/45 px-4 py-3 text-sm leading-6 text-slate-300">
-        <p>Outras cidades precisam ser negociadas pelo WhatsApp antes do agendamento.</p>
       </div>
 
       <div className="mt-5">

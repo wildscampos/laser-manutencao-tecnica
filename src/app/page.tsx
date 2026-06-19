@@ -265,7 +265,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section id="beneficios" title="Benefícios" intro="O cliente não quer apenas alinhamento de espelhos. Ele quer voltar a produzir com qualidade.">
+      <Section id="beneficios" title="Benefícios">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {benefits.map((benefit) => (
             <div className="benefit-row" key={benefit}>
@@ -276,7 +276,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section id="como-funciona" title="Como funciona" intro="Um fluxo simples, com reserva salva antes do contato via WhatsApp.">
+      <Section id="como-funciona" title="Como funciona">
         <div className="grid gap-4 md:grid-cols-5">
           {["Escolha uma data disponível.", "Selecione um horário livre.", "Preencha o formulário.", "Envie o agendamento pelo WhatsApp.", "Receba a confirmação."].map((step, index) => (
             <div className="step" key={step}>
@@ -287,7 +287,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section id="precos" title="Preços" intro="Tabela objetiva para atendimento técnico.">
+      <Section id="precos" title="Preços">
         <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="price-panel">
             <CircleDollarSign aria-hidden="true" />
@@ -390,12 +390,12 @@ export default function Home() {
   );
 }
 
-function Section({ id, title, intro, children, introStrong }: { id: string; title: string; intro: string; children: React.ReactNode; introStrong?: boolean }) {
+function Section({ id, title, intro, children, introStrong }: { id: string; title: string; intro?: string; children: React.ReactNode; introStrong?: boolean }) {
   return (
     <section id={id} className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
       <div className="mb-10 max-w-3xl">
         <h2 className="text-4xl font-semibold tracking-normal text-white">{title}</h2>
-        <p className={introStrong ? "mt-4 text-lg font-bold leading-8 text-slate-300" : "mt-4 text-lg leading-8 text-slate-300"}>{intro}</p>
+        {intro && <p className={introStrong ? "mt-4 text-lg font-bold leading-8 text-slate-300" : "mt-4 text-lg leading-8 text-slate-300"}>{intro}</p>}
       </div>
       {children}
     </section>
