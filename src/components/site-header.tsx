@@ -29,8 +29,8 @@ export function SiteHeader() {
             className="header-logo"
             src="/logo-laserfix.jpg"
             alt="LaserFix"
-            width={52}
-            height={52}
+            width={1090}
+            height={575}
             priority
           />
           <span className="truncate">LaserFix</span>

@@ -115,7 +115,6 @@ svg {
 .hero-logo {
   width: min(26rem, 82vw);
   height: auto;
-  aspect-ratio: 16 / 9;
   border: 0;
   border-radius: 0;
   background: transparent;
