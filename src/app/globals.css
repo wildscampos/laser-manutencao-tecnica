@@ -1504,8 +1504,13 @@ html[data-theme] .site-shell .final-cta-button svg {
 }
 
 .crm-login-card img {
-  width: 14rem;
+  justify-self: center;
+  width: min(100%, 18rem);
   height: auto;
+}
+
+.crm-login-title {
+  text-align: center;
 }
 
 .crm-login-form {

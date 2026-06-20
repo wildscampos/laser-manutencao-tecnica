@@ -347,10 +347,8 @@ export function CrmApp() {
       <main className="crm-shell crm-login-shell">
         <section className="crm-login-card">
           <Image src="/logo-laserfix-light.jpg" alt="LaserFix" width={360} height={203} priority />
-          <div>
-            <p className="crm-kicker">Área restrita</p>
+          <div className="crm-login-title">
             <h1>CRM LaserFix</h1>
-            <p>Acesse com seu nome e senha para visualizar agendamentos, iniciar atendimentos e acompanhar métricas.</p>
           </div>
           {error && <p className="crm-error">{error}</p>}
           <form className="crm-login-form" onSubmit={login}>
