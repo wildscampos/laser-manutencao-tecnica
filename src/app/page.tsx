@@ -99,6 +99,45 @@ const maintenancePoints = [
   },
 ];
 
+const testimonials = [
+  {
+    name: "Luciano",
+    city: "Aparecida",
+    text: "O atendimento foi completo nas quatro máquinas: preventiva, limpeza, alinhamento e troca de espelhos e lente. Também fez a montagem de uma máquina de dois tubos com bastante cuidado técnico.",
+    service: "Preventiva, alinhamento, troca óptica e montagem",
+  },
+  {
+    name: "Tanaka",
+    city: "Potim",
+    text: "A manutenção deixou a máquina pronta para trabalhar. Além da limpeza preventiva, ajustou motor de passo e preparou artes para corte e gravação.",
+    service: "Preventiva, motor de passo e artes",
+  },
+  {
+    name: "Luiz",
+    city: "Aparecida",
+    text: "Fez a manutenção preventiva, troca de espelhos, limpeza e configuração. O serviço foi claro e focado em colocar a máquina em funcionamento com precisão.",
+    service: "Preventiva, espelhos e configuração",
+  },
+  {
+    name: "Robson",
+    city: "Guaratinguetá",
+    text: "Precisava de manutenção preventiva e troca de componentes. O atendimento foi direto, com orientação sobre o que precisava ser substituído.",
+    service: "Preventiva e componentes",
+  },
+  {
+    name: "João",
+    city: "Aparecida",
+    text: "A manutenção preventiva foi feita de forma organizada, com verificação dos pontos principais para manter a máquina operando melhor.",
+    service: "Manutenção preventiva",
+  },
+  {
+    name: "Sandra",
+    city: "Guaratinguetá",
+    text: "O atendimento envolveu alinhamento, limpeza, troca de lentes, espelhos, tubos, fontes, drivers, painel, controladora e sensores. Também configurou motores de passo e criou artes para produção.",
+    service: "Revisão completa, eletrônica, óptica e artes",
+  },
+];
+
 const faq = [
   ["Você troca tubo laser?", "Sim. A troca pode ser feita após avaliação do modelo, potência e compatibilidade da máquina."],
   ["Você troca fonte?", "Sim. Realizo diagnóstico da fonte de alimentação e substituição quando necessário."],
@@ -268,6 +307,24 @@ export default function Home() {
               <BadgeCheck aria-hidden="true" />
               <span>{benefit}</span>
             </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section id="depoimentos" title="Depoimentos" intro="Serviços recentes realizados em máquinas laser CO₂ na região.">
+        <div className="testimonial-grid">
+          {testimonials.map((testimonial) => (
+            <article className="testimonial-card" key={`${testimonial.name}-${testimonial.city}`}>
+              <div className="testimonial-topline">
+                <span>{testimonial.city}</span>
+                <BadgeCheck aria-hidden="true" />
+              </div>
+              <p className="testimonial-text">“{testimonial.text}”</p>
+              <div className="testimonial-footer">
+                <strong>{testimonial.name}</strong>
+                <span>{testimonial.service}</span>
+              </div>
+            </article>
           ))}
         </div>
       </Section>

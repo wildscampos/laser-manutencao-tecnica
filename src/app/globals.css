@@ -229,6 +229,124 @@ svg {
   font-weight: 650;
 }
 
+.testimonial-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.testimonial-card {
+  position: relative;
+  display: flex;
+  min-height: 18rem;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgba(0, 168, 255, 0.1), transparent 38%),
+    rgba(15, 23, 42, 0.74);
+  padding: 1.35rem;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.testimonial-card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(115deg, transparent 12%, rgba(0, 168, 255, 0.16) 46%, transparent 58%);
+  opacity: 0;
+  transform: translateX(-24%);
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease;
+}
+
+.testimonial-card::after {
+  position: absolute;
+  inset-inline: 1.35rem;
+  top: 0;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(0, 168, 255, 0.9), transparent);
+  opacity: 0.6;
+}
+
+.testimonial-card:hover {
+  border-color: rgba(0, 168, 255, 0.58);
+  background-color: rgba(15, 23, 42, 0.88);
+  transform: translateY(-2px);
+}
+
+.testimonial-card:hover::before {
+  opacity: 1;
+  transform: translateX(18%);
+}
+
+.testimonial-topline,
+.testimonial-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.testimonial-topline {
+  color: #93c5fd;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.testimonial-topline svg {
+  color: #00A8FF;
+}
+
+.testimonial-text {
+  position: relative;
+  z-index: 1;
+  margin-block: 1.35rem;
+  color: #f8fafc;
+  font-size: 1.02rem;
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.testimonial-footer {
+  align-items: flex-start;
+  flex-direction: column;
+  border-top: 1px solid rgba(51, 65, 85, 0.8);
+  padding-top: 1rem;
+}
+
+.testimonial-footer strong {
+  color: #ffffff;
+  font-size: 1.02rem;
+}
+
+.testimonial-footer span {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-card,
+  .testimonial-card::before {
+    transition: none;
+  }
+
+  .testimonial-card:hover {
+    transform: none;
+  }
+}
+
 .importance-panel {
   display: grid;
   gap: 2rem;

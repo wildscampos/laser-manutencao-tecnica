@@ -8,6 +8,7 @@ const navigationItems = [
   { href: "#servicos", label: "Serviços" },
   { href: "#importancia", label: "Manutenção" },
   { href: "#beneficios", label: "Benefícios" },
+  { href: "#depoimentos", label: "Depoimentos" },
   { href: "#precos", label: "Preços" },
   { href: "#agendamento", label: "Agendamento" },
   { href: "#faq", label: "FAQ" },
