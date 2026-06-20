@@ -52,14 +52,24 @@ export function SiteHeader() {
     <header ref={headerRef} className="site-header fixed inset-x-0 top-0 z-40 border-b border-white/10 bg-[#111111]/85 backdrop-blur">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8" aria-label="Navegação principal">
         <a className="site-brand flex min-h-11 min-w-0 items-center gap-3 font-mono text-sm font-bold uppercase tracking-[0.16em] text-white" href="#" onClick={closeMenu}>
-          <Image
-            className="header-logo"
-            src="/logo-laserfix.jpg"
-            alt=""
-            width={1280}
-            height={720}
-            priority
-          />
+          <span className="logo-swap header-logo-wrap" aria-hidden="true">
+            <Image
+              className="header-logo logo-dark"
+              src="/logo-laserfix.jpg"
+              alt=""
+              width={1280}
+              height={720}
+              priority
+            />
+            <Image
+              className="header-logo logo-light"
+              src="/logo-laserfix-light.jpg"
+              alt=""
+              width={1280}
+              height={720}
+              priority
+            />
+          </span>
           <span className="truncate">LaserFix</span>
         </a>
 

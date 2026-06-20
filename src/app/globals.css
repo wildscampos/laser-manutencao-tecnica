@@ -96,6 +96,29 @@ svg {
   object-position: center;
 }
 
+.logo-swap {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.header-logo-wrap {
+  width: 4.25rem;
+  height: 2.25rem;
+}
+
+.logo-light {
+  display: none;
+}
+
+html[data-theme="light"] .logo-dark {
+  display: none;
+}
+
+html[data-theme="light"] .logo-light {
+  display: block;
+}
+
 .mobile-menu-button {
   display: inline-flex;
   min-height: 2.75rem;
@@ -174,6 +197,10 @@ svg {
   background: transparent;
   object-fit: contain;
   object-position: center;
+}
+
+.hero-logo-wrap {
+  width: min(26rem, 82vw);
 }
 
 .laser-background {
@@ -1002,6 +1029,10 @@ svg {
     height: auto;
   }
 
+  .hero-logo-wrap {
+    width: min(20rem, 86vw);
+  }
+
   .hero-title {
     font-size: 2.85rem;
     line-height: 1.05;
@@ -1158,8 +1189,8 @@ html[data-theme="dark"] .hero-section {
 }
 
 html[data-theme="light"] .laser-background {
-  opacity: 0.52;
-  mix-blend-mode: multiply;
+  opacity: 0.88;
+  mix-blend-mode: normal;
 }
 
 html[data-theme="light"] .site-shell .text-white,
@@ -1388,6 +1419,13 @@ html[data-theme="light"] .site-shell .text-emerald-100 {
   color: #ffffff !important;
 }
 
+html[data-theme="light"] .site-shell .final-cta-button,
+html[data-theme="light"] .site-shell .final-cta-button svg,
+html[data-theme="dark"] .site-shell .final-cta-button,
+html[data-theme="dark"] .site-shell .final-cta-button svg {
+  color: #ffffff !important;
+}
+
 .site-footer {
   border-color: var(--border);
   color: var(--muted);
@@ -1449,4 +1487,15 @@ html[data-theme="dark"] .slot-option input:disabled + span {
     min-width: 2.75rem;
     padding-inline: 0.65rem;
   }
+}
+
+html[data-theme="light"] .laser-background,
+html[data-theme="dark"] .laser-background {
+  opacity: 0.88 !important;
+  mix-blend-mode: normal !important;
+}
+
+html[data-theme] .site-shell .final-cta-button,
+html[data-theme] .site-shell .final-cta-button svg {
+  color: #ffffff !important;
 }
