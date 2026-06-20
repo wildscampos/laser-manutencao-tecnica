@@ -159,7 +159,7 @@ svg {
     linear-gradient(112deg, transparent 0 35%, rgba(0, 168, 255, 0.15) 37%, transparent 40% 100%),
     linear-gradient(24deg, transparent 0 61%, rgba(0, 168, 255, 0.12) 63%, transparent 66% 100%);
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 88%);
-  animation: laser-field-shift 16s ease-in-out infinite alternate;
+  animation: laser-field-shift 12s ease-in-out infinite alternate;
 }
 
 .laser-background::after {
@@ -171,7 +171,7 @@ svg {
   opacity: 0.48;
   transform: rotate(-9deg);
   filter: drop-shadow(0 0 10px rgba(0, 168, 255, 0.48));
-  animation: laser-scan 11s ease-in-out infinite alternate;
+  animation: laser-scan 7s ease-in-out infinite alternate;
 }
 
 .laser-beam {
@@ -181,7 +181,7 @@ svg {
   filter: drop-shadow(0 0 12px rgba(0, 168, 255, 0.62));
   opacity: 0.34;
   transform-origin: left center;
-  animation: laser-drift 7s ease-in-out infinite;
+  animation: laser-drift 5.5s ease-in-out infinite;
 }
 
 .laser-beam-one {
@@ -214,31 +214,36 @@ svg {
 
   45% {
     opacity: 0.42;
-    translate: 5vw -1.5vh;
+    translate: 11vw -3vh;
+  }
+
+  70% {
+    opacity: 0.3;
+    translate: 6vw 1.5vh;
   }
 }
 
 @keyframes laser-field-shift {
   0% {
     opacity: 0.7;
-    translate: -1vw 0;
+    translate: -4vw 0;
   }
 
   100% {
     opacity: 1;
-    translate: 1.5vw -1vh;
+    translate: 5vw -2vh;
   }
 }
 
 @keyframes laser-scan {
   0% {
     opacity: 0.32;
-    translate: -2vw 0;
+    translate: -9vw 0;
   }
 
   100% {
     opacity: 0.58;
-    translate: 3vw -0.75vh;
+    translate: 10vw -1.5vh;
   }
 }
 
