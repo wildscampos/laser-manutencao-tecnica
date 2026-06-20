@@ -679,17 +679,25 @@ function CustomersView({
           {customers.map((customer) => {
             const customerAppointments = getCustomerAppointments(customer, appointments);
             return (
-              <article className="crm-customer-row" key={customer.id}>
-                <div>
-                  <h3>{customer.nome}</h3>
-                  <p>{customer.empresa || "Sem empresa"} · {customer.cidade}</p>
+              <details className="crm-collapsible-card" key={customer.id}>
+                <summary>
+                  <div>
+                    <h3>{customer.nome}</h3>
+                    <p>{customer.empresa || "Sem empresa"} · {customer.cidade}</p>
+                  </div>
+                  <div className="crm-summary-count">
+                    <strong>{customerAppointments.length}</strong>
+                    <span>atendimento(s)</span>
+                  </div>
+                </summary>
+                <div className="crm-collapsible-content">
                   <p>WhatsApp: {customer.whatsapp || "Não informado"}</p>
+                  <p>Telefone: {customer.telefone || "Não informado"}</p>
+                  <p>Endereço: {customer.rua}, {customer.numero} - {customer.bairro}</p>
+                  {customer.modeloMaquina && <p>Máquina: {customer.modeloMaquina}</p>}
+                  {customer.observacoes && <p>Observações: {customer.observacoes}</p>}
                 </div>
-                <div>
-                  <strong>{customerAppointments.length}</strong>
-                  <span>atendimento(s)</span>
-                </div>
-              </article>
+              </details>
             );
           })}
           {!customers.length && <p className="crm-empty">Nenhum cliente cadastrado.</p>}
@@ -714,20 +722,22 @@ function HistoryView({ appointments, customers }: { appointments: CrmAppointment
           const totalValue = customerAppointments.reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
 
           return (
-            <article className="crm-appointment-card" key={customer.id}>
-              <div className="crm-appointment-main">
+            <details className="crm-appointment-card crm-history-card" key={customer.id}>
+              <summary>
                 <div>
-                  <div className="crm-card-heading">
+                  <div>
                     <h3>{customer.nome}</h3>
-                    <span className="crm-status crm-status-concluido">{customerAppointments.length} atendimento(s)</span>
+                    <p>{customer.empresa || "Sem empresa informada"} · {customer.cidade}</p>
                   </div>
-                  <p>{customer.empresa || "Sem empresa informada"}</p>
-                  <p>{customer.cidade} · WhatsApp: {customer.whatsapp || "Não informado"}</p>
                 </div>
                 <div className="crm-values">
                   <strong>Total: {formatCurrency(totalValue)}</strong>
-                  <span>Último atendimento: {customerAppointments[0] ? formatDate(customerAppointments[0].data) : "-"}</span>
+                  <span>{customerAppointments.length} atendimento(s)</span>
                 </div>
+              </summary>
+              <div className="crm-collapsible-content">
+                <p>WhatsApp: {customer.whatsapp || "Não informado"}</p>
+                <p>Último atendimento: {customerAppointments[0] ? formatDate(customerAppointments[0].data) : "-"}</p>
               </div>
               <div className="crm-history-list">
                 {customerAppointments.map((appointment) => (
@@ -739,7 +749,7 @@ function HistoryView({ appointments, customers }: { appointments: CrmAppointment
                 ))}
                 {!customerAppointments.length && <p className="crm-muted">Ainda não há atendimentos registrados para este cliente.</p>}
               </div>
-            </article>
+            </details>
           );
         })}
         {!sortedCustomers.length && <p className="crm-empty">Nenhum cliente para exibir histórico.</p>}

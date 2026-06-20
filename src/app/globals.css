@@ -1490,7 +1490,7 @@ html[data-theme] .site-shell .final-cta-button svg {
 .crm-panel,
 .crm-appointment-card,
 .crm-metric-card,
-.crm-customer-row {
+.crm-collapsible-card {
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
@@ -1740,32 +1740,65 @@ html[data-theme] .site-shell .final-cta-button svg {
   margin-top: 1rem;
 }
 
-.crm-customer-row {
+.crm-collapsible-card summary,
+.crm-history-card summary {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  cursor: pointer;
+  list-style: none;
   padding: 1rem;
 }
 
-.crm-customer-row h3 {
+.crm-collapsible-card summary::-webkit-details-marker,
+.crm-history-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.crm-collapsible-card summary::after,
+.crm-history-card summary::after {
+  align-self: center;
+  color: #0078d4;
+  content: "+";
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.crm-collapsible-card[open] summary::after,
+.crm-history-card[open] summary::after {
+  content: "–";
+}
+
+.crm-collapsible-card h3,
+.crm-history-card h3 {
   color: #07111f;
   font-size: 1.05rem;
   font-weight: 800;
 }
 
-.crm-customer-row p,
-.crm-customer-row span {
+.crm-collapsible-card p,
+.crm-collapsible-card span,
+.crm-history-card summary p,
+.crm-history-card summary span {
   color: #475569;
   line-height: 1.5;
 }
 
-.crm-customer-row strong {
+.crm-summary-count strong {
   display: block;
   color: #0078d4;
   font-size: 1.5rem;
   line-height: 1;
   text-align: right;
+}
+
+.crm-collapsible-content {
+  display: grid;
+  gap: 0.35rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  padding: 0.75rem 1rem 1rem;
 }
 
 .crm-history-list {
@@ -2082,11 +2115,12 @@ html[data-theme] .site-shell .final-cta-button svg {
     display: grid;
   }
 
-  .crm-customer-row {
+  .crm-collapsible-card summary,
+  .crm-history-card summary {
     display: grid;
   }
 
-  .crm-customer-row strong {
+  .crm-summary-count strong {
     text-align: left;
   }
 }
