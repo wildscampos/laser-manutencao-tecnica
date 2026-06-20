@@ -48,7 +48,7 @@ service cloud.firestore {
 
     match /slots/{slotId} {
       allow read: if true;
-      allow create: if
+      allow create: if isAdmin() || (
         !exists(/databases/$(database)/documents/slots/$(slotId)) &&
         request.resource.data.keys().hasOnly(['id', 'data', 'horario', 'status', 'createdAt', 'createdAtIso']) &&
         request.resource.data.id == slotId &&
@@ -56,14 +56,15 @@ service cloud.firestore {
         isValidTime(request.resource.data.horario) &&
         request.resource.data.status == 'agendado' &&
         request.resource.data.createdAt == request.time &&
-        request.resource.data.createdAtIso is string;
+        request.resource.data.createdAtIso is string
+      );
       allow update: if isAdmin();
       allow delete: if false;
     }
 
     match /agendamentos/{slotId} {
       allow read: if isAdmin();
-      allow create: if
+      allow create: if isAdmin() || (
         !exists(/databases/$(database)/documents/agendamentos/$(slotId)) &&
         existsAfter(/databases/$(database)/documents/slots/$(slotId)) &&
         request.resource.data.keys().hasOnly([
@@ -110,8 +111,14 @@ service cloud.firestore {
         isOptionalString(request.resource.data.empresa, 120) &&
         isOptionalString(request.resource.data.modeloMaquina, 120) &&
         isOptionalString(request.resource.data.observacoes, 800) &&
-        request.resource.data.createdAtIso is string;
+        request.resource.data.createdAtIso is string
+      );
       allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /clientes/{clienteId} {
+      allow read, create, update: if isAdmin();
       allow delete: if false;
     }
 

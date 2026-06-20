@@ -1489,7 +1489,8 @@ html[data-theme] .site-shell .final-cta-button svg {
 .crm-login-card,
 .crm-panel,
 .crm-appointment-card,
-.crm-metric-card {
+.crm-metric-card,
+.crm-customer-row {
   border: 1px solid rgba(15, 23, 42, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.92);
@@ -1569,6 +1570,7 @@ html[data-theme] .site-shell .final-cta-button svg {
 
 .crm-primary-button,
 .crm-secondary-button,
+.crm-home-actions a,
 .crm-actions button,
 .crm-actions a {
   display: inline-flex;
@@ -1588,6 +1590,7 @@ html[data-theme] .site-shell .final-cta-button svg {
 }
 
 .crm-primary-button,
+.crm-home-actions a,
 .crm-actions button,
 .crm-actions a {
   background: #00A8FF;
@@ -1601,6 +1604,7 @@ html[data-theme] .site-shell .final-cta-button svg {
 
 .crm-primary-button:hover,
 .crm-secondary-button:hover,
+.crm-home-actions a:hover,
 .crm-actions button:hover:not(:disabled),
 .crm-actions a:hover {
   transform: translateY(-1px);
@@ -1616,6 +1620,16 @@ html[data-theme] .site-shell .final-cta-button svg {
   border-radius: 4px;
   background: rgba(244, 63, 94, 0.08);
   color: #be123c;
+  padding: 0.85rem 1rem;
+}
+
+.crm-success {
+  max-width: 86rem;
+  margin: 1rem auto 0;
+  border: 1px solid rgba(22, 163, 74, 0.24);
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #166534;
   padding: 0.85rem 1rem;
 }
 
@@ -1640,10 +1654,24 @@ html[data-theme] .site-shell .final-cta-button svg {
   gap: 0.65rem;
 }
 
+.crm-home-actions {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin: 1rem auto 0;
+  max-width: 86rem;
+}
+
+.crm-home-actions a {
+  min-height: 4rem;
+  padding-inline: 1rem;
+}
+
 .crm-toolbar,
 .crm-dashboard,
 .crm-panels,
-.crm-appointments {
+.crm-appointments,
+.crm-page-grid {
   margin: 1rem auto 0;
   max-width: 86rem;
 }
@@ -1654,6 +1682,7 @@ html[data-theme] .site-shell .final-cta-button svg {
 }
 
 .crm-toolbar label,
+.crm-form-grid label,
 .crm-edit-grid label,
 .crm-payment-date {
   display: grid;
@@ -1661,6 +1690,7 @@ html[data-theme] .site-shell .final-cta-button svg {
 }
 
 .crm-toolbar span,
+.crm-form-grid span,
 .crm-edit-grid span,
 .crm-payment-date span {
   color: #475569;
@@ -1669,6 +1699,9 @@ html[data-theme] .site-shell .final-cta-button svg {
 }
 
 .crm-toolbar select,
+.crm-form-grid input,
+.crm-form-grid select,
+.crm-form-grid textarea,
 .crm-edit-grid input,
 .crm-payment-date input {
   min-height: 2.75rem;
@@ -1677,6 +1710,87 @@ html[data-theme] .site-shell .final-cta-button svg {
   background: #ffffff;
   color: #07111f;
   padding-inline: 0.85rem;
+}
+
+.crm-form-grid textarea {
+  min-height: 5.5rem;
+  padding-block: 0.75rem;
+  resize: vertical;
+}
+
+.crm-page-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.crm-form-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.crm-form-wide,
+.crm-wide-panel {
+  grid-column: 1 / -1;
+}
+
+.crm-customer-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.crm-customer-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.crm-customer-row h3 {
+  color: #07111f;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.crm-customer-row p,
+.crm-customer-row span {
+  color: #475569;
+  line-height: 1.5;
+}
+
+.crm-customer-row strong {
+  display: block;
+  color: #0078d4;
+  font-size: 1.5rem;
+  line-height: 1;
+  text-align: right;
+}
+
+.crm-history-list {
+  display: grid;
+  gap: 0.65rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  padding-top: 0.75rem;
+}
+
+.crm-history-list div {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 6px;
+  background: rgba(0, 168, 255, 0.04);
+  padding: 0.75rem;
+}
+
+.crm-history-list strong {
+  color: #07111f;
+}
+
+.crm-history-list span {
+  color: #475569;
+  line-height: 1.45;
 }
 
 .crm-dashboard {
@@ -1957,6 +2071,7 @@ html[data-theme] .site-shell .final-cta-button svg {
 
   .crm-toolbar label,
   .crm-toolbar select,
+  .crm-home-actions a,
   .crm-actions button,
   .crm-actions a,
   .crm-payment-date {
@@ -1965,5 +2080,23 @@ html[data-theme] .site-shell .final-cta-button svg {
 
   .crm-actions {
     display: grid;
+  }
+
+  .crm-customer-row {
+    display: grid;
+  }
+
+  .crm-customer-row strong {
+    text-align: left;
+  }
+}
+
+@media (min-width: 900px) {
+  .crm-page-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .crm-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

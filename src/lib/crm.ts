@@ -1,10 +1,13 @@
 import {
   collection,
   doc,
+  getDoc,
   onSnapshot,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
+  setDoc,
   updateDoc,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -42,6 +45,35 @@ export type CrmAppointment = {
   servicosRealizados?: string;
   crmObservacoes?: string;
   updatedAtIso?: string;
+  clienteId?: string;
+  origem?: string;
+};
+
+export type CrmCustomer = {
+  id: string;
+  nome: string;
+  telefone: string;
+  whatsapp: string;
+  empresa?: string;
+  rua: string;
+  numero: string;
+  bairro: string;
+  cidade: string;
+  modeloMaquina?: string;
+  observacoes?: string;
+  createdAtIso?: string;
+  updatedAtIso?: string;
+};
+
+export type CustomerInput = Omit<CrmCustomer, "id" | "createdAtIso" | "updatedAtIso">;
+
+export type ManualAppointmentInput = {
+  clienteId?: string;
+  cliente: CustomerInput;
+  servico: string;
+  data: string;
+  horario: string;
+  observacoes: string;
 };
 
 export type CrmMetrics = {
@@ -69,6 +101,117 @@ export function listenToAppointments(onChange: (appointments: CrmAppointment[]) 
     },
     onError,
   );
+}
+
+export function listenToCustomers(onChange: (customers: CrmCustomer[]) => void, onError: (error: Error) => void): Unsubscribe {
+  const customersQuery = query(collection(db, "clientes"), orderBy("nome", "asc"));
+
+  return onSnapshot(
+    customersQuery,
+    (snapshot) => {
+      onChange(snapshot.docs.map((customer) => ({ id: customer.id, ...customer.data() }) as CrmCustomer));
+    },
+    onError,
+  );
+}
+
+function normalizeId(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+export function makeCustomerId(name: string, city: string) {
+  const base = normalizeId(`${name}-${city}`) || `cliente-${Date.now()}`;
+  return base;
+}
+
+export async function saveCustomer(customer: CustomerInput, customerId?: string) {
+  const nowIso = new Date().toISOString();
+  const id = customerId || makeCustomerId(customer.nome, customer.cidade);
+  const customerRef = doc(db, "clientes", id);
+  const existingCustomer = await getDoc(customerRef);
+
+  await setDoc(
+    customerRef,
+    {
+      id,
+      ...customer,
+      createdAtIso: existingCustomer.exists() ? existingCustomer.data().createdAtIso || nowIso : nowIso,
+      updatedAt: serverTimestamp(),
+      updatedAtIso: nowIso,
+    },
+    { merge: true },
+  );
+
+  return id;
+}
+
+export async function createManualAppointment(input: ManualAppointmentInput) {
+  const nowIso = new Date().toISOString();
+  const customerId = input.clienteId || makeCustomerId(input.cliente.nome, input.cliente.cidade);
+  const appointmentId = `${input.data}-${input.horario.replace(":", "")}`;
+  const customerRef = doc(db, "clientes", customerId);
+  const appointmentRef = doc(db, "agendamentos", appointmentId);
+  const slotRef = doc(db, "slots", appointmentId);
+
+  await runTransaction(db, async (transaction) => {
+    const slotSnapshot = await transaction.get(slotRef);
+    if (slotSnapshot.exists()) {
+      throw new Error("Este horário já está reservado.");
+    }
+
+    const customerSnapshot = await transaction.get(customerRef);
+    transaction.set(
+      customerRef,
+      {
+        id: customerId,
+        ...input.cliente,
+        createdAtIso: customerSnapshot.exists() ? customerSnapshot.data().createdAtIso || nowIso : nowIso,
+        updatedAt: serverTimestamp(),
+        updatedAtIso: nowIso,
+      },
+      { merge: true },
+    );
+
+    transaction.set(slotRef, {
+      id: appointmentId,
+      data: input.data,
+      horario: input.horario,
+      status: "agendado",
+      createdAt: serverTimestamp(),
+      createdAtIso: nowIso,
+      origem: "crm-manual",
+    });
+
+    transaction.set(appointmentRef, {
+      id: appointmentId,
+      clienteId: customerId,
+      nome: input.cliente.nome,
+      telefone: input.cliente.telefone,
+      whatsapp: input.cliente.whatsapp,
+      empresa: input.cliente.empresa || "",
+      rua: input.cliente.rua,
+      numero: input.cliente.numero,
+      bairro: input.cliente.bairro,
+      cidade: input.cliente.cidade,
+      modeloMaquina: input.cliente.modeloMaquina || "",
+      servico: input.servico,
+      data: input.data,
+      horario: input.horario,
+      observacoes: input.observacoes,
+      deslocamentoKm: 0,
+      deslocamentoValor: 0,
+      status: "agendado",
+      createdAt: serverTimestamp(),
+      createdAtIso: nowIso,
+      origem: "crm-manual",
+    });
+  });
 }
 
 export function calculateServiceValue(durationMinutes: number) {

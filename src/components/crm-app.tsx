@@ -1,17 +1,23 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
+  ArrowLeft,
   BarChart3,
   CalendarClock,
   CheckCircle2,
   Clock3,
   DollarSign,
+  History,
   LogOut,
   Play,
   Bell,
+  Plus,
   Save,
   ShieldCheck,
+  UserPlus,
+  Users,
   WalletCards,
 } from "lucide-react";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from "firebase/auth";
@@ -20,12 +26,18 @@ import { auth } from "@/lib/firebase-client";
 import {
   calculateMetrics,
   completeAppointment,
+  createManualAppointment,
   getMonthKey,
   listenToAppointments,
+  listenToCustomers,
+  saveCustomer,
   startAppointment,
   updateCrmNotes,
   updatePaymentStatus,
+  type CrmCustomer,
   type CrmAppointment,
+  type CustomerInput,
+  type ManualAppointmentInput,
   type PaymentStatus,
 } from "@/lib/crm";
 
@@ -66,6 +78,21 @@ const performedServiceOptions = [
   "Criação de arte para corte e gravação",
   "Testes operacionais",
 ];
+
+const cityOptions = ["Aparecida", "Cachoeira Paulista", "Canas", "Guaratinguetá", "Lorena", "Potim"];
+
+const emptyCustomer: CustomerInput = {
+  nome: "",
+  telefone: "",
+  whatsapp: "",
+  empresa: "",
+  rua: "",
+  numero: "",
+  bairro: "",
+  cidade: "Guaratinguetá",
+  modeloMaquina: "",
+  observacoes: "",
+};
 
 function formatCurrency(value = 0) {
   return currencyFormatter.format(value);
@@ -166,12 +193,14 @@ async function showCrmNotification(title: string, body: string, tag: string) {
   new Notification(title, options);
 }
 
-export function CrmApp() {
+export function CrmApp({ view = "dashboard" }: { view?: "dashboard" | "appointments" | "customers" | "history" }) {
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [appointments, setAppointments] = useState<CrmAppointment[]>([]);
+  const [customers, setCustomers] = useState<CrmCustomer[]>([]);
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [busyId, setBusyId] = useState("");
   const [password, setPassword] = useState("");
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() =>
@@ -203,12 +232,23 @@ export function CrmApp() {
   useEffect(() => {
     if (!isAdmin) return;
 
-    return listenToAppointments(
+    const unsubscribeAppointments = listenToAppointments(
       setAppointments,
       (snapshotError) => {
         setError(snapshotError.message);
       },
     );
+    const unsubscribeCustomers = listenToCustomers(
+      setCustomers,
+      (snapshotError) => {
+        setError(snapshotError.message);
+      },
+    );
+
+    return () => {
+      unsubscribeAppointments();
+      unsubscribeCustomers();
+    };
   }, [isAdmin]);
 
   useEffect(() => {
@@ -329,10 +369,25 @@ export function CrmApp() {
   async function runAction(appointmentId: string, action: () => Promise<void>) {
     setBusyId(appointmentId);
     setError("");
+    setSuccess("");
     try {
       await action();
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Não foi possível atualizar o atendimento.");
+    } finally {
+      setBusyId("");
+    }
+  }
+
+  async function runGlobalAction(action: () => Promise<string | void>) {
+    setBusyId("global");
+    setError("");
+    setSuccess("");
+    try {
+      const message = await action();
+      if (message) setSuccess(message);
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : "Não foi possível salvar os dados.");
     } finally {
       setBusyId("");
     }
@@ -381,10 +436,24 @@ export function CrmApp() {
       <header className="crm-header">
         <div>
           <p className="crm-kicker">CRM LaserFix</p>
-          <h1>Atendimentos e métricas</h1>
+          <h1>
+            {view === "appointments"
+              ? "Agendamentos"
+              : view === "customers"
+                ? "Clientes"
+                : view === "history"
+                  ? "Histórico"
+                  : "Home do CRM"}
+          </h1>
           <p>Logado como {user.email}</p>
         </div>
         <div className="crm-header-actions">
+          {view !== "dashboard" && (
+            <Link className="crm-secondary-button" href="/crm">
+              <ArrowLeft aria-hidden="true" />
+              Home
+            </Link>
+          )}
           <button className="crm-secondary-button" onClick={enableNotifications} type="button">
             <Bell aria-hidden="true" />
             {notificationPermission === "granted" ? "Notificações ativas" : "Ativar notificações"}
@@ -397,7 +466,145 @@ export function CrmApp() {
       </header>
 
       {error && <p className="crm-error">{error}</p>}
+      {success && <p className="crm-success">{success}</p>}
 
+      {view === "customers" && (
+        <CustomersView
+          appointments={appointments}
+          busy={busyId === "global"}
+          customers={customers}
+          onCreateAppointment={(input) => runGlobalAction(async () => {
+            await createManualAppointment(input);
+            return "Agendamento manual criado e horário bloqueado.";
+          })}
+          onSaveCustomer={(customer) => runGlobalAction(async () => {
+            await saveCustomer(customer);
+            return "Cliente salvo no cadastro.";
+          })}
+        />
+      )}
+
+      {view === "history" && <HistoryView appointments={appointments} customers={customers} />}
+
+      {view === "dashboard" && (
+        <>
+          <section className="crm-home-actions">
+            <Link href="/crm/agendamentos">
+              <CalendarClock aria-hidden="true" />
+              Agendamentos
+            </Link>
+            <Link href="/crm/clientes">
+              <Users aria-hidden="true" />
+              Cadastro de clientes
+            </Link>
+            <Link href="/crm/historico">
+              <History aria-hidden="true" />
+              Histórico dos clientes
+            </Link>
+          </section>
+
+          <section className="crm-toolbar">
+            <label>
+              <span>Mês</span>
+              <select value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)}>
+                {months.map((month) => (
+                  <option key={month} value={month}>
+                    {monthFormatter.format(new Date(`${month}-01T12:00:00`))}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </section>
+
+          <section className="crm-dashboard" aria-label="Métricas do mês">
+            <MetricCard icon={CalendarClock} label="Atendimentos no mês" value={String(monthMetrics.appointments)} />
+            <MetricCard icon={CheckCircle2} label="Concluídos no mês" value={String(monthMetrics.completed)} />
+            <MetricCard icon={DollarSign} label="Valor total no mês" value={formatCurrency(monthMetrics.totalValue)} />
+            <MetricCard icon={WalletCards} label="Valor médio" value={formatCurrency(monthMetrics.averageValue)} />
+            <MetricCard icon={Clock3} label="Tempo total" value={formatDuration(monthMetrics.totalMinutes)} />
+            <MetricCard icon={BarChart3} label="Tempo médio" value={formatDuration(monthMetrics.averageMinutes)} />
+          </section>
+
+          <section className="crm-dashboard crm-dashboard-total" aria-label="Métricas gerais">
+            <MetricCard icon={CalendarClock} label="Atendimentos gerais" value={String(totalMetrics.appointments)} />
+            <MetricCard icon={CheckCircle2} label="Concluídos gerais" value={String(totalMetrics.completed)} />
+            <MetricCard icon={DollarSign} label="Valor total geral" value={formatCurrency(totalMetrics.totalValue)} />
+            <MetricCard icon={Clock3} label="Tempo total geral" value={formatDuration(totalMetrics.totalMinutes)} />
+          </section>
+
+          <section className="crm-panels">
+            <div className="crm-panel">
+              <h2>Serviços realizados no mês</h2>
+              {monthMetrics.serviceCounts.length ? (
+                <div className="crm-service-list">
+                  {monthMetrics.serviceCounts.map((item) => (
+                    <div key={item.service}>
+                      <span>{item.service}</span>
+                      <strong>{item.count}</strong>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="crm-muted">Nenhum serviço concluído neste mês.</p>
+              )}
+            </div>
+          </section>
+
+        </>
+      )}
+
+      {view === "appointments" && (
+        <AppointmentsView
+          appointments={appointments}
+          busyId={busyId}
+          onComplete={(appointment) => runAction(appointment.id, () => completeAppointment(appointment))}
+          onPayment={(appointmentId, status, date) => runAction(appointmentId, () => updatePaymentStatus(appointmentId, status, date))}
+          onSaveNotes={(appointmentId, values) => runAction(appointmentId, () => updateCrmNotes(appointmentId, values))}
+          onStart={(appointment) => runAction(appointment.id, () => startAppointment(appointment))}
+        />
+      )}
+    </main>
+  );
+}
+
+function MetricCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+  return (
+    <article className="crm-metric-card">
+      <Icon aria-hidden="true" />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </article>
+  );
+}
+
+function AppointmentsView({
+  appointments,
+  busyId,
+  onComplete,
+  onPayment,
+  onSaveNotes,
+  onStart,
+}: {
+  appointments: CrmAppointment[];
+  busyId: string;
+  onComplete: (appointment: CrmAppointment) => void;
+  onPayment: (appointmentId: string, status: PaymentStatus, scheduledDate?: string) => void;
+  onSaveNotes: (appointmentId: string, values: { servicosRealizados?: string; crmObservacoes?: string }) => void;
+  onStart: (appointment: CrmAppointment) => void;
+}) {
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const months = useMemo(() => {
+    const monthSet = new Set(appointments.map((appointment) => getMonthKey(appointment.data)).filter(Boolean));
+    monthSet.add(new Date().toISOString().slice(0, 7));
+    return Array.from(monthSet).sort().reverse();
+  }, [appointments]);
+  const monthAppointments = useMemo(
+    () => appointments.filter((appointment) => getMonthKey(appointment.data) === selectedMonth),
+    [appointments, selectedMonth],
+  );
+
+  return (
+    <>
       <section className="crm-toolbar">
         <label>
           <span>Mês</span>
@@ -410,41 +617,6 @@ export function CrmApp() {
           </select>
         </label>
       </section>
-
-      <section className="crm-dashboard" aria-label="Métricas do mês">
-        <MetricCard icon={CalendarClock} label="Atendimentos no mês" value={String(monthMetrics.appointments)} />
-        <MetricCard icon={CheckCircle2} label="Concluídos no mês" value={String(monthMetrics.completed)} />
-        <MetricCard icon={DollarSign} label="Valor total no mês" value={formatCurrency(monthMetrics.totalValue)} />
-        <MetricCard icon={WalletCards} label="Valor médio" value={formatCurrency(monthMetrics.averageValue)} />
-        <MetricCard icon={Clock3} label="Tempo total" value={formatDuration(monthMetrics.totalMinutes)} />
-        <MetricCard icon={BarChart3} label="Tempo médio" value={formatDuration(monthMetrics.averageMinutes)} />
-      </section>
-
-      <section className="crm-dashboard crm-dashboard-total" aria-label="Métricas gerais">
-        <MetricCard icon={CalendarClock} label="Atendimentos gerais" value={String(totalMetrics.appointments)} />
-        <MetricCard icon={CheckCircle2} label="Concluídos gerais" value={String(totalMetrics.completed)} />
-        <MetricCard icon={DollarSign} label="Valor total geral" value={formatCurrency(totalMetrics.totalValue)} />
-        <MetricCard icon={Clock3} label="Tempo total geral" value={formatDuration(totalMetrics.totalMinutes)} />
-      </section>
-
-      <section className="crm-panels">
-        <div className="crm-panel">
-          <h2>Serviços realizados no mês</h2>
-          {monthMetrics.serviceCounts.length ? (
-            <div className="crm-service-list">
-              {monthMetrics.serviceCounts.map((item) => (
-                <div key={item.service}>
-                  <span>{item.service}</span>
-                  <strong>{item.count}</strong>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="crm-muted">Nenhum serviço concluído neste mês.</p>
-          )}
-        </div>
-      </section>
-
       <section className="crm-appointments">
         <div className="crm-section-title">
           <h2>Agendamentos</h2>
@@ -457,26 +629,301 @@ export function CrmApp() {
               appointment={appointment}
               busy={busyId === appointment.id}
               key={appointment.id}
-              onComplete={() => runAction(appointment.id, () => completeAppointment(appointment))}
-              onPayment={(status, date) => runAction(appointment.id, () => updatePaymentStatus(appointment.id, status, date))}
-              onSaveNotes={(values) => runAction(appointment.id, () => updateCrmNotes(appointment.id, values))}
-              onStart={() => runAction(appointment.id, () => startAppointment(appointment))}
+              onComplete={() => onComplete(appointment)}
+              onPayment={(status, date) => onPayment(appointment.id, status, date)}
+              onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
+              onStart={() => onStart(appointment)}
             />
           ))}
           {!monthAppointments.length && <p className="crm-empty">Nenhum agendamento para o mês selecionado.</p>}
         </div>
       </section>
-    </main>
+    </>
   );
 }
 
-function MetricCard({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function CustomersView({
+  appointments,
+  busy,
+  customers,
+  onCreateAppointment,
+  onSaveCustomer,
+}: {
+  appointments: CrmAppointment[];
+  busy: boolean;
+  customers: CrmCustomer[];
+  onCreateAppointment: (input: ManualAppointmentInput) => void;
+  onSaveCustomer: (customer: CustomerInput) => void;
+}) {
   return (
-    <article className="crm-metric-card">
-      <Icon aria-hidden="true" />
+    <section className="crm-page-grid">
+      <div className="crm-panel">
+        <div className="crm-section-title">
+          <h2>Cadastrar cliente</h2>
+          <span>{customers.length} cliente(s)</span>
+        </div>
+        <CustomerForm busy={busy} onSave={onSaveCustomer} />
+      </div>
+
+      <div className="crm-panel">
+        <div className="crm-section-title">
+          <h2>Agendamento manual</h2>
+          <span>Por fora do site</span>
+        </div>
+        <ManualAppointmentForm busy={busy} customers={customers} onCreate={onCreateAppointment} />
+      </div>
+
+      <div className="crm-panel crm-wide-panel">
+        <h2>Clientes cadastrados</h2>
+        <div className="crm-customer-list">
+          {customers.map((customer) => {
+            const customerAppointments = getCustomerAppointments(customer, appointments);
+            return (
+              <article className="crm-customer-row" key={customer.id}>
+                <div>
+                  <h3>{customer.nome}</h3>
+                  <p>{customer.empresa || "Sem empresa"} · {customer.cidade}</p>
+                  <p>WhatsApp: {customer.whatsapp || "Não informado"}</p>
+                </div>
+                <div>
+                  <strong>{customerAppointments.length}</strong>
+                  <span>atendimento(s)</span>
+                </div>
+              </article>
+            );
+          })}
+          {!customers.length && <p className="crm-empty">Nenhum cliente cadastrado.</p>}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HistoryView({ appointments, customers }: { appointments: CrmAppointment[]; customers: CrmCustomer[] }) {
+  const sortedCustomers = [...customers].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+  return (
+    <section className="crm-appointments">
+      <div className="crm-section-title">
+        <h2>Histórico por cliente</h2>
+        <span>{sortedCustomers.length} cliente(s)</span>
+      </div>
+      <div className="crm-list">
+        {sortedCustomers.map((customer) => {
+          const customerAppointments = getCustomerAppointments(customer, appointments);
+          const totalValue = customerAppointments.reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
+
+          return (
+            <article className="crm-appointment-card" key={customer.id}>
+              <div className="crm-appointment-main">
+                <div>
+                  <div className="crm-card-heading">
+                    <h3>{customer.nome}</h3>
+                    <span className="crm-status crm-status-concluido">{customerAppointments.length} atendimento(s)</span>
+                  </div>
+                  <p>{customer.empresa || "Sem empresa informada"}</p>
+                  <p>{customer.cidade} · WhatsApp: {customer.whatsapp || "Não informado"}</p>
+                </div>
+                <div className="crm-values">
+                  <strong>Total: {formatCurrency(totalValue)}</strong>
+                  <span>Último atendimento: {customerAppointments[0] ? formatDate(customerAppointments[0].data) : "-"}</span>
+                </div>
+              </div>
+              <div className="crm-history-list">
+                {customerAppointments.map((appointment) => (
+                  <div key={appointment.id}>
+                    <strong>{formatDate(appointment.data)} · {appointment.horario}</strong>
+                    <span>{appointment.servicosRealizados || appointment.servico}</span>
+                    <span>{formatCurrency(appointment.valorTotal || 0)} · {getPaymentLabel(appointment.pagamentoStatus)}</span>
+                  </div>
+                ))}
+                {!customerAppointments.length && <p className="crm-muted">Ainda não há atendimentos registrados para este cliente.</p>}
+              </div>
+            </article>
+          );
+        })}
+        {!sortedCustomers.length && <p className="crm-empty">Nenhum cliente para exibir histórico.</p>}
+      </div>
+    </section>
+  );
+}
+
+function getCustomerAppointments(customer: CrmCustomer, appointments: CrmAppointment[]) {
+  return appointments
+    .filter((appointment) => appointment.clienteId === customer.id || appointment.nome.toLowerCase() === customer.nome.toLowerCase())
+    .sort((a, b) => b.data.localeCompare(a.data) || b.horario.localeCompare(a.horario));
+}
+
+function CustomerForm({ busy, onSave }: { busy: boolean; onSave: (customer: CustomerInput) => void }) {
+  const [customer, setCustomer] = useState<CustomerInput>(emptyCustomer);
+
+  function updateField(field: keyof CustomerInput, value: string) {
+    setCustomer((current) => ({ ...current, [field]: value }));
+  }
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onSave(customer);
+    setCustomer(emptyCustomer);
+  }
+
+  return (
+    <form className="crm-form-grid" onSubmit={submit}>
+      <CrmInput label="Nome" required value={customer.nome} onChange={(value) => updateField("nome", value)} />
+      <CrmInput label="WhatsApp" value={customer.whatsapp} onChange={(value) => updateField("whatsapp", value)} />
+      <CrmInput label="Telefone" value={customer.telefone} onChange={(value) => updateField("telefone", value)} />
+      <CrmInput label="Empresa" value={customer.empresa || ""} onChange={(value) => updateField("empresa", value)} />
+      <CrmInput label="Rua" required value={customer.rua} onChange={(value) => updateField("rua", value)} />
+      <CrmInput label="Número" required value={customer.numero} onChange={(value) => updateField("numero", value)} />
+      <CrmInput label="Bairro" required value={customer.bairro} onChange={(value) => updateField("bairro", value)} />
+      <label>
+        <span>Cidade</span>
+        <select value={customer.cidade} onChange={(event) => updateField("cidade", event.target.value)}>
+          {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
+        </select>
+      </label>
+      <CrmInput label="Modelo da máquina" value={customer.modeloMaquina || ""} onChange={(value) => updateField("modeloMaquina", value)} />
+      <label className="crm-form-wide">
+        <span>Observações</span>
+        <textarea value={customer.observacoes || ""} onChange={(event) => updateField("observacoes", event.target.value)} />
+      </label>
+      <button className="crm-primary-button crm-form-wide" disabled={busy} type="submit">
+        <UserPlus aria-hidden="true" />
+        Salvar cliente
+      </button>
+    </form>
+  );
+}
+
+function ManualAppointmentForm({
+  busy,
+  customers,
+  onCreate,
+}: {
+  busy: boolean;
+  customers: CrmCustomer[];
+  onCreate: (input: ManualAppointmentInput) => void;
+}) {
+  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [newCustomer, setNewCustomer] = useState<CustomerInput>(emptyCustomer);
+  const [appointment, setAppointment] = useState({
+    servico: "Manutenção preventiva",
+    data: new Date().toISOString().slice(0, 10),
+    horario: "18:00",
+    observacoes: "",
+  });
+
+  const selectedCustomer = customers.find((customer) => customer.id === selectedCustomerId) || customers[0];
+  const effectiveMode = customers.length ? mode : "new";
+
+  function updateNewCustomer(field: keyof CustomerInput, value: string) {
+    setNewCustomer((current) => ({ ...current, [field]: value }));
+  }
+
+  function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const customer = effectiveMode === "existing" && selectedCustomer ? selectedCustomer : newCustomer;
+    onCreate({
+      clienteId: effectiveMode === "existing" ? selectedCustomer?.id : undefined,
+      cliente: {
+        nome: customer.nome,
+        telefone: customer.telefone || "",
+        whatsapp: customer.whatsapp || customer.telefone || "",
+        empresa: customer.empresa || "",
+        rua: customer.rua || "Não informado",
+        numero: customer.numero || "S/N",
+        bairro: customer.bairro || "Não informado",
+        cidade: customer.cidade || "Guaratinguetá",
+        modeloMaquina: customer.modeloMaquina || "",
+        observacoes: customer.observacoes || "",
+      },
+      ...appointment,
+    });
+  }
+
+  return (
+    <form className="crm-form-grid" onSubmit={submit}>
+      <label className="crm-form-wide">
+        <span>Cliente</span>
+        <select value={effectiveMode} onChange={(event) => setMode(event.target.value as "existing" | "new")}>
+          <option value="existing" disabled={!customers.length}>Selecionar cliente cadastrado</option>
+          <option value="new">Cadastrar cliente neste agendamento</option>
+        </select>
+      </label>
+
+      {effectiveMode === "existing" && customers.length ? (
+        <label className="crm-form-wide">
+          <span>Cliente cadastrado</span>
+          <select value={selectedCustomerId || customers[0]?.id || ""} onChange={(event) => setSelectedCustomerId(event.target.value)}>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>{customer.nome} · {customer.cidade}</option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <>
+          <CrmInput label="Nome" required value={newCustomer.nome} onChange={(value) => updateNewCustomer("nome", value)} />
+          <CrmInput label="WhatsApp" value={newCustomer.whatsapp} onChange={(value) => updateNewCustomer("whatsapp", value)} />
+          <CrmInput label="Telefone" value={newCustomer.telefone} onChange={(value) => updateNewCustomer("telefone", value)} />
+          <CrmInput label="Empresa" value={newCustomer.empresa || ""} onChange={(value) => updateNewCustomer("empresa", value)} />
+          <CrmInput label="Rua" value={newCustomer.rua} onChange={(value) => updateNewCustomer("rua", value)} />
+          <CrmInput label="Número" value={newCustomer.numero} onChange={(value) => updateNewCustomer("numero", value)} />
+          <CrmInput label="Bairro" value={newCustomer.bairro} onChange={(value) => updateNewCustomer("bairro", value)} />
+          <label>
+            <span>Cidade</span>
+            <select value={newCustomer.cidade} onChange={(event) => updateNewCustomer("cidade", event.target.value)}>
+              {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
+            </select>
+          </label>
+        </>
+      )}
+
+      <label>
+        <span>Serviço</span>
+        <select value={appointment.servico} onChange={(event) => setAppointment((current) => ({ ...current, servico: event.target.value }))}>
+          {performedServiceOptions.map((service) => <option key={service} value={service}>{service}</option>)}
+        </select>
+      </label>
+      <CrmInput label="Data" required type="date" value={appointment.data} onChange={(value) => setAppointment((current) => ({ ...current, data: value }))} />
+      <label>
+        <span>Horário</span>
+        <select value={appointment.horario} onChange={(event) => setAppointment((current) => ({ ...current, horario: event.target.value }))}>
+          {["08:00", "09:00", "10:00", "11:00", "12:00", "18:00", "19:00", "20:00"].map((time) => (
+            <option key={time} value={time}>{time}</option>
+          ))}
+        </select>
+      </label>
+      <label className="crm-form-wide">
+        <span>Observações</span>
+        <textarea value={appointment.observacoes} onChange={(event) => setAppointment((current) => ({ ...current, observacoes: event.target.value }))} />
+      </label>
+      <button className="crm-primary-button crm-form-wide" disabled={busy} type="submit">
+        <Plus aria-hidden="true" />
+        Criar agendamento
+      </button>
+    </form>
+  );
+}
+
+function CrmInput({
+  label,
+  onChange,
+  required,
+  type = "text",
+  value,
+}: {
+  label: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+  type?: string;
+  value: string;
+}) {
+  return (
+    <label>
       <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
+      <input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
   );
 }
 
