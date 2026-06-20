@@ -91,6 +91,10 @@ export type CrmMetrics = {
 const firstHourValue = 100;
 const additionalHourValue = 50;
 
+function slotId(data: string, horario: string) {
+  return `${data}_${horario.replace(":", "-")}`;
+}
+
 export function listenToAppointments(onChange: (appointments: CrmAppointment[]) => void, onError: (error: Error) => void): Unsubscribe {
   const appointmentsQuery = query(collection(db, "agendamentos"), orderBy("data", "desc"));
 
@@ -154,14 +158,15 @@ export async function saveCustomer(customer: CustomerInput, customerId?: string)
 export async function createManualAppointment(input: ManualAppointmentInput) {
   const nowIso = new Date().toISOString();
   const customerId = input.clienteId || makeCustomerId(input.cliente.nome, input.cliente.cidade);
-  const appointmentId = `${input.data}-${input.horario.replace(":", "")}`;
+  const appointmentId = slotId(input.data, input.horario);
   const customerRef = doc(db, "clientes", customerId);
   const appointmentRef = doc(db, "agendamentos", appointmentId);
   const slotRef = doc(db, "slots", appointmentId);
 
   await runTransaction(db, async (transaction) => {
     const slotSnapshot = await transaction.get(slotRef);
-    if (slotSnapshot.exists()) {
+    const appointmentSnapshot = await transaction.get(appointmentRef);
+    if (slotSnapshot.exists() || appointmentSnapshot.exists()) {
       throw new Error("Este horário já está reservado.");
     }
 

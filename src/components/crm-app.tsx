@@ -193,6 +193,27 @@ async function showCrmNotification(title: string, body: string, tag: string) {
   new Notification(title, options);
 }
 
+function readNotificationKeys(storageKey: string) {
+  try {
+    return new Set(JSON.parse(window.localStorage.getItem(storageKey) || "[]") as string[]);
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function writeNotificationKeys(storageKey: string, keys: Set<string>) {
+  window.localStorage.setItem(storageKey, JSON.stringify(Array.from(keys)));
+}
+
+async function showCrmNotificationOnce(storageKey: string, uniqueKey: string, title: string, body: string, tag: string) {
+  const notifiedKeys = readNotificationKeys(storageKey);
+  if (notifiedKeys.has(uniqueKey)) return;
+
+  notifiedKeys.add(uniqueKey);
+  writeNotificationKeys(storageKey, notifiedKeys);
+  await showCrmNotification(title, body, tag);
+}
+
 export function CrmApp({ view = "dashboard" }: { view?: "dashboard" | "appointments" | "customers" | "history" }) {
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -268,13 +289,17 @@ export function CrmApp({ view = "dashboard" }: { view?: "dashboard" | "appointme
     const newAppointments = appointments.filter((appointment) => !previousIds.has(appointment.id));
     knownAppointmentIdsRef.current = currentIds;
 
-    newAppointments.forEach((appointment) => {
-      void showCrmNotification(
-        "Novo agendamento LaserFix",
-        `${appointment.nome} agendou ${formatDate(appointment.data)} às ${appointment.horario}.`,
-        `new-appointment-${appointment.id}`,
-      );
-    });
+    newAppointments
+      .filter((appointment) => appointment.status === "agendado")
+      .forEach((appointment) => {
+        void showCrmNotificationOnce(
+          "laserfix-crm-new-notifications",
+          appointment.id,
+          "Novo agendamento LaserFix",
+          `${appointment.nome} agendou ${formatDate(appointment.data)} às ${appointment.horario}.`,
+          `new-appointment-${appointment.id}`,
+        );
+      });
   }, [appointments, isAdmin, notificationPermission]);
 
   useEffect(() => {
@@ -284,9 +309,7 @@ export function CrmApp({ view = "dashboard" }: { view?: "dashboard" | "appointme
     if (!isAdmin || notificationPermission !== "granted") return;
 
     const now = Date.now();
-    const notifiedReminders = new Set(
-      JSON.parse(window.localStorage.getItem("laserfix-crm-reminders") || "[]") as string[],
-    );
+    const notifiedReminders = readNotificationKeys("laserfix-crm-reminders");
 
     appointments
       .filter((appointment) => appointment.status !== "concluido")
@@ -300,17 +323,13 @@ export function CrmApp({ view = "dashboard" }: { view?: "dashboard" | "appointme
         if (delay < 0 || delay > 2147483647) return;
 
         const timerId = window.setTimeout(() => {
-          void showCrmNotification(
+          void showCrmNotificationOnce(
+            "laserfix-crm-reminders",
+            reminderKey,
             "Atendimento em 30 minutos",
             `${appointment.nome} está agendado para ${appointment.horario} em ${appointment.cidade}.`,
             `appointment-reminder-${appointment.id}`,
           );
-
-          const currentReminders = new Set(
-            JSON.parse(window.localStorage.getItem("laserfix-crm-reminders") || "[]") as string[],
-          );
-          currentReminders.add(reminderKey);
-          window.localStorage.setItem("laserfix-crm-reminders", JSON.stringify(Array.from(currentReminders)));
         }, delay);
 
         reminderTimersRef.current.push(timerId);
@@ -359,11 +378,7 @@ export function CrmApp({ view = "dashboard" }: { view?: "dashboard" | "appointme
       return;
     }
 
-    await showCrmNotification(
-      "Notificações LaserFix ativadas",
-      "Você receberá avisos de novos agendamentos e lembretes 30 minutos antes.",
-      "laserfix-notifications-ready",
-    );
+    setSuccess("Notificações ativadas. Você receberá novos agendamentos e lembretes 30 minutos antes.");
   }
 
   async function runAction(appointmentId: string, action: () => Promise<void>) {
