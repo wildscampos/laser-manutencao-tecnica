@@ -1,5 +1,5 @@
-const CACHE_NAME = "laserfix-crm-v2";
-const APP_SHELL = ["/crm", "/manifest.webmanifest", "/pwa-icon-192.png", "/pwa-icon-512.png"];
+const CACHE_NAME = "laserfix-crm-v3";
+const APP_SHELL = ["/crm", "/manifest.webmanifest", "/pwa-icon-laserfix-192.png", "/pwa-icon-laserfix-512.png"];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();

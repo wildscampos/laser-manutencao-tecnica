@@ -151,8 +151,8 @@ async function showCrmNotification(title: string, body: string, tag: string) {
 
   const options: NotificationOptions = {
     body,
-    icon: "/pwa-icon-192.png",
-    badge: "/pwa-icon-192.png",
+    icon: "/pwa-icon-laserfix-192.png",
+    badge: "/pwa-icon-laserfix-192.png",
     tag,
     data: { url: "/crm" },
   };
