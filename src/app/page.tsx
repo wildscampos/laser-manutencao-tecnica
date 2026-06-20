@@ -179,7 +179,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#111111] text-slate-100">
+    <main className="site-shell relative isolate min-h-screen overflow-hidden bg-[#111111] text-slate-100">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="laser-background" aria-hidden="true">
         <span className="laser-beam laser-beam-one" />
@@ -188,8 +188,8 @@ export default function Home() {
       </div>
       <SiteHeader />
 
-      <section className="relative border-b border-slate-800/80">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(0,168,255,0.18),transparent_30%),linear-gradient(135deg,rgba(0,168,255,0.12),transparent_42%)]" />
+      <section className="hero-section relative border-b border-slate-800/80">
+        <div className="hero-radial absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(0,168,255,0.18),transparent_30%),linear-gradient(135deg,rgba(0,168,255,0.12),transparent_42%)]" />
         <div className="laser-grid absolute inset-0 opacity-35" />
         <div className="relative mx-auto grid min-h-[86vh] max-w-7xl items-center gap-12 px-5 py-24 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:py-28">
           <div className="min-w-0">
@@ -204,7 +204,7 @@ export default function Home() {
               />
             </div>
             <h1 className="hero-title max-w-4xl text-5xl font-semibold leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
-              Manutenção de Máquinas de Corte a Laser <span className="whitespace-nowrap">CO₂</span>
+              Manutenção de Máquinas de Corte a Laser <span className="co2-mark">CO<sub>2</sub></span>
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300">
               Seu laser sempre no ponto: alinhamento, limpeza, troca de componentes, configuração e ajustes para sua máquina voltar a produzir com qualidade.
@@ -221,7 +221,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative min-h-[420px] min-w-0 overflow-hidden rounded-[8px] border border-[#00A8FF]/20 bg-slate-950/70 p-4 shadow-2xl shadow-black/40 sm:p-6">
+          <div className="hero-system-panel relative min-h-[420px] min-w-0 overflow-hidden rounded-[8px] border border-[#00A8FF]/20 bg-slate-950/70 p-4 shadow-2xl shadow-black/40 sm:p-6">
             <div className="absolute inset-0 bg-[linear-gradient(110deg,transparent_0%,rgba(0,168,255,0.10)_48%,transparent_52%)]" />
             <div className="relative flex h-full min-h-[380px] flex-col justify-between">
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -237,7 +237,7 @@ export default function Home() {
                   "Guaratinguetá e região",
                   "(12) 98182-3416",
                 ].map((item, index) => (
-                  <div className="flex items-center gap-4 border-l border-[#00A8FF]/60 bg-white/[0.03] p-4" key={item}>
+                  <div className="hero-system-item flex items-center gap-4 border-l border-[#00A8FF]/60 bg-white/[0.03] p-4" key={item}>
                     <span className="flex size-9 items-center justify-center rounded-[4px] bg-[#00A8FF] text-sm font-bold text-slate-950">
                       {index + 1}
                     </span>
@@ -365,7 +365,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <section id="agendamento" className="relative border-y border-[#00A8FF]/15 bg-slate-950/70">
+      <section id="agendamento" className="booking-section relative border-y border-[#00A8FF]/15 bg-slate-950/70">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.78fr_1.22fr]">
           <div>
             <h2 className="text-4xl font-semibold text-white">Reserve um horário técnico</h2>
@@ -432,16 +432,16 @@ export default function Home() {
       </Section>
 
       <section className="px-5 pb-20 sm:px-8">
-        <div className="mx-auto max-w-7xl rounded-[8px] border border-[#00A8FF]/25 bg-[#00A8FF] p-8 text-slate-950 md:p-12">
+        <div className="final-cta-panel mx-auto max-w-7xl rounded-[8px] border border-[#00A8FF]/25 bg-[#00A8FF] p-8 text-slate-950 md:p-12">
           <h2 className="max-w-3xl text-4xl font-semibold">Coloque sua laser CO₂ de volta em operação com atendimento técnico programado.</h2>
-          <a className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-[4px] bg-slate-950 px-5 text-sm font-bold uppercase tracking-[0.12em] text-white" href="#agendamento">
+          <a className="final-cta-button mt-8 inline-flex min-h-12 items-center gap-2 rounded-[4px] bg-slate-950 px-5 text-sm font-bold uppercase tracking-[0.12em] text-white" href="#agendamento">
             Agendar Manutenção
             <ArrowRight aria-hidden="true" />
           </a>
         </div>
       </section>
 
-      <footer className="border-t border-slate-800 px-5 py-6 text-center text-sm text-slate-400 sm:px-8">
+      <footer className="site-footer border-t border-slate-800 px-5 py-6 text-center text-sm text-slate-400 sm:px-8">
         <p>© {currentYear} Wilds Campos. Todos os direitos reservados.</p>
       </footer>
     </main>
@@ -462,7 +462,7 @@ function Section({ id, title, intro, children, introStrong }: { id: string; titl
 
 function Metric({ value, label }: { value: string; label: string }) {
   return (
-    <div className="border border-slate-800 bg-slate-900/70 p-4">
+    <div className="metric-card border border-slate-800 bg-slate-900/70 p-4">
       <p className="text-2xl font-semibold text-white">{value}</p>
       <p className="mt-1 text-sm text-slate-400">{label}</p>
     </div>

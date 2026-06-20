@@ -195,7 +195,7 @@ export function BookingForm() {
 
   return (
     <form
-      className="relative overflow-hidden rounded-[6px] border border-slate-700/80 bg-slate-950/88 p-5 shadow-2xl shadow-black/30 backdrop-blur md:p-7"
+      className="booking-form-panel relative overflow-hidden rounded-[6px] border border-slate-700/80 bg-slate-950/88 p-5 shadow-2xl shadow-black/30 backdrop-blur md:p-7"
       onSubmit={handleSubmit(onSubmit)}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00A8FF] to-transparent" />
@@ -243,7 +243,7 @@ export function BookingForm() {
               </option>
             ))}
           </select>
-          <span className="mt-2 block rounded-[4px] border border-slate-700 bg-slate-900/45 px-3 py-2 text-sm leading-6 text-slate-300">
+          <span className="city-note mt-2 block rounded-[4px] border border-slate-700 bg-slate-900/45 px-3 py-2 text-sm leading-6 text-slate-300">
             Outras cidades precisam ser negociadas pelo WhatsApp antes do agendamento.
           </span>
         </Field>
