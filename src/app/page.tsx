@@ -179,8 +179,13 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#111111] text-slate-100">
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#111111] text-slate-100">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
+      <div className="laser-background" aria-hidden="true">
+        <span className="laser-beam laser-beam-one" />
+        <span className="laser-beam laser-beam-two" />
+        <span className="laser-beam laser-beam-three" />
+      </div>
       <SiteHeader />
 
       <section className="relative border-b border-slate-800/80">
