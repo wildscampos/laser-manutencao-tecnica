@@ -959,38 +959,6 @@ html[data-theme="light"] .logo-light {
   background: #f43f5e;
 }
 
-.file-picker {
-  display: flex;
-  min-height: 3.5rem;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.55rem;
-}
-
-.file-picker button {
-  min-height: 2.75rem;
-  border-radius: 4px;
-  background: #00A8FF;
-  padding-inline: 0.9rem;
-  color: #07111f;
-  font-size: 0.9rem;
-  font-weight: 800;
-  transition: background-color 160ms ease;
-}
-
-.file-picker button:hover {
-  background: #ffffff;
-}
-
-.file-picker span {
-  min-width: 0;
-  overflow: hidden;
-  color: #e2e8f0;
-  font-size: 0.9rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .slot-option {
   cursor: pointer;
 }
@@ -1080,15 +1048,6 @@ html[data-theme="light"] .logo-light {
   .calendar-popover {
     position: static;
     margin-top: 0.5rem;
-  }
-
-  .file-picker {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .file-picker span {
-    white-space: normal;
   }
 
   .about-copy p {
@@ -1356,10 +1315,6 @@ html[data-theme="light"] .site-shell .text-emerald-100 {
   color: var(--muted-soft);
 }
 
-.file-picker span {
-  color: var(--muted);
-}
-
 .calendar-popover {
   border-color: var(--border-strong);
   background: var(--surface-solid);
@@ -1395,7 +1350,6 @@ html[data-theme="light"] .site-shell .text-emerald-100 {
 .slot-option input:focus-visible + span,
 .slot-option input:checked + span,
 .button-primary,
-.file-picker button,
 .mobile-menu .mobile-menu-cta {
   background: var(--accent);
   color: #07111f !important;

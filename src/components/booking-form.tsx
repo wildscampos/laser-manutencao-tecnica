@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
@@ -73,9 +73,7 @@ export function BookingForm() {
   const [availabilityDate, setAvailabilityDate] = useState("");
   const [availabilityError, setAvailabilityError] = useState(false);
   const [confirmation, setConfirmation] = useState<string>("");
-  const [selectedFileName, setSelectedFileName] = useState("");
   const [formStartedAt] = useState(() => Date.now());
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -99,7 +97,6 @@ export function BookingForm() {
       data: "",
       horario: "",
       observacoes: "",
-      fotoNome: "",
       website: "",
       formStartedAt,
     },
@@ -365,27 +362,6 @@ export function BookingForm() {
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <Field label="Observações" error={errors.observacoes?.message} wide>
           <textarea className="field min-h-28 resize-y" {...register("observacoes")} />
-        </Field>
-        <Field label="Upload de foto (opcional)" error={errors.fotoNome?.message}>
-          <div className="file-picker field">
-            <button type="button" onClick={() => fileInputRef.current?.click()}>
-              Escolher arquivo
-            </button>
-            <span>{selectedFileName || "Nenhum arquivo selecionado"}</span>
-            <input
-              ref={fileInputRef}
-              hidden
-              aria-hidden="true"
-              tabIndex={-1}
-              type="file"
-              accept="image/*"
-              onChange={(event) => {
-                const fileName = event.target.files?.[0]?.name || "";
-                setSelectedFileName(fileName);
-                setValue("fotoNome", fileName, { shouldDirty: true, shouldValidate: true });
-              }}
-            />
-          </div>
         </Field>
       </div>
 

@@ -19,7 +19,6 @@ export const appointmentSchema = z
     data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Escolha uma data válida."),
     horario: z.string().regex(/^\d{2}:\d{2}$/, "Escolha um horário válido."),
     observacoes: z.string().trim().max(800).optional().or(z.literal("")),
-    fotoNome: z.string().trim().max(180).optional().or(z.literal("")),
     website: z.string().max(0).optional().or(z.literal("")),
     formStartedAt: z.number().optional(),
   })

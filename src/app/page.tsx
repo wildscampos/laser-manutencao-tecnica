@@ -144,7 +144,7 @@ const faq = [
   ["O valor inclui peças?", "Não. Peças, componentes e materiais podem ser cobrados separadamente mediante aprovação prévia."],
   ["O atendimento é presencial?", "O atendimento técnico é programado conforme cidade, disponibilidade e tipo de serviço."],
   ["Quanto tempo dura uma manutenção?", "Depende do estado da máquina. A primeira hora cobre diagnóstico e início do atendimento."],
-  ["Posso enviar fotos antes do atendimento?", "Sim. O formulário permite informar foto e o WhatsApp fica aberto para envio de imagens."],
+  ["Posso enviar fotos antes do atendimento?", "Sim. Após abrir a conversa no WhatsApp, você pode enviar fotos diretamente por lá."],
   ["Como funciona o agendamento?", "Você escolhe uma data e horário livre; o sistema salva a reserva e abre o WhatsApp para confirmar."],
 ];
 

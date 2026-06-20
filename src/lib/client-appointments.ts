@@ -86,7 +86,6 @@ export async function createClientAppointment(input: AppointmentInput) {
       data: input.data,
       horario: input.horario,
       observacoes: input.observacoes || "",
-      fotoNome: input.fotoNome || "",
       deslocamentoKm: travelFee.distanceKm,
       deslocamentoValor: travelFee.fee,
       status: "agendado",
