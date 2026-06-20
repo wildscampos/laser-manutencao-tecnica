@@ -10,8 +10,6 @@ import {
   Cpu,
   Crosshair,
   Gauge,
-  Headphones,
-  MessageCircle,
   ShieldCheck,
   Sparkles,
   Wrench,
@@ -225,7 +223,7 @@ export default function Home() {
                 <ArrowRight aria-hidden="true" />
               </a>
               <a className="button-secondary" href={whatsappIntroUrl} target="_blank" rel="noopener noreferrer">
-                <MessageCircle aria-hidden="true" />
+                <span className="whatsapp-button-logo" aria-hidden="true" />
                 Falar no WhatsApp
               </a>
             </div>
@@ -429,12 +427,20 @@ export default function Home() {
 
       <Section id="contato" title="Contato" intro="Fale pelo WhatsApp para alinhar cidade, máquina, sintomas e prioridade do atendimento.">
         <div className="contact-band">
-          <Headphones aria-hidden="true" />
+          <Image
+            className="whatsapp-contact-logo"
+            src="/whatsapp-logo.svg"
+            alt=""
+            width={40}
+            height={40}
+            aria-hidden="true"
+          />
           <div>
             <p className="font-mono text-sm text-[#00A8FF]">WhatsApp</p>
             <p className="mt-1 text-2xl font-semibold text-white">+{WHATSAPP_NUMBER}</p>
           </div>
           <a className="button-primary ml-auto" href={whatsappIntroUrl} target="_blank" rel="noopener noreferrer">
+            <span className="whatsapp-button-logo" aria-hidden="true" />
             Falar no WhatsApp
             <ArrowRight aria-hidden="true" />
           </a>

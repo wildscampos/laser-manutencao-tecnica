@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Loader2, MessageCircle } from "lucide-react";
+import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { createClientAppointment, getBookedTimesByDate, getFreeTimes, SlotAlreadyBookedError } from "@/lib/client-appointments";
 import { getAvailableTimesForDate, SERVICES, toBrazilianDate } from "@/lib/schedule";
 import { SERVICE_CITIES } from "@/lib/service-area";
@@ -404,7 +404,11 @@ export function BookingForm() {
       )}
 
       <button className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[4px] bg-[#00A8FF] px-5 text-sm font-bold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A8FF] focus:ring-offset-2 focus:ring-offset-[#111111] disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="animate-spin" aria-hidden="true" /> : <MessageCircle aria-hidden="true" />}
+        {isSubmitting ? (
+          <Loader2 className="animate-spin" aria-hidden="true" />
+        ) : (
+          <span className="whatsapp-button-logo" aria-hidden="true" />
+        )}
         Enviar agendamento pelo WhatsApp
       </button>
     </form>

@@ -740,6 +740,24 @@ html[data-theme="light"] .logo-light {
   color: #00A8FF;
 }
 
+.whatsapp-contact-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  color: #00A8FF;
+  object-fit: contain;
+}
+
+.whatsapp-button-logo {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  background: currentColor;
+  mask: url("/whatsapp-logo.svg") center / contain no-repeat;
+  -webkit-mask: url("/whatsapp-logo.svg") center / contain no-repeat;
+}
+
 .faq-item {
   border: 1px solid rgba(51, 65, 85, 0.85);
   border-radius: 6px;
