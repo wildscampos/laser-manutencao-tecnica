@@ -57,11 +57,12 @@ service cloud.firestore {
         request.resource.data.status == 'agendado' &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.createdAtIso is string;
-      allow update, delete: if false;
+      allow update: if isAdmin();
+      allow delete: if false;
     }
 
     match /agendamentos/{slotId} {
-      allow read: if false;
+      allow read: if isAdmin();
       allow create: if
         !exists(/databases/$(database)/documents/agendamentos/$(slotId)) &&
         existsAfter(/databases/$(database)/documents/slots/$(slotId)) &&
@@ -80,7 +81,6 @@ service cloud.firestore {
           'data',
           'horario',
           'observacoes',
-          'fotoNome',
           'deslocamentoKm',
           'deslocamentoValor',
           'status',
@@ -110,9 +110,14 @@ service cloud.firestore {
         isOptionalString(request.resource.data.empresa, 120) &&
         isOptionalString(request.resource.data.modeloMaquina, 120) &&
         isOptionalString(request.resource.data.observacoes, 800) &&
-        isOptionalString(request.resource.data.fotoNome, 180) &&
         request.resource.data.createdAtIso is string;
-      allow update, delete: if false;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.token.email in ['wilds.mc@gmail.com'];
     }
   }
 }

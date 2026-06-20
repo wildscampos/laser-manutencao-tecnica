@@ -1471,3 +1471,448 @@ html[data-theme] .site-shell .final-cta-button,
 html[data-theme] .site-shell .final-cta-button svg {
   color: #ffffff !important;
 }
+
+.crm-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 80% 10%, rgba(0, 168, 255, 0.18), transparent 24rem),
+    linear-gradient(180deg, #f8fcff 0%, #eef7fd 100%);
+  color: #07111f;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.crm-login-shell {
+  display: grid;
+  place-items: center;
+}
+
+.crm-login-card,
+.crm-panel,
+.crm-appointment-card,
+.crm-metric-card {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.crm-login-card {
+  display: grid;
+  width: min(100%, 28rem);
+  gap: 1.25rem;
+  padding: 1.5rem;
+}
+
+.crm-login-card img {
+  width: 14rem;
+  height: auto;
+}
+
+.crm-kicker {
+  color: #0078d4;
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.crm-login-card h1,
+.crm-header h1 {
+  color: #07111f;
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 750;
+  line-height: 1.04;
+}
+
+.crm-login-card p,
+.crm-header p,
+.crm-muted {
+  color: #475569;
+  line-height: 1.65;
+}
+
+.crm-primary-button,
+.crm-secondary-button,
+.crm-actions button,
+.crm-actions a {
+  display: inline-flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.crm-primary-button,
+.crm-actions button,
+.crm-actions a {
+  background: #00A8FF;
+  color: #07111f;
+}
+
+.crm-secondary-button {
+  border: 1px solid rgba(0, 122, 204, 0.34);
+  color: #07111f;
+}
+
+.crm-primary-button:hover,
+.crm-secondary-button:hover,
+.crm-actions button:hover:not(:disabled),
+.crm-actions a:hover {
+  transform: translateY(-1px);
+}
+
+.crm-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.crm-error {
+  border: 1px solid rgba(190, 18, 60, 0.24);
+  border-radius: 4px;
+  background: rgba(244, 63, 94, 0.08);
+  color: #be123c;
+  padding: 0.85rem 1rem;
+}
+
+.crm-loading {
+  color: #475569;
+  font-size: 1rem;
+}
+
+.crm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-inline: auto;
+  max-width: 86rem;
+}
+
+.crm-toolbar,
+.crm-dashboard,
+.crm-panels,
+.crm-appointments {
+  margin: 1rem auto 0;
+  max-width: 86rem;
+}
+
+.crm-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.crm-toolbar label,
+.crm-edit-grid label,
+.crm-payment-date {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.crm-toolbar span,
+.crm-edit-grid span,
+.crm-payment-date span {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.crm-toolbar select,
+.crm-edit-grid input,
+.crm-payment-date input {
+  min-height: 2.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 4px;
+  background: #ffffff;
+  color: #07111f;
+  padding-inline: 0.85rem;
+}
+
+.crm-dashboard {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.crm-dashboard-total {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.crm-metric-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+}
+
+.crm-metric-card svg {
+  color: #00A8FF;
+}
+
+.crm-metric-card span {
+  color: #475569;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.crm-metric-card strong {
+  color: #07111f;
+  font-size: 1.55rem;
+  line-height: 1.15;
+}
+
+.crm-panel {
+  padding: 1rem;
+}
+
+.crm-panel h2,
+.crm-section-title h2 {
+  color: #07111f;
+  font-size: 1.2rem;
+  font-weight: 750;
+}
+
+.crm-service-list {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.crm-service-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  padding-bottom: 0.65rem;
+}
+
+.crm-service-list strong {
+  color: #0078d4;
+}
+
+.crm-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.crm-section-title span {
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.crm-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.crm-empty {
+  border: 1px dashed rgba(15, 23, 42, 0.18);
+  border-radius: 8px;
+  color: #475569;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.crm-appointment-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.crm-appointment-main {
+  display: grid;
+  gap: 1rem;
+}
+
+.crm-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.crm-card-heading h3 {
+  color: #07111f;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.crm-appointment-card p {
+  color: #243447;
+  line-height: 1.55;
+}
+
+.crm-status {
+  border-radius: 999px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.crm-status-agendado {
+  background: rgba(0, 168, 255, 0.12);
+  color: #075985;
+}
+
+.crm-status-atendimento_iniciado {
+  background: rgba(250, 204, 21, 0.18);
+  color: #854d0e;
+}
+
+.crm-status-concluido {
+  background: rgba(34, 197, 94, 0.14);
+  color: #166534;
+}
+
+.crm-values {
+  display: grid;
+  gap: 0.4rem;
+  border: 1px solid rgba(0, 122, 204, 0.16);
+  border-radius: 6px;
+  background: rgba(0, 168, 255, 0.06);
+  padding: 0.85rem;
+}
+
+.crm-values span {
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.crm-values strong {
+  color: #07111f;
+  font-size: 1.2rem;
+}
+
+.crm-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  color: #475569;
+  font-size: 0.86rem;
+}
+
+.crm-edit-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.crm-service-picker {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.crm-service-toggle {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid rgba(0, 122, 204, 0.22);
+  border-radius: 4px;
+  background: rgba(0, 168, 255, 0.08);
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+}
+
+.crm-service-toggle span {
+  color: #07111f;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.crm-service-toggle strong {
+  color: #0078d4;
+  font-size: 0.82rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.crm-service-options {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.crm-service-picker label {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 4px;
+  background: #ffffff;
+  padding: 0.65rem 0.75rem;
+}
+
+.crm-service-picker input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #00A8FF;
+}
+
+.crm-service-picker label span {
+  color: #07111f;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.crm-save-services {
+  margin-top: 0.35rem;
+  width: 100%;
+}
+
+.crm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.crm-payment-date {
+  min-width: min(100%, 12rem);
+}
+
+@media (min-width: 860px) {
+  .crm-appointment-main {
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.32fr);
+  }
+
+  .crm-edit-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .crm-shell {
+    padding: 0.85rem;
+  }
+
+  .crm-header {
+    flex-direction: column;
+  }
+
+  .crm-toolbar {
+    justify-content: stretch;
+  }
+
+  .crm-toolbar label,
+  .crm-toolbar select,
+  .crm-actions button,
+  .crm-actions a,
+  .crm-payment-date {
+    width: 100%;
+  }
+
+  .crm-actions {
+    display: grid;
+  }
+}

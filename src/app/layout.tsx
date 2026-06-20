@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -61,6 +62,7 @@ export const metadata: Metadata = {
     icon: "/logo-laserfix.jpg",
     apple: "/logo-laserfix.jpg",
   },
+  manifest: "/manifest.webmanifest",
   robots: {
     index: true,
     follow: true,
@@ -81,6 +83,7 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <PwaRegister />
         {children}
       </body>
     </html>
