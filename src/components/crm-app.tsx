@@ -9,12 +9,13 @@ import {
   DollarSign,
   LogOut,
   Play,
+  Bell,
   Save,
   ShieldCheck,
   WalletCards,
 } from "lucide-react";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth";
-import { useEffect, useMemo, useState } from "react";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from "firebase/auth";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { auth } from "@/lib/firebase-client";
 import {
   calculateMetrics,
@@ -28,7 +29,10 @@ import {
   type PaymentStatus,
 } from "@/lib/crm";
 
-const adminEmails = (process.env.NEXT_PUBLIC_CRM_ADMIN_EMAILS || "wilds.mc@gmail.com")
+const crmLoginName = "Wilds Campos";
+const crmLoginEmail = "wilds.campos@laserfix.app";
+
+const adminEmails = (process.env.NEXT_PUBLIC_CRM_ADMIN_EMAILS || "wilds.campos@laserfix.app,wilds.mc@gmail.com")
   .split(",")
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
@@ -138,6 +142,30 @@ function buildCustomerWhatsAppUrl(appointment: CrmAppointment, servicesDone: str
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
+function getAppointmentStartTime(appointment: CrmAppointment) {
+  return new Date(`${appointment.data}T${appointment.horario}:00`).getTime();
+}
+
+async function showCrmNotification(title: string, body: string, tag: string) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+  const options: NotificationOptions = {
+    body,
+    icon: "/pwa-icon-192.png",
+    badge: "/pwa-icon-192.png",
+    tag,
+    data: { url: "/crm" },
+  };
+
+  if ("serviceWorker" in navigator) {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.showNotification(title, options);
+    return;
+  }
+
+  new Notification(title, options);
+}
+
 export function CrmApp() {
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -145,6 +173,12 @@ export function CrmApp() {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [password, setPassword] = useState("");
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() =>
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default",
+  );
+  const knownAppointmentIdsRef = useRef<Set<string> | null>(null);
+  const reminderTimersRef = useRef<number[]>([]);
 
   const isAdmin = user?.email ? adminEmails.includes(user.email.toLowerCase()) : false;
   const months = useMemo(() => {
@@ -177,11 +211,82 @@ export function CrmApp() {
     );
   }, [isAdmin]);
 
-  async function login() {
+  useEffect(() => {
+    if (!isAdmin || notificationPermission !== "granted") {
+      knownAppointmentIdsRef.current = null;
+      return;
+    }
+
+    const currentIds = new Set(appointments.map((appointment) => appointment.id));
+
+    if (!knownAppointmentIdsRef.current) {
+      knownAppointmentIdsRef.current = currentIds;
+      return;
+    }
+
+    const previousIds = knownAppointmentIdsRef.current;
+    const newAppointments = appointments.filter((appointment) => !previousIds.has(appointment.id));
+    knownAppointmentIdsRef.current = currentIds;
+
+    newAppointments.forEach((appointment) => {
+      void showCrmNotification(
+        "Novo agendamento LaserFix",
+        `${appointment.nome} agendou ${formatDate(appointment.data)} às ${appointment.horario}.`,
+        `new-appointment-${appointment.id}`,
+      );
+    });
+  }, [appointments, isAdmin, notificationPermission]);
+
+  useEffect(() => {
+    reminderTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+    reminderTimersRef.current = [];
+
+    if (!isAdmin || notificationPermission !== "granted") return;
+
+    const now = Date.now();
+    const notifiedReminders = new Set(
+      JSON.parse(window.localStorage.getItem("laserfix-crm-reminders") || "[]") as string[],
+    );
+
+    appointments
+      .filter((appointment) => appointment.status !== "concluido")
+      .forEach((appointment) => {
+        const reminderKey = `${appointment.id}-30`;
+        if (notifiedReminders.has(reminderKey)) return;
+
+        const reminderTime = getAppointmentStartTime(appointment) - 30 * 60 * 1000;
+        const delay = reminderTime - now;
+
+        if (delay < 0 || delay > 2147483647) return;
+
+        const timerId = window.setTimeout(() => {
+          void showCrmNotification(
+            "Atendimento em 30 minutos",
+            `${appointment.nome} está agendado para ${appointment.horario} em ${appointment.cidade}.`,
+            `appointment-reminder-${appointment.id}`,
+          );
+
+          const currentReminders = new Set(
+            JSON.parse(window.localStorage.getItem("laserfix-crm-reminders") || "[]") as string[],
+          );
+          currentReminders.add(reminderKey);
+          window.localStorage.setItem("laserfix-crm-reminders", JSON.stringify(Array.from(currentReminders)));
+        }, delay);
+
+        reminderTimersRef.current.push(timerId);
+      });
+
+    return () => {
+      reminderTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+      reminderTimersRef.current = [];
+    };
+  }, [appointments, isAdmin, notificationPermission]);
+
+  async function login(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setError("");
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithEmailAndPassword(auth, crmLoginEmail, password);
       const email = result.user.email?.toLowerCase();
 
       if (!email || !adminEmails.includes(email)) {
@@ -190,8 +295,35 @@ export function CrmApp() {
       }
     } catch (loginError) {
       const message = loginError instanceof Error ? loginError.message : "Não foi possível entrar no CRM.";
-      setError(message.includes("operation-not-allowed") ? "Ative o login com Google no Firebase Authentication." : message);
+      setError(
+        message.includes("operation-not-allowed") || message.includes("configuration-not-found")
+          ? "Login por senha ainda não está ativo no Firebase Authentication."
+          : "Nome ou senha inválidos.",
+      );
     }
+  }
+
+  async function enableNotifications() {
+    setError("");
+
+    if (!("Notification" in window)) {
+      setError("Este navegador não oferece suporte a notificações do PWA.");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+
+    if (permission !== "granted") {
+      setError("As notificações foram bloqueadas no navegador.");
+      return;
+    }
+
+    await showCrmNotification(
+      "Notificações LaserFix ativadas",
+      "Você receberá avisos de novos agendamentos e lembretes 30 minutos antes.",
+      "laserfix-notifications-ready",
+    );
   }
 
   async function runAction(appointmentId: string, action: () => Promise<void>) {
@@ -218,13 +350,29 @@ export function CrmApp() {
           <div>
             <p className="crm-kicker">Área restrita</p>
             <h1>CRM LaserFix</h1>
-            <p>Acesse com o e-mail autorizado para visualizar agendamentos, iniciar atendimentos e acompanhar métricas.</p>
+            <p>Acesse com seu nome e senha para visualizar agendamentos, iniciar atendimentos e acompanhar métricas.</p>
           </div>
           {error && <p className="crm-error">{error}</p>}
-          <button className="crm-primary-button" onClick={login} type="button">
-            <ShieldCheck aria-hidden="true" />
-            Entrar com Google
-          </button>
+          <form className="crm-login-form" onSubmit={login}>
+            <label>
+              <span>Nome</span>
+              <input autoComplete="username" readOnly value={crmLoginName} />
+            </label>
+            <label>
+              <span>Senha</span>
+              <input
+                autoComplete="current-password"
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Digite sua senha"
+                type="password"
+                value={password}
+              />
+            </label>
+            <button className="crm-primary-button" type="submit">
+              <ShieldCheck aria-hidden="true" />
+              Entrar
+            </button>
+          </form>
         </section>
       </main>
     );
@@ -238,10 +386,16 @@ export function CrmApp() {
           <h1>Atendimentos e métricas</h1>
           <p>Logado como {user.email}</p>
         </div>
-        <button className="crm-secondary-button" onClick={() => signOut(auth)} type="button">
-          <LogOut aria-hidden="true" />
-          Sair
-        </button>
+        <div className="crm-header-actions">
+          <button className="crm-secondary-button" onClick={enableNotifications} type="button">
+            <Bell aria-hidden="true" />
+            {notificationPermission === "granted" ? "Notificações ativas" : "Ativar notificações"}
+          </button>
+          <button className="crm-secondary-button" onClick={() => signOut(auth)} type="button">
+            <LogOut aria-hidden="true" />
+            Sair
+          </button>
+        </div>
       </header>
 
       {error && <p className="crm-error">{error}</p>}

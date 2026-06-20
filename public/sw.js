@@ -1,4 +1,4 @@
-const CACHE_NAME = "laserfix-crm-v1";
+const CACHE_NAME = "laserfix-crm-v2";
 const APP_SHELL = ["/crm", "/manifest.webmanifest", "/pwa-icon-192.png", "/pwa-icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -34,5 +34,23 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(() => caches.match(request).then((cached) => cached || caches.match("/crm"))),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const targetUrl = event.notification.data?.url || "/crm";
+  const url = new URL(targetUrl, self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      const existingClient = clientList.find((client) => client.url.includes("/crm"));
+      if (existingClient) {
+        return existingClient.focus();
+      }
+
+      return self.clients.openWindow(url);
+    }),
   );
 });

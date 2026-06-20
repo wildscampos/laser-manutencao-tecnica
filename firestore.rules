@@ -117,7 +117,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null &&
-        request.auth.token.email in ['wilds.mc@gmail.com'];
+        request.auth.token.email in ['wilds.campos@laserfix.app', 'wilds.mc@gmail.com'];
     }
   }
 }

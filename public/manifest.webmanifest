@@ -1,7 +1,7 @@
 {
-  "name": "LaserFix CRM",
-  "short_name": "LaserFix CRM",
-  "description": "CRM de atendimentos LaserFix para acompanhar agendamentos, status, valores e pagamentos.",
+  "name": "LaserFix",
+  "short_name": "LaserFix",
+  "description": "Aplicativo LaserFix para acompanhar agendamentos, status, valores e pagamentos.",
   "id": "/crm",
   "start_url": "/crm",
   "scope": "/",

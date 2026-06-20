@@ -1508,6 +1508,37 @@ html[data-theme] .site-shell .final-cta-button svg {
   height: auto;
 }
 
+.crm-login-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.crm-login-form label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.crm-login-form span {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.crm-login-form input {
+  min-height: 2.9rem;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 4px;
+  background: #ffffff;
+  color: #07111f;
+  font-size: 1rem;
+  padding-inline: 0.85rem;
+}
+
+.crm-login-form input[readonly] {
+  background: #f1f7fb;
+  color: #243447;
+}
+
 .crm-kicker {
   color: #0078d4;
   font-size: 0.78rem;
@@ -1595,6 +1626,13 @@ html[data-theme] .site-shell .final-cta-button svg {
   gap: 1rem;
   margin-inline: auto;
   max-width: 86rem;
+}
+
+.crm-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem;
 }
 
 .crm-toolbar,
@@ -1898,6 +1936,14 @@ html[data-theme] .site-shell .final-cta-button svg {
 
   .crm-header {
     flex-direction: column;
+  }
+
+  .crm-header-actions {
+    width: 100%;
+  }
+
+  .crm-header-actions button {
+    width: 100%;
   }
 
   .crm-toolbar {
