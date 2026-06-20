@@ -141,7 +141,7 @@ svg {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.72;
+  opacity: 0.88;
   overflow: hidden;
 }
 
@@ -156,9 +156,10 @@ svg {
 .laser-background::before {
   inset: 0;
   background:
-    linear-gradient(112deg, transparent 0 36%, rgba(0, 168, 255, 0.1) 37%, transparent 39% 100%),
-    linear-gradient(24deg, transparent 0 62%, rgba(0, 168, 255, 0.08) 63%, transparent 65% 100%);
+    linear-gradient(112deg, transparent 0 35%, rgba(0, 168, 255, 0.15) 37%, transparent 40% 100%),
+    linear-gradient(24deg, transparent 0 61%, rgba(0, 168, 255, 0.12) 63%, transparent 66% 100%);
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 88%);
+  animation: laser-field-shift 16s ease-in-out infinite alternate;
 }
 
 .laser-background::after {
@@ -166,19 +167,21 @@ svg {
   top: 26vh;
   width: 136vw;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 168, 255, 0.62), transparent);
-  opacity: 0.34;
+  background: linear-gradient(90deg, transparent, rgba(0, 168, 255, 0.78), rgba(255, 255, 255, 0.32), rgba(0, 168, 255, 0.62), transparent);
+  opacity: 0.48;
   transform: rotate(-9deg);
+  filter: drop-shadow(0 0 10px rgba(0, 168, 255, 0.48));
+  animation: laser-scan 11s ease-in-out infinite alternate;
 }
 
 .laser-beam {
   width: 44vw;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(0, 168, 255, 0.92), rgba(255, 255, 255, 0.38), transparent);
-  filter: drop-shadow(0 0 8px rgba(0, 168, 255, 0.45));
-  opacity: 0.22;
+  filter: drop-shadow(0 0 12px rgba(0, 168, 255, 0.62));
+  opacity: 0.34;
   transform-origin: left center;
-  animation: laser-drift 9s ease-in-out infinite;
+  animation: laser-drift 7s ease-in-out infinite;
 }
 
 .laser-beam-one {
@@ -205,13 +208,37 @@ svg {
 @keyframes laser-drift {
   0%,
   100% {
-    opacity: 0.12;
+    opacity: 0.18;
     translate: 0 0;
   }
 
   45% {
-    opacity: 0.28;
-    translate: 3vw -1vh;
+    opacity: 0.42;
+    translate: 5vw -1.5vh;
+  }
+}
+
+@keyframes laser-field-shift {
+  0% {
+    opacity: 0.7;
+    translate: -1vw 0;
+  }
+
+  100% {
+    opacity: 1;
+    translate: 1.5vw -1vh;
+  }
+}
+
+@keyframes laser-scan {
+  0% {
+    opacity: 0.32;
+    translate: -2vw 0;
+  }
+
+  100% {
+    opacity: 0.58;
+    translate: 3vw -0.75vh;
   }
 }
 
@@ -422,6 +449,8 @@ svg {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .laser-background::before,
+  .laser-background::after,
   .laser-beam {
     animation: none;
   }
