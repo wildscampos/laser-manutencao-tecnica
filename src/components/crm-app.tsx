@@ -640,10 +640,38 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   return (
     <main className="crm-shell">
       <header className="crm-header">
-        <div>
-          <div className="crm-header-meta">
+        <div className="crm-header-content">
+          <div className="crm-topbar">
+            <div className="crm-topbar-side">
+              {view !== "dashboard" && (
+                <Link aria-label="Voltar para o início" className="crm-secondary-button crm-icon-button" href="/crm">
+                  <ArrowLeft aria-hidden="true" />
+                </Link>
+              )}
+            </div>
             <p className="crm-kicker">LaserFix</p>
-            <span>{user.email}</span>
+            <div className="crm-topbar-side crm-header-actions">
+              {view === "dashboard" && (
+                <button
+                  aria-label="Alternar tema do CRM"
+                  className="crm-secondary-button crm-icon-button crm-theme-button"
+                  onClick={toggleStoredCrmTheme}
+                  title="Alternar tema do CRM"
+                  type="button"
+                >
+                  <Moon aria-hidden="true" className="crm-theme-icon-dark" />
+                  <Sun aria-hidden="true" className="crm-theme-icon-light" />
+                </button>
+              )}
+              <button
+                aria-label="Sair"
+                className="crm-secondary-button crm-icon-button crm-logout-button"
+                onClick={() => signOut(auth)}
+                type="button"
+              >
+                <LogOut aria-hidden="true" />
+              </button>
+            </div>
           </div>
           <h1>
             {view === "appointments"
@@ -660,28 +688,6 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
                         ? "Disponibilidade"
                         : "Início"}
           </h1>
-        </div>
-        <div className="crm-header-actions">
-          {view !== "dashboard" && (
-            <Link className="crm-secondary-button" href="/crm">
-              <ArrowLeft aria-hidden="true" />
-              Início
-            </Link>
-          )}
-          <button
-            aria-label="Alternar tema do CRM"
-            className="crm-secondary-button crm-theme-button"
-            onClick={toggleStoredCrmTheme}
-            title="Alternar tema do CRM"
-            type="button"
-          >
-            <Moon aria-hidden="true" className="crm-theme-icon-dark" />
-            <Sun aria-hidden="true" className="crm-theme-icon-light" />
-          </button>
-          <button className="crm-secondary-button crm-logout-button" onClick={() => signOut(auth)} type="button">
-            <LogOut aria-hidden="true" />
-            Sair
-          </button>
         </div>
       </header>
 

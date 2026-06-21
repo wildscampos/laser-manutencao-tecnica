@@ -34,7 +34,7 @@ test.describe("CRM LaserFix", () => {
     for (const route of routes) {
       await page.goto(route.href);
       await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
-      await expect(page.getByRole("link", { name: /Início/i })).toBeVisible();
+      await expect(page.getByRole("link", { name: /Voltar para o início/i })).toBeVisible();
     }
   });
 
