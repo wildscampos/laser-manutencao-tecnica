@@ -153,4 +153,21 @@ test.describe("CRM LaserFix", () => {
       await expect(cards.nth(1).getByRole("button", { name: /Recolher/i })).toBeVisible();
     }
   });
+
+  test("expande cards editaveis para largura total", async ({ page }) => {
+    await page.goto("/crm/clientes");
+    const customerCard = page.locator(".crm-customer-list > .crm-collapsible-card").first();
+    await customerCard.locator("summary").first().click();
+    await expect(customerCard).toHaveCSS("grid-column-start", "1");
+    await expect(customerCard).toHaveCSS("grid-column-end", "-1");
+    await customerCard.locator(".crm-edit-details summary").click();
+    await expect(customerCard.getByRole("button", { name: /Salvar alterações/i })).toBeVisible();
+
+    await page.goto("/crm/servicos");
+    const serviceCard = page.locator(".crm-service-catalog > .crm-service-record").first();
+    await serviceCard.locator(".crm-edit-details summary").click();
+    await expect(serviceCard).toHaveCSS("grid-column-start", "1");
+    await expect(serviceCard).toHaveCSS("grid-column-end", "-1");
+    await expect(serviceCard.getByRole("button", { name: /Salvar alterações/i })).toBeVisible();
+  });
 });
