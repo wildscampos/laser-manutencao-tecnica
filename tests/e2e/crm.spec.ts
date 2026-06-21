@@ -38,6 +38,25 @@ test.describe("CRM LaserFix", () => {
     }
   });
 
+  test("mantém tema do CRM persistente entre páginas sem texto no botão", async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem("laserfix-crm-theme", "light");
+      document.documentElement.dataset.crmTheme = "light";
+    });
+
+    const themeButton = page.getByRole("button", { name: /Alternar tema do CRM/i });
+    await expect(themeButton).toHaveText("");
+
+    await themeButton.click();
+    await expect(page.locator("html")).toHaveAttribute("data-crm-theme", "dark");
+
+    await page.goto("/crm/clientes");
+    await expect(page.locator("html")).toHaveAttribute("data-crm-theme", "dark");
+
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-crm-theme", "dark");
+  });
+
   test("mantém apenas um agendamento expandido por vez", async ({ page }) => {
     await page.goto("/crm/agendamentos");
 

@@ -20,10 +20,14 @@ const themeScript = `
     try {
       const storedTheme = localStorage.getItem("laserfix-theme");
       const theme = storedTheme === "dark" ? "dark" : "light";
+      const storedCrmTheme = localStorage.getItem("laserfix-crm-theme");
+      const crmTheme = storedCrmTheme === "dark" ? "dark" : "light";
       document.documentElement.dataset.theme = theme;
+      document.documentElement.dataset.crmTheme = crmTheme;
       document.documentElement.style.colorScheme = theme;
     } catch {
       document.documentElement.dataset.theme = "light";
+      document.documentElement.dataset.crmTheme = "light";
       document.documentElement.style.colorScheme = "light";
     }
   })();

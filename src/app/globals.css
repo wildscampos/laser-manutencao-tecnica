@@ -1602,6 +1602,29 @@ html[data-theme] .site-shell .final-cta-button svg {
   color: #07111f;
 }
 
+.crm-theme-button {
+  width: 2.8rem;
+  min-width: 2.8rem;
+  padding: 0;
+}
+
+.crm-theme-button svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.crm-theme-icon-light {
+  display: none;
+}
+
+html[data-crm-theme="dark"] .crm-theme-icon-dark {
+  display: none;
+}
+
+html[data-crm-theme="dark"] .crm-theme-icon-light {
+  display: block;
+}
+
 .crm-primary-button:hover,
 .crm-secondary-button:hover,
 .crm-home-actions a:hover,
@@ -2165,132 +2188,132 @@ html[data-theme] .site-shell .final-cta-button svg {
   min-width: min(100%, 12rem);
 }
 
-.crm-shell.crm-dark {
+html[data-crm-theme="dark"] .crm-shell {
   background:
     radial-gradient(circle at 80% 10%, rgba(0, 168, 255, 0.2), transparent 24rem),
     linear-gradient(180deg, #07111f 0%, #0f172a 100%);
   color: #f8fafc;
 }
 
-.crm-shell.crm-dark .crm-login-card,
-.crm-shell.crm-dark .crm-panel,
-.crm-shell.crm-dark .crm-appointment-card,
-.crm-shell.crm-dark .crm-metric-card,
-.crm-shell.crm-dark .crm-collapsible-card {
+html[data-crm-theme="dark"] .crm-shell .crm-login-card,
+html[data-crm-theme="dark"] .crm-shell .crm-panel,
+html[data-crm-theme="dark"] .crm-shell .crm-appointment-card,
+html[data-crm-theme="dark"] .crm-shell .crm-metric-card,
+html[data-crm-theme="dark"] .crm-shell .crm-collapsible-card {
   border-color: rgba(148, 163, 184, 0.28);
   background: rgba(15, 23, 42, 0.9);
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28);
 }
 
-.crm-shell.crm-dark .crm-login-card h1,
-.crm-shell.crm-dark .crm-header h1,
-.crm-shell.crm-dark .crm-panel h2,
-.crm-shell.crm-dark .crm-section-title h2,
-.crm-shell.crm-dark .crm-collapsible-card h3,
-.crm-shell.crm-dark .crm-history-card h3,
-.crm-shell.crm-dark .crm-service-record h3,
-.crm-shell.crm-dark .crm-appointment-card h3,
-.crm-shell.crm-dark .crm-card-heading h3,
-.crm-shell.crm-dark .crm-metric-card strong,
-.crm-shell.crm-dark .crm-values strong,
-.crm-shell.crm-dark .crm-service-toggle span,
-.crm-shell.crm-dark .crm-service-picker label span,
-.crm-shell.crm-dark .crm-history-list strong {
+html[data-crm-theme="dark"] .crm-shell .crm-login-card h1,
+html[data-crm-theme="dark"] .crm-shell .crm-header h1,
+html[data-crm-theme="dark"] .crm-shell .crm-panel h2,
+html[data-crm-theme="dark"] .crm-shell .crm-section-title h2,
+html[data-crm-theme="dark"] .crm-shell .crm-collapsible-card h3,
+html[data-crm-theme="dark"] .crm-shell .crm-history-card h3,
+html[data-crm-theme="dark"] .crm-shell .crm-service-record h3,
+html[data-crm-theme="dark"] .crm-shell .crm-appointment-card h3,
+html[data-crm-theme="dark"] .crm-shell .crm-card-heading h3,
+html[data-crm-theme="dark"] .crm-shell .crm-metric-card strong,
+html[data-crm-theme="dark"] .crm-shell .crm-values strong,
+html[data-crm-theme="dark"] .crm-shell .crm-service-toggle span,
+html[data-crm-theme="dark"] .crm-shell .crm-service-picker label span,
+html[data-crm-theme="dark"] .crm-shell .crm-history-list strong {
   color: #f8fafc;
 }
 
-.crm-shell.crm-dark .crm-login-card p,
-.crm-shell.crm-dark .crm-header p,
-.crm-shell.crm-dark .crm-muted,
-.crm-shell.crm-dark .crm-loading,
-.crm-shell.crm-dark .crm-collapsible-card p,
-.crm-shell.crm-dark .crm-collapsible-card span,
-.crm-shell.crm-dark .crm-history-card summary p,
-.crm-shell.crm-dark .crm-history-card summary span,
-.crm-shell.crm-dark .crm-service-record p,
-.crm-shell.crm-dark .crm-appointment-card p,
-.crm-shell.crm-dark .crm-metric-card span,
-.crm-shell.crm-dark .crm-section-title span,
-.crm-shell.crm-dark .crm-values span,
-.crm-shell.crm-dark .crm-timeline,
-.crm-shell.crm-dark .crm-history-list span,
-.crm-shell.crm-dark .crm-toolbar span,
-.crm-shell.crm-dark .crm-form-grid span,
-.crm-shell.crm-dark .crm-edit-grid span,
-.crm-shell.crm-dark .crm-payment-date span,
-.crm-shell.crm-dark .crm-login-form span {
+html[data-crm-theme="dark"] .crm-shell .crm-login-card p,
+html[data-crm-theme="dark"] .crm-shell .crm-header p,
+html[data-crm-theme="dark"] .crm-shell .crm-muted,
+html[data-crm-theme="dark"] .crm-shell .crm-loading,
+html[data-crm-theme="dark"] .crm-shell .crm-collapsible-card p,
+html[data-crm-theme="dark"] .crm-shell .crm-collapsible-card span,
+html[data-crm-theme="dark"] .crm-shell .crm-history-card summary p,
+html[data-crm-theme="dark"] .crm-shell .crm-history-card summary span,
+html[data-crm-theme="dark"] .crm-shell .crm-service-record p,
+html[data-crm-theme="dark"] .crm-shell .crm-appointment-card p,
+html[data-crm-theme="dark"] .crm-shell .crm-metric-card span,
+html[data-crm-theme="dark"] .crm-shell .crm-section-title span,
+html[data-crm-theme="dark"] .crm-shell .crm-values span,
+html[data-crm-theme="dark"] .crm-shell .crm-timeline,
+html[data-crm-theme="dark"] .crm-shell .crm-history-list span,
+html[data-crm-theme="dark"] .crm-shell .crm-toolbar span,
+html[data-crm-theme="dark"] .crm-shell .crm-form-grid span,
+html[data-crm-theme="dark"] .crm-shell .crm-edit-grid span,
+html[data-crm-theme="dark"] .crm-shell .crm-payment-date span,
+html[data-crm-theme="dark"] .crm-shell .crm-login-form span {
   color: #cbd5e1;
 }
 
-.crm-shell.crm-dark .crm-secondary-button {
+html[data-crm-theme="dark"] .crm-shell .crm-secondary-button {
   border-color: rgba(0, 168, 255, 0.46);
   color: #f8fafc;
   background: rgba(15, 23, 42, 0.48);
 }
 
-.crm-shell.crm-dark .crm-secondary-button:hover {
+html[data-crm-theme="dark"] .crm-shell .crm-secondary-button:hover {
   background: rgba(0, 168, 255, 0.14);
 }
 
-.crm-shell.crm-dark .crm-primary-button,
-.crm-shell.crm-dark .crm-home-actions a,
-.crm-shell.crm-dark .crm-actions button,
-.crm-shell.crm-dark .crm-actions a {
+html[data-crm-theme="dark"] .crm-shell .crm-primary-button,
+html[data-crm-theme="dark"] .crm-shell .crm-home-actions a,
+html[data-crm-theme="dark"] .crm-shell .crm-actions button,
+html[data-crm-theme="dark"] .crm-shell .crm-actions a {
   color: #07111f;
 }
 
-.crm-shell.crm-dark .crm-module-nav a[aria-current="page"] {
+html[data-crm-theme="dark"] .crm-shell .crm-module-nav a[aria-current="page"] {
   box-shadow: inset 0 0 0 2px rgba(248, 250, 252, 0.34);
 }
 
-.crm-shell.crm-dark .crm-toolbar select,
-.crm-shell.crm-dark .crm-form-grid input,
-.crm-shell.crm-dark .crm-form-grid select,
-.crm-shell.crm-dark .crm-form-grid textarea,
-.crm-shell.crm-dark .crm-edit-grid input,
-.crm-shell.crm-dark .crm-payment-date input,
-.crm-shell.crm-dark .crm-login-form input {
+html[data-crm-theme="dark"] .crm-shell .crm-toolbar select,
+html[data-crm-theme="dark"] .crm-shell .crm-form-grid input,
+html[data-crm-theme="dark"] .crm-shell .crm-form-grid select,
+html[data-crm-theme="dark"] .crm-shell .crm-form-grid textarea,
+html[data-crm-theme="dark"] .crm-shell .crm-edit-grid input,
+html[data-crm-theme="dark"] .crm-shell .crm-payment-date input,
+html[data-crm-theme="dark"] .crm-shell .crm-login-form input {
   border-color: rgba(148, 163, 184, 0.36);
   background: rgba(2, 6, 23, 0.82);
   color: #f8fafc;
 }
 
-.crm-shell.crm-dark .crm-login-form input[readonly] {
+html[data-crm-theme="dark"] .crm-shell .crm-login-form input[readonly] {
   background: rgba(15, 23, 42, 0.88);
   color: #cbd5e1;
 }
 
-.crm-shell.crm-dark .crm-values,
-.crm-shell.crm-dark .crm-service-toggle,
-.crm-shell.crm-dark .crm-history-list div,
-.crm-shell.crm-dark .crm-service-picker label,
-.crm-shell.crm-dark .crm-service-record {
+html[data-crm-theme="dark"] .crm-shell .crm-values,
+html[data-crm-theme="dark"] .crm-shell .crm-service-toggle,
+html[data-crm-theme="dark"] .crm-shell .crm-history-list div,
+html[data-crm-theme="dark"] .crm-shell .crm-service-picker label,
+html[data-crm-theme="dark"] .crm-shell .crm-service-record {
   border-color: rgba(0, 168, 255, 0.26);
   background: rgba(0, 168, 255, 0.08);
 }
 
-.crm-shell.crm-dark .crm-collapsible-content,
-.crm-shell.crm-dark .crm-history-list,
-.crm-shell.crm-dark .crm-service-list div {
+html[data-crm-theme="dark"] .crm-shell .crm-collapsible-content,
+html[data-crm-theme="dark"] .crm-shell .crm-history-list,
+html[data-crm-theme="dark"] .crm-shell .crm-service-list div {
   border-color: rgba(148, 163, 184, 0.22);
 }
 
-.crm-shell.crm-dark .crm-empty {
+html[data-crm-theme="dark"] .crm-shell .crm-empty {
   border-color: rgba(148, 163, 184, 0.3);
   color: #cbd5e1;
 }
 
-.crm-shell.crm-dark .crm-status-agendado {
+html[data-crm-theme="dark"] .crm-shell .crm-status-agendado {
   background: rgba(0, 168, 255, 0.18);
   color: #bae6fd;
 }
 
-.crm-shell.crm-dark .crm-status-atendimento_iniciado {
+html[data-crm-theme="dark"] .crm-shell .crm-status-atendimento_iniciado {
   background: rgba(250, 204, 21, 0.2);
   color: #fde68a;
 }
 
-.crm-shell.crm-dark .crm-status-concluido {
+html[data-crm-theme="dark"] .crm-shell .crm-status-concluido {
   background: rgba(34, 197, 94, 0.18);
   color: #bbf7d0;
 }
@@ -2326,6 +2349,12 @@ html[data-theme] .site-shell .final-cta-button svg {
     min-height: 2.35rem;
     padding-inline: 0.75rem;
     font-size: 0.72rem;
+  }
+
+  .crm-theme-button {
+    width: 2.35rem;
+    min-width: 2.35rem;
+    min-height: 2.35rem;
   }
 
   .crm-home-actions {
@@ -2471,3 +2500,4 @@ html[data-theme] .site-shell .final-cta-button svg {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+

@@ -51,6 +51,7 @@ import {
 
 const crmLoginName = "Wilds Campos";
 const crmLoginEmail = "wilds.campos@laserfix.app";
+const crmThemeStorageKey = "laserfix-crm-theme";
 
 const adminEmails = (process.env.NEXT_PUBLIC_CRM_ADMIN_EMAILS || "wilds.campos@laserfix.app,wilds.mc@gmail.com")
   .split(",")
@@ -236,13 +237,29 @@ async function showCrmNotificationOnce(storageKey: string, uniqueKey: string, ti
 }
 
 type CrmView = "dashboard" | "appointments" | "customers" | "history" | "services" | "finance" | "availability";
+type CrmTheme = "light" | "dark";
+
+function getStoredCrmTheme(): CrmTheme {
+  if (typeof window === "undefined") return "light";
+  return window.localStorage.getItem(crmThemeStorageKey) === "dark" ? "dark" : "light";
+}
+
+function applyCrmTheme(theme: CrmTheme) {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset.crmTheme = theme;
+}
+
+function toggleStoredCrmTheme() {
+  if (typeof window === "undefined") return;
+  const currentTheme = document.documentElement.dataset.crmTheme === "dark" ? "dark" : "light";
+  const nextTheme = currentTheme === "dark" ? "light" : "dark";
+  window.localStorage.setItem(crmThemeStorageKey, nextTheme);
+  applyCrmTheme(nextTheme);
+}
 
 export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [crmTheme, setCrmTheme] = useState<"light" | "dark">(() =>
-    typeof window !== "undefined" && window.localStorage.getItem("laserfix-crm-theme") === "dark" ? "dark" : "light",
-  );
   const [appointments, setAppointments] = useState<CrmAppointment[]>([]);
   const [customers, setCustomers] = useState<CrmCustomer[]>([]);
   const [services, setServices] = useState<CrmService[]>([]);
@@ -282,8 +299,8 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("laserfix-crm-theme", crmTheme);
-  }, [crmTheme]);
+    applyCrmTheme(getStoredCrmTheme());
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -439,12 +456,12 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   }
 
   if (!authReady) {
-    return <main className={`crm-shell crm-${crmTheme}`}><p className="crm-loading">Carregando CRM...</p></main>;
+    return <main className="crm-shell"><p className="crm-loading">Carregando CRM...</p></main>;
   }
 
   if (!user || !isAdmin) {
     return (
-      <main className={`crm-shell crm-login-shell crm-${crmTheme}`}>
+      <main className="crm-shell crm-login-shell">
         <section className="crm-login-card">
           <Image src="/logo-laserfix-light.jpg" alt="LaserFix" width={360} height={203} priority />
           <div className="crm-login-title">
@@ -477,7 +494,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   }
 
   return (
-    <main className={`crm-shell crm-${crmTheme}`}>
+    <main className="crm-shell">
       <header className="crm-header">
         <div>
           <p className="crm-kicker">CRM LaserFix</p>
@@ -506,13 +523,14 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
             </Link>
           )}
           <button
-            aria-label={crmTheme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+            aria-label="Alternar tema do CRM"
             className="crm-secondary-button crm-theme-button"
-            onClick={() => setCrmTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"))}
+            onClick={toggleStoredCrmTheme}
+            title="Alternar tema do CRM"
             type="button"
           >
-            {crmTheme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-            {crmTheme === "dark" ? "Claro" : "Escuro"}
+            <Moon aria-hidden="true" className="crm-theme-icon-dark" />
+            <Sun aria-hidden="true" className="crm-theme-icon-light" />
           </button>
           <button className="crm-secondary-button crm-logout-button" onClick={() => signOut(auth)} type="button">
             <LogOut aria-hidden="true" />
