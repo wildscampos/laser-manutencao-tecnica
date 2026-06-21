@@ -99,6 +99,15 @@ test.describe("CRM LaserFix", () => {
     await expect(page.getByLabel("Valor total por mês")).toHaveCount(0);
   });
 
+  test("nao preenche meses sem dados em grafico acumulado", async ({ page }) => {
+    await page.goto("/crm");
+
+    await page.getByRole("button", { name: /Valor total geral/i }).click();
+    await expect(page.getByLabel("Valor total geral acumulado")).toBeVisible();
+    await expect(page.locator(".crm-chart-label")).toHaveCount(12);
+    await expect(page.locator(".crm-chart-bar")).toHaveCount(1);
+  });
+
   test("mantém tema do CRM persistente entre páginas sem texto no botão", async ({ page }) => {
     await page.evaluate(() => {
       localStorage.setItem("laserfix-crm-theme", "light");

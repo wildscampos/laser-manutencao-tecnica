@@ -231,12 +231,13 @@ function buildDashboardCharts(appointments: CrmAppointment[], selectedMonth: str
 
   return chartConfigs.map<DashboardChart>((config) => {
     const points = yearMonths.map((month) => {
+      const monthAppointments = appointments.filter((appointment) => getMonthKey(appointment.data) === month);
       const scopedAppointments = config.cumulative
         ? appointments.filter((appointment) => getMonthKey(appointment.data) <= month)
-        : appointments.filter((appointment) => getMonthKey(appointment.data) === month);
+        : monthAppointments;
       return {
         label: formatChartMonth(month),
-        value: getChartMetricValue(calculateMetrics(scopedAppointments), config.key),
+        value: config.cumulative && !monthAppointments.length ? 0 : getChartMetricValue(calculateMetrics(scopedAppointments), config.key),
       };
     });
     const pointsWithData = points.filter((point) => point.value > 0);
