@@ -1831,6 +1831,40 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   padding: 0.75rem 1rem 1rem;
 }
 
+.crm-edit-details {
+  border: 1px solid rgba(0, 122, 204, 0.16);
+  border-radius: 6px;
+  background: rgba(0, 168, 255, 0.04);
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+}
+
+.crm-edit-details summary {
+  cursor: pointer;
+  list-style: none;
+  color: #0078d4;
+  font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.crm-edit-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.crm-edit-details summary::after {
+  content: " +";
+}
+
+.crm-edit-details[open] summary::after {
+  content: " –";
+}
+
+.crm-compact-edit-form {
+  margin-top: 0.85rem;
+}
+
 .crm-history-list {
   display: grid;
   gap: 0.65rem;
@@ -2279,7 +2313,8 @@ html[data-crm-theme="dark"] .crm-shell .crm-values,
 html[data-crm-theme="dark"] .crm-shell .crm-service-toggle,
 html[data-crm-theme="dark"] .crm-shell .crm-history-list div,
 html[data-crm-theme="dark"] .crm-shell .crm-service-picker label,
-html[data-crm-theme="dark"] .crm-shell .crm-service-record {
+html[data-crm-theme="dark"] .crm-shell .crm-service-record,
+html[data-crm-theme="dark"] .crm-shell .crm-edit-details {
   border-color: rgba(0, 168, 255, 0.26);
   background: rgba(0, 168, 255, 0.08);
 }

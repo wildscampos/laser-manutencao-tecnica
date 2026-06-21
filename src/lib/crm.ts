@@ -101,6 +101,19 @@ export type ManualAppointmentInput = {
   observacoes: string;
 };
 
+export type AppointmentEditInput = {
+  servico: string;
+  observacoes?: string;
+  deslocamentoValor: number;
+  valorServico: number;
+  valorTotal: number;
+  tempoAtendimentoMin: number;
+  pagamentoStatus: PaymentStatus;
+  pagamentoAgendadoPara?: string;
+  servicosRealizados?: string;
+  crmObservacoes?: string;
+};
+
 export type CrmMetrics = {
   appointments: number;
   completed: number;
@@ -217,6 +230,36 @@ export async function saveService(service: ServiceInput, serviceId?: string) {
   );
 
   return id;
+}
+
+export async function updateCustomer(customerId: string, customer: CustomerInput) {
+  return saveCustomer(customer, customerId);
+}
+
+export async function updateService(serviceId: string, service: ServiceInput) {
+  return saveService(service, serviceId);
+}
+
+export async function updateAppointmentDetails(appointmentId: string, values: AppointmentEditInput) {
+  const nowIso = new Date().toISOString();
+  const serviceValue = Number(values.valorServico) || 0;
+  const travelValue = Number(values.deslocamentoValor) || 0;
+  const totalValue = Number(values.valorTotal) || serviceValue + travelValue;
+
+  await updateDoc(doc(db, "agendamentos", appointmentId), {
+    servico: values.servico,
+    observacoes: values.observacoes || "",
+    deslocamentoValor: travelValue,
+    valorServico: serviceValue,
+    valorTotal: totalValue,
+    tempoAtendimentoMin: Math.max(0, Number(values.tempoAtendimentoMin) || 0),
+    pagamentoStatus: values.pagamentoStatus,
+    pagamentoAgendadoPara: values.pagamentoStatus === "agendado" ? values.pagamentoAgendadoPara || "" : "",
+    servicosRealizados: values.servicosRealizados || "",
+    crmObservacoes: values.crmObservacoes || "",
+    updatedAt: serverTimestamp(),
+    updatedAtIso: nowIso,
+  });
 }
 
 export async function seedDefaultServices(services: ServiceInput[]) {
