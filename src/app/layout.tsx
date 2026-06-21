@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PwaRegister } from "@/components/pwa-register";
+import { PwaSplash } from "@/components/pwa-splash";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -88,6 +89,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <PwaRegister />
+        <PwaSplash />
         {children}
       </body>
     </html>

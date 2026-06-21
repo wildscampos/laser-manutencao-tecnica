@@ -2210,6 +2210,55 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   gap: 0.65rem;
 }
 
+.pwa-custom-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  padding: 1.5rem;
+  animation: pwaSplashExit 1.6s ease both;
+}
+
+.pwa-custom-splash img {
+  width: min(86vw, 46rem);
+  max-height: 62vh;
+  object-fit: contain;
+  filter: drop-shadow(0 1.5rem 2.2rem rgba(0, 168, 255, 0.16));
+  animation: pwaSplashLogo 1.6s ease both;
+}
+
+@keyframes pwaSplashLogo {
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  18%,
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes pwaSplashExit {
+  0%,
+  76% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 .crm-payment-date {
   min-width: min(100%, 12rem);
 }
