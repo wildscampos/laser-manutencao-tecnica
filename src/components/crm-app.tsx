@@ -24,11 +24,13 @@ import {
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from "firebase/auth";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { auth } from "@/lib/firebase-client";
+import { getFreeTimes } from "@/lib/client-appointments";
 import {
   blockAvailability,
   calculateMetrics,
   completeAppointment,
   createManualAppointment,
+  formatServiceLabel,
   getMonthKey,
   listenToAppointments,
   listenToCustomers,
@@ -48,6 +50,7 @@ import {
   type PaymentStatus,
   type ServiceInput,
 } from "@/lib/crm";
+import { getAvailableTimesForDate } from "@/lib/schedule";
 
 const crmLoginName = "Wilds Campos";
 const crmLoginEmail = "wilds.campos@laserfix.app";
@@ -159,6 +162,14 @@ function parsePerformedServices(value = "") {
 
 function formatPerformedServices(values: string[]) {
   return values.join(", ");
+}
+
+function formatServiceListLabel(value = "") {
+  return value
+    .split(",")
+    .map((service) => formatServiceLabel(service))
+    .filter(Boolean)
+    .join(", ");
 }
 
 function normalizeWhatsAppNumber(value: string) {
@@ -448,8 +459,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
     try {
       const message = await action();
       if (message) setSuccess(message);
+      return true;
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Não foi possível salvar os dados.");
+      return false;
     } finally {
       setBusyId("");
     }
@@ -574,11 +587,6 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
           appointments={appointments}
           busy={busyId === "global"}
           customers={customers}
-          serviceOptions={serviceOptions}
-          onCreateAppointment={(input) => runGlobalAction(async () => {
-            await createManualAppointment(input);
-            return "Agendamento manual criado e horário bloqueado.";
-          })}
           onSaveCustomer={(customer) => runGlobalAction(async () => {
             await saveCustomer(customer);
             return "Cliente salvo no cadastro.";
@@ -651,7 +659,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
                 <div className="crm-service-list">
                   {monthMetrics.serviceCounts.map((item) => (
                     <div key={item.service}>
-                      <span>{item.service}</span>
+                      <span>{formatServiceListLabel(item.service)}</span>
                       <strong>{item.count}</strong>
                     </div>
                   ))}
@@ -669,6 +677,11 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         <AppointmentsView
           appointments={appointments}
           busyId={busyId}
+          customers={customers}
+          onCreateAppointment={(input) => runGlobalAction(async () => {
+            await createManualAppointment(input);
+            return "Agendamento manual criado e horário bloqueado.";
+          })}
           onComplete={(appointment) => runAction(appointment.id, () => completeAppointment(appointment))}
           onPayment={(appointmentId, status, date) => runAction(appointmentId, () => updatePaymentStatus(appointmentId, status, date))}
           onSaveNotes={(appointmentId, values) => runAction(appointmentId, () => updateCrmNotes(appointmentId, values))}
@@ -693,6 +706,8 @@ function MetricCard({ icon: Icon, label, value }: { icon: React.ElementType; lab
 function AppointmentsView({
   appointments,
   busyId,
+  customers,
+  onCreateAppointment,
   onComplete,
   onPayment,
   onSaveNotes,
@@ -701,6 +716,8 @@ function AppointmentsView({
 }: {
   appointments: CrmAppointment[];
   busyId: string;
+  customers: CrmCustomer[];
+  onCreateAppointment: (input: ManualAppointmentInput) => Promise<boolean>;
   onComplete: (appointment: CrmAppointment) => void;
   onPayment: (appointmentId: string, status: PaymentStatus, scheduledDate?: string) => void;
   onSaveNotes: (appointmentId: string, values: { servicosRealizados?: string; crmObservacoes?: string }) => void;
@@ -733,6 +750,23 @@ function AppointmentsView({
           </select>
         </label>
       </section>
+
+      <section className="crm-page-grid">
+        <div className="crm-panel crm-wide-panel">
+          <div className="crm-section-title">
+            <h2>Agendamento manual</h2>
+            <span>Por fora do site</span>
+          </div>
+          <ManualAppointmentForm
+            appointments={appointments}
+            busy={busyId === "global"}
+            customers={customers}
+            onCreate={onCreateAppointment}
+            serviceOptions={serviceOptions}
+          />
+        </div>
+      </section>
+
       <section className="crm-appointments">
         <div className="crm-section-title">
           <h2>Agendamentos</h2>
@@ -765,16 +799,12 @@ function CustomersView({
   appointments,
   busy,
   customers,
-  serviceOptions,
-  onCreateAppointment,
   onSaveCustomer,
 }: {
   appointments: CrmAppointment[];
   busy: boolean;
   customers: CrmCustomer[];
-  serviceOptions: string[];
-  onCreateAppointment: (input: ManualAppointmentInput) => void;
-  onSaveCustomer: (customer: CustomerInput) => void;
+  onSaveCustomer: (customer: CustomerInput) => Promise<boolean>;
 }) {
   return (
     <section className="crm-page-grid">
@@ -784,14 +814,6 @@ function CustomersView({
           <span>{customers.length} cliente(s)</span>
         </div>
         <CustomerForm busy={busy} onSave={onSaveCustomer} />
-      </div>
-
-      <div className="crm-panel">
-        <div className="crm-section-title">
-          <h2>Agendamento manual</h2>
-          <span>Por fora do site</span>
-        </div>
-        <ManualAppointmentForm busy={busy} customers={customers} onCreate={onCreateAppointment} serviceOptions={serviceOptions} />
       </div>
 
       <div className="crm-panel crm-wide-panel">
@@ -869,7 +891,7 @@ function HistoryView({ appointments, customers }: { appointments: CrmAppointment
                 {customerAppointments.map((appointment) => (
                   <div key={appointment.id}>
                     <strong>{formatDate(appointment.data)} · {appointment.horario}</strong>
-                    <span>{appointment.servicosRealizados || appointment.servico}</span>
+                    <span>{formatServiceListLabel(appointment.servicosRealizados || appointment.servico)}</span>
                     <span>{formatCurrency(appointment.valorTotal || 0)} · {getPaymentLabel(appointment.pagamentoStatus)}</span>
                   </div>
                 ))}
@@ -989,7 +1011,7 @@ function FinanceView({
                 <div>
                   <h3>{appointment.nome}</h3>
                   <p>{formatDate(appointment.data)} às {appointment.horario} · {appointment.cidade}</p>
-                  <p>{appointment.servicosRealizados || appointment.servico}</p>
+                  <p>{formatServiceListLabel(appointment.servicosRealizados || appointment.servico)}</p>
                 </div>
                 <div className="crm-values">
                   <strong>{formatCurrency(appointment.valorTotal || 0)}</strong>
@@ -1113,17 +1135,17 @@ function getCustomerAppointments(customer: CrmCustomer, appointments: CrmAppoint
     .sort((a, b) => b.data.localeCompare(a.data) || b.horario.localeCompare(a.horario));
 }
 
-function CustomerForm({ busy, onSave }: { busy: boolean; onSave: (customer: CustomerInput) => void }) {
+function CustomerForm({ busy, onSave }: { busy: boolean; onSave: (customer: CustomerInput) => Promise<boolean> }) {
   const [customer, setCustomer] = useState<CustomerInput>(emptyCustomer);
 
   function updateField(field: keyof CustomerInput, value: string) {
     setCustomer((current) => ({ ...current, [field]: value }));
   }
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSave(customer);
-    setCustomer(emptyCustomer);
+    const saved = await onSave(customer);
+    if (saved) setCustomer(emptyCustomer);
   }
 
   return (
@@ -1163,37 +1185,78 @@ function CustomerForm({ busy, onSave }: { busy: boolean; onSave: (customer: Cust
 }
 
 function ManualAppointmentForm({
+  appointments,
   busy,
   customers,
   onCreate,
   serviceOptions,
 }: {
+  appointments: CrmAppointment[];
   busy: boolean;
   customers: CrmCustomer[];
-  onCreate: (input: ManualAppointmentInput) => void;
+  onCreate: (input: ManualAppointmentInput) => Promise<boolean>;
   serviceOptions: string[];
 }) {
   const [mode, setMode] = useState<"existing" | "new">("existing");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [newCustomer, setNewCustomer] = useState<CustomerInput>(emptyCustomer);
   const [appointment, setAppointment] = useState({
-    servico: "Manutenção preventiva",
+    servico: serviceOptions[0] || performedServiceOptions[0],
     data: new Date().toISOString().slice(0, 10),
-    horario: "18:00",
+    horario: "",
     observacoes: "",
   });
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
 
   const selectedCustomer = customers.find((customer) => customer.id === selectedCustomerId) || customers[0];
   const effectiveMode = customers.length ? mode : "new";
+
+  useEffect(() => {
+    let active = true;
+    const data = appointment.data;
+
+    async function loadAvailableTimes() {
+      try {
+        const freeTimes = await getFreeTimes(data);
+        if (!active) return;
+        setAvailableTimes(freeTimes);
+        setAppointment((current) => ({
+          ...current,
+          horario: freeTimes.includes(current.horario) ? current.horario : freeTimes[0] || "",
+        }));
+      } catch {
+        const occupiedTimes = new Set(
+          appointments
+            .filter((currentAppointment) => currentAppointment.data === data && currentAppointment.status !== "concluido")
+            .map((currentAppointment) => currentAppointment.horario),
+        );
+        const fallbackTimes = getAvailableTimesForDate(data).filter((time) => !occupiedTimes.has(time));
+        if (!active) return;
+        setAvailableTimes(fallbackTimes);
+        setAppointment((current) => ({
+          ...current,
+          horario: fallbackTimes.includes(current.horario) ? current.horario : fallbackTimes[0] || "",
+        }));
+      }
+    }
+
+    void loadAvailableTimes();
+
+    return () => {
+      active = false;
+    };
+  }, [appointment.data, appointments]);
 
   function updateNewCustomer(field: keyof CustomerInput, value: string) {
     setNewCustomer((current) => ({ ...current, [field]: value }));
   }
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!appointment.horario) return;
+
     const customer = effectiveMode === "existing" && selectedCustomer ? selectedCustomer : newCustomer;
-    onCreate({
+    const created = await onCreate({
       clienteId: effectiveMode === "existing" ? selectedCustomer?.id : undefined,
       cliente: {
         nome: customer.nome,
@@ -1208,6 +1271,18 @@ function ManualAppointmentForm({
         observacoes: customer.observacoes || "",
       },
       ...appointment,
+    });
+
+    if (!created) return;
+
+    setNewCustomer(emptyCustomer);
+    setSelectedCustomerId("");
+    setMode(customers.length ? "existing" : "new");
+    setAppointment({
+      servico: serviceOptions[0] || performedServiceOptions[0],
+      data: new Date().toISOString().slice(0, 10),
+      horario: "",
+      observacoes: "",
     });
   }
 
@@ -1258,7 +1333,8 @@ function ManualAppointmentForm({
       <label>
         <span>Horário</span>
         <select value={appointment.horario} onChange={(event) => setAppointment((current) => ({ ...current, horario: event.target.value }))}>
-          {["08:00", "09:00", "10:00", "11:00", "12:00", "18:00", "19:00", "20:00"].map((time) => (
+          {!availableTimes.length && <option value="">Nenhum horário livre</option>}
+          {availableTimes.map((time) => (
             <option key={time} value={time}>{time}</option>
           ))}
         </select>
@@ -1267,7 +1343,7 @@ function ManualAppointmentForm({
         <span>Observações</span>
         <textarea value={appointment.observacoes} onChange={(event) => setAppointment((current) => ({ ...current, observacoes: event.target.value }))} />
       </label>
-      <button className="crm-primary-button crm-form-wide" disabled={busy} type="submit">
+      <button className="crm-primary-button crm-form-wide" disabled={busy || !appointment.horario} type="submit">
         <Plus aria-hidden="true" />
         Criar agendamento
       </button>

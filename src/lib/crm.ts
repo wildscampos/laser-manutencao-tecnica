@@ -386,6 +386,12 @@ export function getMonthKey(dateValue: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(dateValue) ? dateValue.slice(0, 7) : "";
 }
 
+export function formatServiceLabel(service: string) {
+  const trimmedService = service.trim();
+  if (!trimmedService) return "";
+  return trimmedService.charAt(0).toLocaleUpperCase("pt-BR") + trimmedService.slice(1);
+}
+
 export function calculateMetrics(appointments: CrmAppointment[]): CrmMetrics {
   const completedAppointments = appointments.filter((appointment) => appointment.status === "concluido");
   const totalValue = completedAppointments.reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
@@ -406,7 +412,10 @@ export function calculateMetrics(appointments: CrmAppointment[]): CrmMetrics {
       .split(",")
       .map((service) => service.trim())
       .filter(Boolean);
-    services.forEach((service) => serviceMap.set(service, (serviceMap.get(service) || 0) + 1));
+    services.forEach((service) => {
+      const serviceLabel = formatServiceLabel(service);
+      serviceMap.set(serviceLabel, (serviceMap.get(serviceLabel) || 0) + 1);
+    });
   });
 
   return {

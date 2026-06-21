@@ -38,6 +38,23 @@ test.describe("CRM LaserFix", () => {
     }
   });
 
+  test("mantém agendamento manual somente na página de agendamentos", async ({ page }) => {
+    await page.goto("/crm/clientes");
+    await expect(page.getByRole("heading", { name: /^Agendamento manual$/i })).toHaveCount(0);
+
+    await page.goto("/crm/agendamentos");
+    await expect(page.getByRole("heading", { name: /^Agendamento manual$/i })).toBeVisible();
+  });
+
+  test("oculta horários indisponíveis no agendamento manual", async ({ page }) => {
+    await page.goto("/crm/agendamentos");
+    await page.getByLabel("Data").fill("2026-06-21");
+
+    const timeSelect = page.getByLabel("Horário");
+    await expect(timeSelect).toContainText("Nenhum horário livre");
+    await expect(timeSelect).not.toContainText("18:00");
+  });
+
   test("mantém tema do CRM persistente entre páginas sem texto no botão", async ({ page }) => {
     await page.evaluate(() => {
       localStorage.setItem("laserfix-crm-theme", "light");
