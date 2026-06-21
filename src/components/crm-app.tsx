@@ -145,6 +145,32 @@ function formatDateTime(iso?: string) {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
 }
 
+function getCurrentMonthKey() {
+  return new Date().toISOString().slice(0, 7);
+}
+
+function useAutoMonthSelection() {
+  const [currentMonth, setCurrentMonth] = useState(getCurrentMonthKey);
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey);
+
+  useEffect(() => {
+    function refreshCurrentMonth() {
+      const nextMonth = getCurrentMonthKey();
+      setCurrentMonth((previousMonth) => {
+        if (previousMonth === nextMonth) return previousMonth;
+        setSelectedMonth((selected) => (selected === previousMonth ? nextMonth : selected));
+        return nextMonth;
+      });
+    }
+
+    refreshCurrentMonth();
+    const timerId = window.setInterval(refreshCurrentMonth, 60_000);
+    return () => window.clearInterval(timerId);
+  }, []);
+
+  return { currentMonth, selectedMonth, setSelectedMonth };
+}
+
 function getStatusLabel(status: string) {
   if (status === "atendimento_iniciado") return "Iniciado";
   if (status === "concluido") return "Concluído";
@@ -278,7 +304,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   const [appointments, setAppointments] = useState<CrmAppointment[]>([]);
   const [customers, setCustomers] = useState<CrmCustomer[]>([]);
   const [services, setServices] = useState<CrmService[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const { currentMonth, selectedMonth, setSelectedMonth } = useAutoMonthSelection();
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [busyId, setBusyId] = useState("");
@@ -292,9 +318,9 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   const isAdmin = user?.email ? adminEmails.includes(user.email.toLowerCase()) : false;
   const months = useMemo(() => {
     const monthSet = new Set(appointments.map((appointment) => getMonthKey(appointment.data)).filter(Boolean));
-    monthSet.add(new Date().toISOString().slice(0, 7));
+    monthSet.add(currentMonth);
     return Array.from(monthSet).sort().reverse();
-  }, [appointments]);
+  }, [appointments, currentMonth]);
   const monthAppointments = useMemo(
     () => appointments.filter((appointment) => getMonthKey(appointment.data) === selectedMonth),
     [appointments, selectedMonth],
@@ -746,12 +772,12 @@ function AppointmentsView({
   serviceOptions: string[];
 }) {
   const [openAppointmentId, setOpenAppointmentId] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const { currentMonth, selectedMonth, setSelectedMonth } = useAutoMonthSelection();
   const months = useMemo(() => {
     const monthSet = new Set(appointments.map((appointment) => getMonthKey(appointment.data)).filter(Boolean));
-    monthSet.add(new Date().toISOString().slice(0, 7));
+    monthSet.add(currentMonth);
     return Array.from(monthSet).sort().reverse();
-  }, [appointments]);
+  }, [appointments, currentMonth]);
   const monthAppointments = useMemo(
     () => appointments.filter((appointment) => getMonthKey(appointment.data) === selectedMonth),
     [appointments, selectedMonth],
@@ -1048,11 +1074,13 @@ function FinanceView({
         <MetricCard icon={Clock3} label="Pendente geral" value={formatCurrency(totalMetrics.pendingValue)} />
       </section>
 
-      <section className="crm-appointments">
-        <div className="crm-section-title">
-          <h2>Histórico financeiro</h2>
-          <span>{financialAppointments.length} atendimento(s)</span>
-        </div>
+      <details className="crm-appointments crm-finance-history-details">
+        <summary>
+          <div className="crm-section-title">
+            <h2>Histórico financeiro</h2>
+            <span>{financialAppointments.length} atendimento(s)</span>
+          </div>
+        </summary>
         <div className="crm-list crm-finance-list">
           {financialAppointments.map((appointment) => (
             <article className="crm-appointment-card crm-finance-card" key={appointment.id}>
@@ -1072,7 +1100,7 @@ function FinanceView({
           ))}
           {!financialAppointments.length && <p className="crm-empty">Nenhum atendimento concluído no mês selecionado.</p>}
         </div>
-      </section>
+      </details>
     </>
   );
 }

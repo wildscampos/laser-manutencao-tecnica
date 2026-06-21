@@ -69,6 +69,13 @@ test.describe("CRM LaserFix", () => {
     await expect(page.getByRole("button", { name: /Salvar cliente/i })).toBeVisible();
   });
 
+  test("mantém histórico financeiro recolhido por padrão", async ({ page }) => {
+    await page.goto("/crm/financeiro");
+    await expect(page.locator(".crm-finance-card").first()).toBeHidden();
+    await page.getByText("Histórico financeiro").click();
+    await expect(page.locator(".crm-finance-card").first()).toBeVisible();
+  });
+
   test("mantém tema do CRM persistente entre páginas sem texto no botão", async ({ page }) => {
     await page.evaluate(() => {
       localStorage.setItem("laserfix-crm-theme", "light");
