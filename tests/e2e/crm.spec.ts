@@ -86,6 +86,17 @@ test.describe("CRM LaserFix", () => {
     await expect(page.getByRole("button", { name: /Bloquear horário/i })).toBeDisabled();
   });
 
+  test("expande grafico ao clicar em um card de metrica", async ({ page }) => {
+    await page.goto("/crm");
+
+    const metric = page.getByRole("button", { name: /Valor total no mês/i });
+    await expect(page.getByLabel("Valor total por mês")).toHaveCount(0);
+    await metric.click();
+    await expect(page.getByLabel("Valor total por mês")).toBeVisible();
+    await metric.click();
+    await expect(page.getByLabel("Valor total por mês")).toHaveCount(0);
+  });
+
   test("mantém tema do CRM persistente entre páginas sem texto no botão", async ({ page }) => {
     await page.evaluate(() => {
       localStorage.setItem("laserfix-crm-theme", "light");
