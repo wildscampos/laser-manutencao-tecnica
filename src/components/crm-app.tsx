@@ -773,11 +773,13 @@ function AppointmentsView({
       </section>
 
       <section className="crm-page-grid">
-        <div className="crm-panel crm-wide-panel">
-          <div className="crm-section-title">
-            <h2>Agendamento manual</h2>
-            <span>Por fora do site</span>
-          </div>
+        <details className="crm-panel crm-wide-panel crm-form-details">
+          <summary>
+            <div className="crm-section-title">
+              <h2>Agendamento manual</h2>
+              <span>Por fora do site</span>
+            </div>
+          </summary>
           <ManualAppointmentForm
             appointments={appointments}
             busy={busyId === "global"}
@@ -785,7 +787,7 @@ function AppointmentsView({
             onCreate={onCreateAppointment}
             serviceOptions={serviceOptions}
           />
-        </div>
+        </details>
       </section>
 
       <section className="crm-appointments">
@@ -832,13 +834,15 @@ function CustomersView({
 }) {
   return (
     <section className="crm-page-grid">
-      <div className="crm-panel">
-        <div className="crm-section-title">
-          <h2>Cadastrar cliente</h2>
-          <span>{customers.length} cliente(s)</span>
-        </div>
+      <details className="crm-panel crm-form-details">
+        <summary>
+          <div className="crm-section-title">
+            <h2>Cadastrar cliente</h2>
+            <span>{customers.length} cliente(s)</span>
+          </div>
+        </summary>
         <CustomerForm busy={busy} onSave={onSaveCustomer} />
-      </div>
+      </details>
 
       <div className="crm-panel crm-wide-panel">
         <h2>Clientes cadastrados</h2>

@@ -1926,6 +1926,35 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   padding: 1rem;
 }
 
+.crm-form-details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.crm-form-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.crm-form-details > summary .crm-section-title {
+  margin-bottom: 0;
+}
+
+.crm-form-details > summary .crm-section-title::after {
+  color: #0078d4;
+  content: "+";
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.crm-form-details[open] > summary .crm-section-title {
+  margin-bottom: 0.9rem;
+}
+
+.crm-form-details[open] > summary .crm-section-title::after {
+  content: "–";
+}
+
 .crm-panel h2,
 .crm-section-title h2 {
   color: #07111f;
