@@ -14,12 +14,16 @@ Site publicado: https://laserfix.web.app
 - Firebase Firestore client SDK
 - Firebase Hosting gratuito
 - Lucide React
+- Playwright para testes E2E
 
 ## Estrutura
 
 - `src/app/page.tsx`: single page application e conteúdo do site.
+- `src/app/crm`: CRM restrito com dashboard e páginas internas.
 - `src/components/booking-form.tsx`: formulário de agendamento.
+- `src/components/crm-app.tsx`: interface do CRM, dashboards, clientes, serviços, financeiro e disponibilidade.
 - `src/lib/client-appointments.ts`: consulta disponibilidade e cria reservas no Firestore.
+- `src/lib/crm.ts`: operações administrativas do CRM no Firestore.
 - `src/lib/firebase-client.ts`: configuração pública do Firebase Web SDK.
 - `src/lib/schedule.ts`: regras de dias e horários.
 - `src/lib/service-area.ts`: cidades atendidas e cálculo interno de deslocamento.
@@ -35,6 +39,8 @@ Coleções:
 
 - `slots`: pública para disponibilidade. Contém apenas `data`, `horario`, `status` e auditoria básica.
 - `agendamentos`: dados completos do cliente. Escrita permitida apenas na criação; leitura pública bloqueada.
+- `clientes`: cadastro restrito de clientes do CRM.
+- `servicos`: catálogo restrito de serviços e valores do CRM.
 
 Documento: ID determinístico no formato `YYYY-MM-DD_HH-mm`, garantindo unicidade por `data + horario`.
 
@@ -74,6 +80,33 @@ npm install
 npm run dev
 ```
 
+## CRM
+
+Páginas restritas:
+
+- `/crm`: dashboard geral com métricas e botões para módulos.
+- `/crm/agendamentos`: iniciar, concluir, registrar serviços, pagamentos e cobrança por WhatsApp.
+- `/crm/clientes`: cadastro de clientes e agendamento manual.
+- `/crm/historico`: histórico por cliente.
+- `/crm/servicos`: catálogo de serviços, valores e duração estimada.
+- `/crm/financeiro`: recebidos, pendentes, pagamentos agendados e histórico financeiro.
+- `/crm/disponibilidade`: bloqueio manual de horários no site público.
+
+## Testes
+
+```bash
+npm run lint
+npm run build
+npm run test:e2e
+```
+
+Para testar login e páginas internas do CRM, defina `CRM_TEST_PASSWORD` no terminal antes do Playwright:
+
+```bash
+$env:CRM_TEST_PASSWORD="sua-senha"
+npm run test:e2e
+```
+
 ## Deploy gratuito
 
 ```bash
@@ -86,5 +119,6 @@ firebase deploy --only firestore:rules,hosting --project laser-manutencao-co2-20
 - Para trocar o WhatsApp, altere `NEXT_PUBLIC_WHATSAPP_NUMBER` ou `src/config/whatsapp.ts`.
 - Para alterar horários, edite `src/lib/schedule.ts` e revise `firestore.rules`.
 - Para alterar cidades, distância ou taxa de deslocamento, edite `src/lib/service-area.ts` e revise `firestore.rules`.
-- Para alterar serviços, edite `src/app/page.tsx` e `src/lib/schedule.ts`.
+- Para alterar serviços operacionais do CRM, use `/crm/servicos`.
+- Para alterar textos comerciais do site, edite `src/app/page.tsx`.
 - Para revisar reservas, consulte a coleção `agendamentos` no Firestore.

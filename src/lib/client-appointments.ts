@@ -22,7 +22,7 @@ export async function getFreeTimes(data: string) {
   const snapshot = await getDocs(query(collection(db, "slots"), where("data", "==", data)));
   const bookedTimes = new Set(
     snapshot.docs
-      .filter((slot) => slot.data().status === "agendado")
+      .filter((slot) => ["agendado", "bloqueado"].includes(slot.data().status))
       .map((slot) => slot.data().horario as string),
   );
 
@@ -40,7 +40,7 @@ export async function getBookedTimesByDate(startDate: string, endDate: string) {
 
   return snapshot.docs.reduce<Record<string, string[]>>((bookedByDate, slot) => {
     const slotData = slot.data();
-    if (slotData.status !== "agendado") return bookedByDate;
+    if (!["agendado", "bloqueado"].includes(slotData.status)) return bookedByDate;
 
     const data = slotData.data as string;
     const horario = slotData.horario as string;

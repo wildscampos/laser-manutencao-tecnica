@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -55,17 +56,41 @@ export type CrmCustomer = {
   telefone: string;
   whatsapp: string;
   empresa?: string;
+  cpfCnpj?: string;
   rua: string;
   numero: string;
   bairro: string;
   cidade: string;
   modeloMaquina?: string;
+  etiquetas?: string;
+  preferenciasHorario?: string;
+  aniversario?: string;
+  camposCustomizados?: string;
   observacoes?: string;
   createdAtIso?: string;
   updatedAtIso?: string;
 };
 
 export type CustomerInput = Omit<CrmCustomer, "id" | "createdAtIso" | "updatedAtIso">;
+
+export type CrmService = {
+  id: string;
+  nome: string;
+  descricao: string;
+  valorBase: number;
+  duracaoMin: number;
+  ativo: boolean;
+  createdAtIso?: string;
+  updatedAtIso?: string;
+};
+
+export type ServiceInput = Omit<CrmService, "id" | "createdAtIso" | "updatedAtIso">;
+
+export type AvailabilityBlockInput = {
+  data: string;
+  horario: string;
+  motivo: string;
+};
 
 export type ManualAppointmentInput = {
   clienteId?: string;
@@ -81,6 +106,9 @@ export type CrmMetrics = {
   completed: number;
   inProgress: number;
   pendingPayment: number;
+  receivedValue: number;
+  pendingValue: number;
+  scheduledPaymentValue: number;
   totalValue: number;
   averageValue: number;
   totalMinutes: number;
@@ -114,6 +142,18 @@ export function listenToCustomers(onChange: (customers: CrmCustomer[]) => void, 
     customersQuery,
     (snapshot) => {
       onChange(snapshot.docs.map((customer) => ({ id: customer.id, ...customer.data() }) as CrmCustomer));
+    },
+    onError,
+  );
+}
+
+export function listenToServices(onChange: (services: CrmService[]) => void, onError: (error: Error) => void): Unsubscribe {
+  const servicesQuery = query(collection(db, "servicos"), orderBy("nome", "asc"));
+
+  return onSnapshot(
+    servicesQuery,
+    (snapshot) => {
+      onChange(snapshot.docs.map((service) => ({ id: service.id, ...service.data() }) as CrmService));
     },
     onError,
   );
@@ -153,6 +193,36 @@ export async function saveCustomer(customer: CustomerInput, customerId?: string)
   );
 
   return id;
+}
+
+export async function saveService(service: ServiceInput, serviceId?: string) {
+  const nowIso = new Date().toISOString();
+  const id = serviceId || normalizeId(service.nome) || `servico-${Date.now()}`;
+  const serviceRef = doc(db, "servicos", id);
+  const existingService = await getDoc(serviceRef);
+
+  await setDoc(
+    serviceRef,
+    {
+      id,
+      ...service,
+      valorBase: Number(service.valorBase) || 0,
+      duracaoMin: Number(service.duracaoMin) || 60,
+      ativo: service.ativo !== false,
+      createdAtIso: existingService.exists() ? existingService.data().createdAtIso || nowIso : nowIso,
+      updatedAt: serverTimestamp(),
+      updatedAtIso: nowIso,
+    },
+    { merge: true },
+  );
+
+  return id;
+}
+
+export async function seedDefaultServices(services: ServiceInput[]) {
+  const existingServices = await getDocs(collection(db, "servicos"));
+  if (!existingServices.empty) return;
+  await Promise.all(services.map((service) => saveService(service)));
 }
 
 export async function createManualAppointment(input: ManualAppointmentInput) {
@@ -215,6 +285,32 @@ export async function createManualAppointment(input: ManualAppointmentInput) {
       createdAt: serverTimestamp(),
       createdAtIso: nowIso,
       origem: "crm-manual",
+    });
+  });
+}
+
+export async function blockAvailability(input: AvailabilityBlockInput) {
+  const id = slotId(input.data, input.horario);
+  const slotRef = doc(db, "slots", id);
+  const appointmentRef = doc(db, "agendamentos", id);
+  const nowIso = new Date().toISOString();
+
+  await runTransaction(db, async (transaction) => {
+    const slotSnapshot = await transaction.get(slotRef);
+    const appointmentSnapshot = await transaction.get(appointmentRef);
+    if (slotSnapshot.exists() || appointmentSnapshot.exists()) {
+      throw new Error("Este horário já está ocupado.");
+    }
+
+    transaction.set(slotRef, {
+      id,
+      data: input.data,
+      horario: input.horario,
+      status: "bloqueado",
+      motivo: input.motivo || "Bloqueio manual",
+      createdAt: serverTimestamp(),
+      createdAtIso: nowIso,
+      origem: "crm-bloqueio",
     });
   });
 }
@@ -293,12 +389,24 @@ export function getMonthKey(dateValue: string) {
 export function calculateMetrics(appointments: CrmAppointment[]): CrmMetrics {
   const completedAppointments = appointments.filter((appointment) => appointment.status === "concluido");
   const totalValue = completedAppointments.reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
+  const receivedValue = completedAppointments
+    .filter((appointment) => appointment.pagamentoStatus === "recebido")
+    .reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
+  const scheduledPaymentValue = completedAppointments
+    .filter((appointment) => appointment.pagamentoStatus === "agendado")
+    .reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
+  const pendingValue = completedAppointments
+    .filter((appointment) => !appointment.pagamentoStatus || appointment.pagamentoStatus === "pendente")
+    .reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
   const totalMinutes = completedAppointments.reduce((sum, appointment) => sum + (appointment.tempoAtendimentoMin || 0), 0);
   const serviceMap = new Map<string, number>();
 
   completedAppointments.forEach((appointment) => {
-    const service = appointment.servicosRealizados?.trim() || appointment.servico;
-    serviceMap.set(service, (serviceMap.get(service) || 0) + 1);
+    const services = (appointment.servicosRealizados?.trim() || appointment.servico)
+      .split(",")
+      .map((service) => service.trim())
+      .filter(Boolean);
+    services.forEach((service) => serviceMap.set(service, (serviceMap.get(service) || 0) + 1));
   });
 
   return {
@@ -306,6 +414,9 @@ export function calculateMetrics(appointments: CrmAppointment[]): CrmMetrics {
     completed: completedAppointments.length,
     inProgress: appointments.filter((appointment) => appointment.status === "atendimento_iniciado").length,
     pendingPayment: completedAppointments.filter((appointment) => appointment.pagamentoStatus !== "recebido").length,
+    receivedValue,
+    pendingValue,
+    scheduledPaymentValue,
     totalValue,
     averageValue: completedAppointments.length ? totalValue / completedAppointments.length : 0,
     totalMinutes,
