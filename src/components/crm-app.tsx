@@ -652,6 +652,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
 
       {view === "availability" && (
         <AvailabilityView
+          appointments={appointments}
           busy={busyId === "global"}
           onBlock={(input) => runGlobalAction(async () => {
             await blockAvailability(input);
@@ -1106,25 +1107,71 @@ function FinanceView({
 }
 
 function AvailabilityView({
+  appointments,
   busy,
   onBlock,
 }: {
+  appointments: CrmAppointment[];
   busy: boolean;
-  onBlock: (input: AvailabilityBlockInput) => void;
+  onBlock: (input: AvailabilityBlockInput) => Promise<boolean>;
 }) {
   const [block, setBlock] = useState<AvailabilityBlockInput>({
     data: new Date().toISOString().slice(0, 10),
-    horario: "18:00",
+    horario: "",
     motivo: "Agenda externa",
   });
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const data = block.data;
+
+    async function loadAvailableTimes() {
+      try {
+        const freeTimes = await getFreeTimes(data);
+        if (!active) return;
+        setAvailableTimes(freeTimes);
+        setBlock((current) => ({
+          ...current,
+          horario: freeTimes.includes(current.horario) ? current.horario : freeTimes[0] || "",
+        }));
+      } catch {
+        const occupiedTimes = new Set(
+          appointments
+            .filter((appointment) => appointment.data === data && appointment.status !== "concluido")
+            .map((appointment) => appointment.horario),
+        );
+        const fallbackTimes = getAvailableTimesForDate(data).filter((time) => !occupiedTimes.has(time));
+        if (!active) return;
+        setAvailableTimes(fallbackTimes);
+        setBlock((current) => ({
+          ...current,
+          horario: fallbackTimes.includes(current.horario) ? current.horario : fallbackTimes[0] || "",
+        }));
+      }
+    }
+
+    void loadAvailableTimes();
+
+    return () => {
+      active = false;
+    };
+  }, [appointments, block.data]);
 
   function updateField(field: keyof AvailabilityBlockInput, value: string) {
     setBlock((current) => ({ ...current, [field]: value }));
   }
 
-  function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onBlock(block);
+    if (!block.horario) return;
+    const blocked = await onBlock(block);
+    if (!blocked) return;
+    setAvailableTimes((currentTimes) => currentTimes.filter((time) => time !== block.horario));
+    setBlock((current) => {
+      const nextTimes = availableTimes.filter((time) => time !== current.horario);
+      return { ...current, horario: nextTimes[0] || "" };
+    });
   }
 
   return (
@@ -1138,13 +1185,14 @@ function AvailabilityView({
           <label>
             <span>Horário</span>
             <select value={block.horario} onChange={(event) => updateField("horario", event.target.value)}>
-              {["08:00", "09:00", "10:00", "11:00", "12:00", "18:00", "19:00", "20:00"].map((time) => (
+              {!availableTimes.length && <option value="">Nenhum horário livre</option>}
+              {availableTimes.map((time) => (
                 <option key={time} value={time}>{time}</option>
               ))}
             </select>
           </label>
           <CrmInput label="Motivo" value={block.motivo} onChange={(value) => updateField("motivo", value)} />
-          <button className="crm-primary-button crm-form-wide" disabled={busy} type="submit">
+          <button className="crm-primary-button crm-form-wide" disabled={busy || !block.horario} type="submit">
             <ShieldCheck aria-hidden="true" />
             Bloquear horário
           </button>

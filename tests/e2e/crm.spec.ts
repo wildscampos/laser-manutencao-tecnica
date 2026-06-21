@@ -76,6 +76,16 @@ test.describe("CRM LaserFix", () => {
     await expect(page.locator(".crm-finance-card").first()).toBeVisible();
   });
 
+  test("lista somente horários disponíveis no bloqueio manual", async ({ page }) => {
+    await page.goto("/crm/disponibilidade");
+    await page.getByLabel("Data").fill("2026-06-21");
+
+    const timeSelect = page.getByLabel("Horário");
+    await expect(timeSelect).toContainText("Nenhum horário livre");
+    await expect(timeSelect).not.toContainText("18:00");
+    await expect(page.getByRole("button", { name: /Bloquear horário/i })).toBeDisabled();
+  });
+
   test("mantém tema do CRM persistente entre páginas sem texto no botão", async ({ page }) => {
     await page.evaluate(() => {
       localStorage.setItem("laserfix-crm-theme", "light");
