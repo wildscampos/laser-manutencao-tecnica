@@ -796,7 +796,7 @@ function AppointmentsView({
           <span>{monthAppointments.length} registro(s)</span>
         </div>
 
-        <div className="crm-list">
+        <div className="crm-list crm-appointment-list">
           {monthAppointments.map((appointment) => (
             <AppointmentCard
               appointment={appointment}
