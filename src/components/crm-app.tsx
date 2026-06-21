@@ -1241,14 +1241,14 @@ function CustomerForm({
 
   return (
     <form className="crm-form-grid" onSubmit={submit}>
-      <CrmInput label="Nome" required value={customer.nome} onChange={(value) => updateField("nome", value)} />
+      <CrmInput label="Nome" value={customer.nome} onChange={(value) => updateField("nome", value)} />
       <CrmInput label="WhatsApp" value={customer.whatsapp} onChange={(value) => updateField("whatsapp", value)} />
       <CrmInput label="Telefone" value={customer.telefone} onChange={(value) => updateField("telefone", value)} />
       <CrmInput label="Empresa" value={customer.empresa || ""} onChange={(value) => updateField("empresa", value)} />
       <CrmInput label="CPF/CNPJ" value={customer.cpfCnpj || ""} onChange={(value) => updateField("cpfCnpj", value)} />
-      <CrmInput label="Rua" required value={customer.rua} onChange={(value) => updateField("rua", value)} />
-      <CrmInput label="Número" required value={customer.numero} onChange={(value) => updateField("numero", value)} />
-      <CrmInput label="Bairro" required value={customer.bairro} onChange={(value) => updateField("bairro", value)} />
+      <CrmInput label="Rua" value={customer.rua} onChange={(value) => updateField("rua", value)} />
+      <CrmInput label="Número" value={customer.numero} onChange={(value) => updateField("numero", value)} />
+      <CrmInput label="Bairro" value={customer.bairro} onChange={(value) => updateField("bairro", value)} />
       <label>
         <span>Cidade</span>
         <select value={customer.cidade} onChange={(event) => updateField("cidade", event.target.value)}>
@@ -1398,7 +1398,7 @@ function ManualAppointmentForm({
         </label>
       ) : (
         <>
-          <CrmInput label="Nome" required value={newCustomer.nome} onChange={(value) => updateNewCustomer("nome", value)} />
+          <CrmInput label="Nome" value={newCustomer.nome} onChange={(value) => updateNewCustomer("nome", value)} />
           <CrmInput label="WhatsApp" value={newCustomer.whatsapp} onChange={(value) => updateNewCustomer("whatsapp", value)} />
           <CrmInput label="Telefone" value={newCustomer.telefone} onChange={(value) => updateNewCustomer("telefone", value)} />
           <CrmInput label="Empresa" value={newCustomer.empresa || ""} onChange={(value) => updateNewCustomer("empresa", value)} />

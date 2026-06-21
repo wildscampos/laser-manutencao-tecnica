@@ -183,13 +183,18 @@ function normalizeId(value: string) {
 }
 
 export function makeCustomerId(name: string, city: string) {
-  const base = normalizeId(`${name}-${city}`) || `cliente-${Date.now()}`;
+  const base = normalizeId(`${name || "cliente"}-${city || "sem-cidade"}`) || `cliente-${Date.now()}`;
   return base;
 }
 
 export async function saveCustomer(customer: CustomerInput, customerId?: string) {
   const nowIso = new Date().toISOString();
-  const id = customerId || makeCustomerId(customer.nome, customer.cidade);
+  const normalizedCustomer = {
+    ...customer,
+    nome: customer.nome.trim() || "Cliente sem nome",
+    cidade: customer.cidade || "Guaratinguetá",
+  };
+  const id = customerId || makeCustomerId(normalizedCustomer.nome, normalizedCustomer.cidade);
   const customerRef = doc(db, "clientes", id);
   const existingCustomer = await getDoc(customerRef);
 
@@ -197,7 +202,7 @@ export async function saveCustomer(customer: CustomerInput, customerId?: string)
     customerRef,
     {
       id,
-      ...customer,
+      ...normalizedCustomer,
       createdAtIso: existingCustomer.exists() ? existingCustomer.data().createdAtIso || nowIso : nowIso,
       updatedAt: serverTimestamp(),
       updatedAtIso: nowIso,
@@ -270,7 +275,12 @@ export async function seedDefaultServices(services: ServiceInput[]) {
 
 export async function createManualAppointment(input: ManualAppointmentInput) {
   const nowIso = new Date().toISOString();
-  const customerId = input.clienteId || makeCustomerId(input.cliente.nome, input.cliente.cidade);
+  const customer = {
+    ...input.cliente,
+    nome: input.cliente.nome.trim() || "Cliente sem nome",
+    cidade: input.cliente.cidade || "Guaratinguetá",
+  };
+  const customerId = input.clienteId || makeCustomerId(customer.nome, customer.cidade);
   const appointmentId = slotId(input.data, input.horario);
   const customerRef = doc(db, "clientes", customerId);
   const appointmentRef = doc(db, "agendamentos", appointmentId);
@@ -286,12 +296,12 @@ export async function createManualAppointment(input: ManualAppointmentInput) {
     const customerSnapshot = await transaction.get(customerRef);
     transaction.set(
       customerRef,
-      {
-        id: customerId,
-        ...input.cliente,
-        createdAtIso: customerSnapshot.exists() ? customerSnapshot.data().createdAtIso || nowIso : nowIso,
-        updatedAt: serverTimestamp(),
-        updatedAtIso: nowIso,
+        {
+          id: customerId,
+          ...customer,
+          createdAtIso: customerSnapshot.exists() ? customerSnapshot.data().createdAtIso || nowIso : nowIso,
+          updatedAt: serverTimestamp(),
+          updatedAtIso: nowIso,
       },
       { merge: true },
     );
@@ -309,15 +319,15 @@ export async function createManualAppointment(input: ManualAppointmentInput) {
     transaction.set(appointmentRef, {
       id: appointmentId,
       clienteId: customerId,
-      nome: input.cliente.nome,
-      telefone: input.cliente.telefone,
-      whatsapp: input.cliente.whatsapp,
-      empresa: input.cliente.empresa || "",
-      rua: input.cliente.rua,
-      numero: input.cliente.numero,
-      bairro: input.cliente.bairro,
-      cidade: input.cliente.cidade,
-      modeloMaquina: input.cliente.modeloMaquina || "",
+      nome: customer.nome,
+      telefone: customer.telefone,
+      whatsapp: customer.whatsapp,
+      empresa: customer.empresa || "",
+      rua: customer.rua,
+      numero: customer.numero,
+      bairro: customer.bairro,
+      cidade: customer.cidade,
+      modeloMaquina: customer.modeloMaquina || "",
       servico: input.servico,
       data: input.data,
       horario: input.horario,
