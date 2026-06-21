@@ -63,7 +63,7 @@ html[data-theme="dark"] {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Aptos, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
 }
 
 main > section,
@@ -767,6 +767,7 @@ html[data-theme="light"] .logo-light {
 
 .faq-item summary {
   display: flex;
+  min-height: 2.75rem;
   cursor: pointer;
   list-style: none;
   align-items: center;
@@ -1088,18 +1089,14 @@ html[data-theme="dark"] .site-shell {
 .theme-toggle {
   display: inline-flex;
   min-height: 2.75rem;
+  min-width: 2.75rem;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
   border: 1px solid var(--border-strong);
   border-radius: 4px;
   background: rgba(0, 168, 255, 0.08);
-  padding-inline: 0.75rem;
+  padding: 0;
   color: var(--heading);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
@@ -1114,18 +1111,17 @@ html[data-theme="dark"] .site-shell {
 }
 
 .theme-toggle svg {
+  width: 1.15rem;
+  height: 1.15rem;
   color: var(--accent);
 }
 
 .theme-toggle-sun,
-.theme-toggle-light-label,
-html[data-theme="dark"] .theme-toggle-moon,
-html[data-theme="dark"] .theme-toggle-dark-label {
+html[data-theme="dark"] .theme-toggle-moon {
   display: none;
 }
 
-html[data-theme="dark"] .theme-toggle-sun,
-html[data-theme="dark"] .theme-toggle-light-label {
+html[data-theme="dark"] .theme-toggle-sun {
   display: inline-flex;
 }
 
@@ -1451,13 +1447,8 @@ html[data-theme="dark"] .slot-option input:disabled + span {
 }
 
 @media (max-width: 480px) {
-  html[data-theme] .theme-toggle span {
-    display: none;
-  }
-
   .theme-toggle {
     min-width: 2.75rem;
-    padding-inline: 0.65rem;
   }
 }
 
@@ -1603,8 +1594,9 @@ html[data-theme] .site-shell .final-cta-button svg {
 }
 
 .crm-theme-button {
-  width: 2.8rem;
-  min-width: 2.8rem;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
 }
 
@@ -2319,6 +2311,10 @@ html[data-crm-theme="dark"] .crm-shell .crm-status-concluido {
 }
 
 @media (min-width: 860px) {
+  .crm-dashboard {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .crm-appointment-main {
     grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.32fr);
   }
@@ -2346,15 +2342,15 @@ html[data-crm-theme="dark"] .crm-shell .crm-status-concluido {
   }
 
   .crm-secondary-button.crm-logout-button {
-    min-height: 2.35rem;
+    min-height: 44px;
     padding-inline: 0.75rem;
     font-size: 0.72rem;
   }
 
   .crm-theme-button {
-    width: 2.35rem;
-    min-width: 2.35rem;
-    min-height: 2.35rem;
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .crm-home-actions {

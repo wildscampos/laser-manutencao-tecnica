@@ -29,8 +29,6 @@ export function ThemeToggle() {
     >
       <Sun className="theme-toggle-sun" aria-hidden="true" />
       <Moon className="theme-toggle-moon" aria-hidden="true" />
-      <span className="theme-toggle-light-label">Claro</span>
-      <span className="theme-toggle-dark-label">Escuro</span>
     </button>
   );
 }
