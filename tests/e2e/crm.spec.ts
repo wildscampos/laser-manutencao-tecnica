@@ -37,4 +37,20 @@ test.describe("CRM LaserFix", () => {
       await expect(page.getByRole("link", { name: /Home/i })).toBeVisible();
     }
   });
+
+  test("mantém apenas um agendamento expandido por vez", async ({ page }) => {
+    await page.goto("/crm/agendamentos");
+
+    const cards = page.locator(".crm-appointment-accordion");
+    await expect(cards.first()).toBeVisible();
+
+    await cards.first().getByRole("button").first().click();
+    await expect(cards.first().getByRole("button", { name: /Recolher/i })).toBeVisible();
+
+    if ((await cards.count()) > 1) {
+      await cards.nth(1).getByRole("button").first().click();
+      await expect(cards.first().getByRole("button", { name: /Expandir/i })).toBeVisible();
+      await expect(cards.nth(1).getByRole("button", { name: /Recolher/i })).toBeVisible();
+    }
+  });
 });

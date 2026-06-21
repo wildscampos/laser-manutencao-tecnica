@@ -11,10 +11,12 @@ import {
   DollarSign,
   History,
   LogOut,
+  Moon,
   Play,
   Plus,
   Save,
   ShieldCheck,
+  Sun,
   UserPlus,
   Users,
   WalletCards,
@@ -238,6 +240,9 @@ type CrmView = "dashboard" | "appointments" | "customers" | "history" | "service
 export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [crmTheme, setCrmTheme] = useState<"light" | "dark">(() =>
+    typeof window !== "undefined" && window.localStorage.getItem("laserfix-crm-theme") === "dark" ? "dark" : "light",
+  );
   const [appointments, setAppointments] = useState<CrmAppointment[]>([]);
   const [customers, setCustomers] = useState<CrmCustomer[]>([]);
   const [services, setServices] = useState<CrmService[]>([]);
@@ -275,6 +280,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
       setAuthReady(true);
     });
   }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("laserfix-crm-theme", crmTheme);
+  }, [crmTheme]);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -430,12 +439,12 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   }
 
   if (!authReady) {
-    return <main className="crm-shell"><p className="crm-loading">Carregando CRM...</p></main>;
+    return <main className={`crm-shell crm-${crmTheme}`}><p className="crm-loading">Carregando CRM...</p></main>;
   }
 
   if (!user || !isAdmin) {
     return (
-      <main className="crm-shell crm-login-shell">
+      <main className={`crm-shell crm-login-shell crm-${crmTheme}`}>
         <section className="crm-login-card">
           <Image src="/logo-laserfix-light.jpg" alt="LaserFix" width={360} height={203} priority />
           <div className="crm-login-title">
@@ -468,7 +477,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   }
 
   return (
-    <main className="crm-shell">
+    <main className={`crm-shell crm-${crmTheme}`}>
       <header className="crm-header">
         <div>
           <p className="crm-kicker">CRM LaserFix</p>
@@ -496,12 +505,48 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
               Home
             </Link>
           )}
+          <button
+            aria-label={crmTheme === "dark" ? "Ativar tema claro" : "Ativar tema escuro"}
+            className="crm-secondary-button crm-theme-button"
+            onClick={() => setCrmTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"))}
+            type="button"
+          >
+            {crmTheme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+            {crmTheme === "dark" ? "Claro" : "Escuro"}
+          </button>
           <button className="crm-secondary-button crm-logout-button" onClick={() => signOut(auth)} type="button">
             <LogOut aria-hidden="true" />
             Sair
           </button>
         </div>
       </header>
+
+      <section className="crm-home-actions crm-module-nav" aria-label="Navegação principal do CRM">
+        <Link aria-current={view === "appointments" ? "page" : undefined} href="/crm/agendamentos">
+          <CalendarClock aria-hidden="true" />
+          Agendamentos
+        </Link>
+        <Link aria-current={view === "customers" ? "page" : undefined} href="/crm/clientes">
+          <Users aria-hidden="true" />
+          Cadastro de clientes
+        </Link>
+        <Link aria-current={view === "history" ? "page" : undefined} href="/crm/historico">
+          <History aria-hidden="true" />
+          Histórico dos clientes
+        </Link>
+        <Link aria-current={view === "services" ? "page" : undefined} href="/crm/servicos">
+          <Save aria-hidden="true" />
+          Serviços e valores
+        </Link>
+        <Link aria-current={view === "finance" ? "page" : undefined} href="/crm/financeiro">
+          <WalletCards aria-hidden="true" />
+          Financeiro
+        </Link>
+        <Link aria-current={view === "availability" ? "page" : undefined} href="/crm/disponibilidade">
+          <ShieldCheck aria-hidden="true" />
+          Disponibilidade
+        </Link>
+      </section>
 
       {error && <p className="crm-error">{error}</p>}
       {success && <p className="crm-success">{success}</p>}
@@ -550,33 +595,6 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
 
       {view === "dashboard" && (
         <>
-          <section className="crm-home-actions">
-            <Link href="/crm/agendamentos">
-              <CalendarClock aria-hidden="true" />
-              Agendamentos
-            </Link>
-            <Link href="/crm/clientes">
-              <Users aria-hidden="true" />
-              Cadastro de clientes
-            </Link>
-            <Link href="/crm/historico">
-              <History aria-hidden="true" />
-              Histórico dos clientes
-            </Link>
-            <Link href="/crm/servicos">
-              <Save aria-hidden="true" />
-              Serviços e valores
-            </Link>
-            <Link href="/crm/financeiro">
-              <WalletCards aria-hidden="true" />
-              Financeiro
-            </Link>
-            <Link href="/crm/disponibilidade">
-              <ShieldCheck aria-hidden="true" />
-              Disponibilidade
-            </Link>
-          </section>
-
           <section className="crm-toolbar">
             <label>
               <span>Mês</span>
@@ -671,6 +689,7 @@ function AppointmentsView({
   onStart: (appointment: CrmAppointment) => void;
   serviceOptions: string[];
 }) {
+  const [openAppointmentId, setOpenAppointmentId] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const months = useMemo(() => {
     const monthSet = new Set(appointments.map((appointment) => getMonthKey(appointment.data)).filter(Boolean));
@@ -707,11 +726,13 @@ function AppointmentsView({
             <AppointmentCard
               appointment={appointment}
               busy={busyId === appointment.id}
+              isOpen={openAppointmentId === appointment.id}
               key={appointment.id}
               onComplete={() => onComplete(appointment)}
               onPayment={(status, date) => onPayment(appointment.id, status, date)}
               onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
               onStart={() => onStart(appointment)}
+              onToggle={() => setOpenAppointmentId((currentId) => (currentId === appointment.id ? "" : appointment.id))}
               serviceOptions={serviceOptions}
             />
           ))}
@@ -757,7 +778,7 @@ function CustomersView({
 
       <div className="crm-panel crm-wide-panel">
         <h2>Clientes cadastrados</h2>
-        <div className="crm-customer-list">
+        <div className="crm-customer-list crm-two-column-list">
           {customers.map((customer) => {
             const customerAppointments = getCustomerAppointments(customer, appointments);
             return (
@@ -803,7 +824,7 @@ function HistoryView({ appointments, customers }: { appointments: CrmAppointment
         <h2>Histórico por cliente</h2>
         <span>{sortedCustomers.length} cliente(s)</span>
       </div>
-      <div className="crm-list">
+      <div className="crm-list crm-history-grid crm-two-column-list">
         {sortedCustomers.map((customer) => {
           const customerAppointments = getCustomerAppointments(customer, appointments);
           const totalValue = customerAppointments.reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
@@ -869,7 +890,7 @@ function ServicesView({
 
       <div className="crm-panel">
         <h2>Serviços cadastrados</h2>
-        <div className="crm-service-catalog">
+        <div className="crm-service-catalog crm-two-column-list">
           {services.map((service) => (
             <article key={service.id} className="crm-service-record">
               <div>
@@ -1260,18 +1281,22 @@ function CrmInput({
 function AppointmentCard({
   appointment,
   busy,
+  isOpen,
   onComplete,
   onPayment,
   onSaveNotes,
   onStart,
+  onToggle,
   serviceOptions,
 }: {
   appointment: CrmAppointment;
   busy: boolean;
+  isOpen: boolean;
   onComplete: () => void;
   onPayment: (status: PaymentStatus, scheduledDate?: string) => void;
   onSaveNotes: (values: { servicosRealizados?: string; crmObservacoes?: string }) => void;
   onStart: () => void;
+  onToggle: () => void;
   serviceOptions: string[];
 }) {
   const [paymentDate, setPaymentDate] = useState(appointment.pagamentoAgendadoPara || "");
@@ -1296,8 +1321,8 @@ function AppointmentCard({
   }
 
   return (
-    <article className="crm-appointment-card">
-      <div className="crm-appointment-main">
+    <article className={`crm-appointment-card crm-appointment-accordion ${isOpen ? "crm-appointment-open" : ""}`}>
+      <button aria-expanded={isOpen} className="crm-appointment-summary" onClick={onToggle} type="button">
         <div>
           <div className="crm-card-heading">
             <h3>{appointment.nome}</h3>
@@ -1305,102 +1330,113 @@ function AppointmentCard({
           </div>
           <p className="crm-muted">{appointment.empresa || "Sem empresa informada"}</p>
           <p>{formatDate(appointment.data)} às {appointment.horario}</p>
-          <p>{address}</p>
-          <p>WhatsApp: {appointment.whatsapp}</p>
-          {appointment.modeloMaquina && <p>Máquina: {appointment.modeloMaquina}</p>}
-          <p>Serviço solicitado: {appointment.servico}</p>
-          {appointment.observacoes && <p>Observações do cliente: {appointment.observacoes}</p>}
+          <p>{appointment.cidade} · {appointment.servico}</p>
         </div>
+        <strong>{isOpen ? "Recolher" : "Expandir"}</strong>
+      </button>
 
-        <div className="crm-values">
-          <span>Deslocamento: {formatCurrency(appointment.deslocamentoValor || 0)}</span>
-          <span>Serviço: {formatCurrency(appointment.valorServico || 0)}</span>
-          <strong>Total: {formatCurrency(appointment.valorTotal || 0)}</strong>
-          <span>Tempo: {formatDuration(appointment.tempoAtendimentoMin || 0)}</span>
-          <span>Pagamento: {getPaymentLabel(appointment.pagamentoStatus)}</span>
-          {appointment.pagamentoAgendadoPara && <span>Data pagamento: {formatDate(appointment.pagamentoAgendadoPara)}</span>}
-        </div>
-      </div>
-
-      <div className="crm-timeline">
-        <span>Início: {formatDateTime(appointment.atendimentoIniciadoAtIso)}</span>
-        <span>Conclusão: {formatDateTime(appointment.atendimentoConcluidoAtIso)}</span>
-      </div>
-
-      <div className="crm-edit-grid">
-        <div className="crm-service-picker">
-          <button
-            aria-expanded={servicesOpen}
-            className="crm-service-toggle"
-            onClick={() => setServicesOpen((open) => !open)}
-            type="button"
-          >
-            <span>Serviços realizados</span>
-            <strong>{selectedServices.length ? `${selectedServices.length} selecionado(s)` : "Selecionar"}</strong>
-          </button>
-          {servicesOpen && (
-            <div className="crm-service-options">
-              {serviceOptions.map((service) => (
-                <label key={service}>
-                  <input
-                    checked={selectedServices.includes(service)}
-                    onChange={() => toggleService(service)}
-                    type="checkbox"
-                  />
-                  <span>{service}</span>
-                </label>
-              ))}
-              <button className="crm-save-services" disabled={busy} onClick={saveServicesAndClose} type="button">
-                <Save aria-hidden="true" />
-                Salvar serviços
-              </button>
+      {isOpen && (
+        <>
+          <div className="crm-appointment-main">
+            <div>
+              <p>{address}</p>
+              <p>WhatsApp: {appointment.whatsapp}</p>
+              {appointment.modeloMaquina && <p>Máquina: {appointment.modeloMaquina}</p>}
+              <p>Serviço solicitado: {appointment.servico}</p>
+              {appointment.observacoes && <p>Observações do cliente: {appointment.observacoes}</p>}
             </div>
-          )}
-        </div>
-        <label>
-          <span>Observações internas</span>
-          <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Anotações do atendimento" />
-        </label>
-      </div>
 
-      <div className="crm-actions">
-        {appointment.status === "agendado" && (
-          <button disabled={busy} onClick={onStart} type="button">
-            <Play aria-hidden="true" />
-            Iniciar atendimento
-          </button>
-        )}
-        {appointment.status === "atendimento_iniciado" && (
-          <button disabled={busy} onClick={onComplete} type="button">
-            <CheckCircle2 aria-hidden="true" />
-            Encerrar e calcular
-          </button>
-        )}
-        <button disabled={busy} onClick={() => onSaveNotes({ servicosRealizados: servicesDone, crmObservacoes: notes })} type="button">
-          <Save aria-hidden="true" />
-          Salvar observações
-        </button>
-        {appointment.status === "concluido" && (
-          <>
-            <button disabled={busy} onClick={() => onPayment("recebido")} type="button">
-              <WalletCards aria-hidden="true" />
-              Marcar recebido
-            </button>
-            <label className="crm-payment-date">
-              <span>Agendar pagamento</span>
-              <input value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} type="date" />
+            <div className="crm-values">
+              <span>Deslocamento: {formatCurrency(appointment.deslocamentoValor || 0)}</span>
+              <span>Serviço: {formatCurrency(appointment.valorServico || 0)}</span>
+              <strong>Total: {formatCurrency(appointment.valorTotal || 0)}</strong>
+              <span>Tempo: {formatDuration(appointment.tempoAtendimentoMin || 0)}</span>
+              <span>Pagamento: {getPaymentLabel(appointment.pagamentoStatus)}</span>
+              {appointment.pagamentoAgendadoPara && <span>Data pagamento: {formatDate(appointment.pagamentoAgendadoPara)}</span>}
+            </div>
+          </div>
+
+          <div className="crm-timeline">
+            <span>Início: {formatDateTime(appointment.atendimentoIniciadoAtIso)}</span>
+            <span>Conclusão: {formatDateTime(appointment.atendimentoConcluidoAtIso)}</span>
+          </div>
+
+          <div className="crm-edit-grid">
+            <div className="crm-service-picker">
+              <button
+                aria-expanded={servicesOpen}
+                className="crm-service-toggle"
+                onClick={() => setServicesOpen((open) => !open)}
+                type="button"
+              >
+                <span>Serviços realizados</span>
+                <strong>{selectedServices.length ? `${selectedServices.length} selecionado(s)` : "Selecionar"}</strong>
+              </button>
+              {servicesOpen && (
+                <div className="crm-service-options">
+                  {serviceOptions.map((service) => (
+                    <label key={service}>
+                      <input
+                        checked={selectedServices.includes(service)}
+                        onChange={() => toggleService(service)}
+                        type="checkbox"
+                      />
+                      <span>{service}</span>
+                    </label>
+                  ))}
+                  <button className="crm-save-services" disabled={busy} onClick={saveServicesAndClose} type="button">
+                    <Save aria-hidden="true" />
+                    Salvar serviços
+                  </button>
+                </div>
+              )}
+            </div>
+            <label>
+              <span>Observações internas</span>
+              <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Anotações do atendimento" />
             </label>
-            <button disabled={busy || !paymentDate} onClick={() => onPayment("agendado", paymentDate)} type="button">
-              <CalendarClock aria-hidden="true" />
-              Salvar pagamento
+          </div>
+
+          <div className="crm-actions">
+            {appointment.status === "agendado" && (
+              <button disabled={busy} onClick={onStart} type="button">
+                <Play aria-hidden="true" />
+                Iniciar atendimento
+              </button>
+            )}
+            {appointment.status === "atendimento_iniciado" && (
+              <button disabled={busy} onClick={onComplete} type="button">
+                <CheckCircle2 aria-hidden="true" />
+                Encerrar e calcular
+              </button>
+            )}
+            <button disabled={busy} onClick={() => onSaveNotes({ servicosRealizados: servicesDone, crmObservacoes: notes })} type="button">
+              <Save aria-hidden="true" />
+              Salvar observações
             </button>
-            <a href={customerPaymentUrl} rel="noopener noreferrer" target="_blank">
-              <span className="whatsapp-button-logo" aria-hidden="true" />
-              Enviar cobrança
-            </a>
-          </>
-        )}
-      </div>
+            {appointment.status === "concluido" && (
+              <>
+                <button disabled={busy} onClick={() => onPayment("recebido")} type="button">
+                  <WalletCards aria-hidden="true" />
+                  Marcar recebido
+                </button>
+                <label className="crm-payment-date">
+                  <span>Agendar pagamento</span>
+                  <input value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} type="date" />
+                </label>
+                <button disabled={busy || !paymentDate} onClick={() => onPayment("agendado", paymentDate)} type="button">
+                  <CalendarClock aria-hidden="true" />
+                  Salvar pagamento
+                </button>
+                <a href={customerPaymentUrl} rel="noopener noreferrer" target="_blank">
+                  <span className="whatsapp-button-logo" aria-hidden="true" />
+                  Enviar cobrança
+                </a>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </article>
   );
 }

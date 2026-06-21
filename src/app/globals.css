@@ -1670,6 +1670,14 @@ html[data-theme] .site-shell .final-cta-button svg {
   text-align: center;
 }
 
+.crm-module-nav {
+  align-items: stretch;
+}
+
+.crm-module-nav a[aria-current="page"] {
+  box-shadow: inset 0 0 0 2px rgba(7, 17, 31, 0.22);
+}
+
 .crm-toolbar,
 .crm-dashboard,
 .crm-panels,
@@ -1741,6 +1749,10 @@ html[data-theme] .site-shell .final-cta-button svg {
   display: grid;
   gap: 0.75rem;
   margin-top: 1rem;
+}
+
+.crm-two-column-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .crm-collapsible-card summary,
@@ -1891,6 +1903,33 @@ html[data-theme] .site-shell .final-cta-button svg {
   border-radius: 6px;
   background: rgba(0, 168, 255, 0.04);
   padding: 0.85rem;
+}
+
+.crm-appointment-summary {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+}
+
+.crm-appointment-summary > strong {
+  align-self: center;
+  color: #0078d4;
+  font-size: 0.82rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.crm-appointment-accordion {
+  gap: 0.85rem;
+}
+
+.crm-appointment-accordion:not(.crm-appointment-open) {
+  padding-block: 0.85rem;
 }
 
 .crm-service-record h3,
@@ -2126,6 +2165,136 @@ html[data-theme] .site-shell .final-cta-button svg {
   min-width: min(100%, 12rem);
 }
 
+.crm-shell.crm-dark {
+  background:
+    radial-gradient(circle at 80% 10%, rgba(0, 168, 255, 0.2), transparent 24rem),
+    linear-gradient(180deg, #07111f 0%, #0f172a 100%);
+  color: #f8fafc;
+}
+
+.crm-shell.crm-dark .crm-login-card,
+.crm-shell.crm-dark .crm-panel,
+.crm-shell.crm-dark .crm-appointment-card,
+.crm-shell.crm-dark .crm-metric-card,
+.crm-shell.crm-dark .crm-collapsible-card {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28);
+}
+
+.crm-shell.crm-dark .crm-login-card h1,
+.crm-shell.crm-dark .crm-header h1,
+.crm-shell.crm-dark .crm-panel h2,
+.crm-shell.crm-dark .crm-section-title h2,
+.crm-shell.crm-dark .crm-collapsible-card h3,
+.crm-shell.crm-dark .crm-history-card h3,
+.crm-shell.crm-dark .crm-service-record h3,
+.crm-shell.crm-dark .crm-appointment-card h3,
+.crm-shell.crm-dark .crm-card-heading h3,
+.crm-shell.crm-dark .crm-metric-card strong,
+.crm-shell.crm-dark .crm-values strong,
+.crm-shell.crm-dark .crm-service-toggle span,
+.crm-shell.crm-dark .crm-service-picker label span,
+.crm-shell.crm-dark .crm-history-list strong {
+  color: #f8fafc;
+}
+
+.crm-shell.crm-dark .crm-login-card p,
+.crm-shell.crm-dark .crm-header p,
+.crm-shell.crm-dark .crm-muted,
+.crm-shell.crm-dark .crm-loading,
+.crm-shell.crm-dark .crm-collapsible-card p,
+.crm-shell.crm-dark .crm-collapsible-card span,
+.crm-shell.crm-dark .crm-history-card summary p,
+.crm-shell.crm-dark .crm-history-card summary span,
+.crm-shell.crm-dark .crm-service-record p,
+.crm-shell.crm-dark .crm-appointment-card p,
+.crm-shell.crm-dark .crm-metric-card span,
+.crm-shell.crm-dark .crm-section-title span,
+.crm-shell.crm-dark .crm-values span,
+.crm-shell.crm-dark .crm-timeline,
+.crm-shell.crm-dark .crm-history-list span,
+.crm-shell.crm-dark .crm-toolbar span,
+.crm-shell.crm-dark .crm-form-grid span,
+.crm-shell.crm-dark .crm-edit-grid span,
+.crm-shell.crm-dark .crm-payment-date span,
+.crm-shell.crm-dark .crm-login-form span {
+  color: #cbd5e1;
+}
+
+.crm-shell.crm-dark .crm-secondary-button {
+  border-color: rgba(0, 168, 255, 0.46);
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.crm-shell.crm-dark .crm-secondary-button:hover {
+  background: rgba(0, 168, 255, 0.14);
+}
+
+.crm-shell.crm-dark .crm-primary-button,
+.crm-shell.crm-dark .crm-home-actions a,
+.crm-shell.crm-dark .crm-actions button,
+.crm-shell.crm-dark .crm-actions a {
+  color: #07111f;
+}
+
+.crm-shell.crm-dark .crm-module-nav a[aria-current="page"] {
+  box-shadow: inset 0 0 0 2px rgba(248, 250, 252, 0.34);
+}
+
+.crm-shell.crm-dark .crm-toolbar select,
+.crm-shell.crm-dark .crm-form-grid input,
+.crm-shell.crm-dark .crm-form-grid select,
+.crm-shell.crm-dark .crm-form-grid textarea,
+.crm-shell.crm-dark .crm-edit-grid input,
+.crm-shell.crm-dark .crm-payment-date input,
+.crm-shell.crm-dark .crm-login-form input {
+  border-color: rgba(148, 163, 184, 0.36);
+  background: rgba(2, 6, 23, 0.82);
+  color: #f8fafc;
+}
+
+.crm-shell.crm-dark .crm-login-form input[readonly] {
+  background: rgba(15, 23, 42, 0.88);
+  color: #cbd5e1;
+}
+
+.crm-shell.crm-dark .crm-values,
+.crm-shell.crm-dark .crm-service-toggle,
+.crm-shell.crm-dark .crm-history-list div,
+.crm-shell.crm-dark .crm-service-picker label,
+.crm-shell.crm-dark .crm-service-record {
+  border-color: rgba(0, 168, 255, 0.26);
+  background: rgba(0, 168, 255, 0.08);
+}
+
+.crm-shell.crm-dark .crm-collapsible-content,
+.crm-shell.crm-dark .crm-history-list,
+.crm-shell.crm-dark .crm-service-list div {
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+.crm-shell.crm-dark .crm-empty {
+  border-color: rgba(148, 163, 184, 0.3);
+  color: #cbd5e1;
+}
+
+.crm-shell.crm-dark .crm-status-agendado {
+  background: rgba(0, 168, 255, 0.18);
+  color: #bae6fd;
+}
+
+.crm-shell.crm-dark .crm-status-atendimento_iniciado {
+  background: rgba(250, 204, 21, 0.2);
+  color: #fde68a;
+}
+
+.crm-shell.crm-dark .crm-status-concluido {
+  background: rgba(34, 197, 94, 0.18);
+  color: #bbf7d0;
+}
+
 @media (min-width: 860px) {
   .crm-appointment-main {
     grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.32fr);
@@ -2193,6 +2362,53 @@ html[data-theme] .site-shell .final-cta-button svg {
   .crm-finance-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.65rem;
+  }
+
+  .crm-two-column-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .crm-two-column-list .crm-collapsible-card summary,
+  .crm-two-column-list .crm-history-card summary {
+    padding: 0.75rem;
+  }
+
+  .crm-two-column-list .crm-collapsible-card h3,
+  .crm-two-column-list .crm-history-card h3,
+  .crm-two-column-list .crm-service-record h3 {
+    font-size: 0.95rem;
+  }
+
+  .crm-two-column-list .crm-collapsible-card p,
+  .crm-two-column-list .crm-history-card p,
+  .crm-two-column-list .crm-history-card span,
+  .crm-two-column-list .crm-service-record p {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .crm-two-column-list .crm-summary-count strong,
+  .crm-two-column-list .crm-values strong {
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .crm-two-column-list .crm-service-record {
+    gap: 0.65rem;
+    padding: 0.7rem;
+  }
+
+  .crm-two-column-list .crm-values {
+    padding: 0.55rem;
+  }
+
+  .crm-appointment-summary {
+    gap: 0.65rem;
+  }
+
+  .crm-appointment-summary > strong {
+    font-size: 0.7rem;
   }
 
   .crm-finance-card {
