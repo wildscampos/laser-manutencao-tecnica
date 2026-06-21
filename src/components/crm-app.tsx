@@ -1192,13 +1192,15 @@ function ServicesView({
 
   return (
     <section className="crm-page-grid">
-      <div className="crm-panel">
-        <div className="crm-section-title">
-          <h2>Catálogo de serviços</h2>
-          <span>{activeServices.length} ativo(s)</span>
-        </div>
+      <details className="crm-panel crm-form-details">
+        <summary>
+          <div className="crm-section-title">
+            <h2>Catálogo de serviços</h2>
+            <span>{activeServices.length} ativo(s)</span>
+          </div>
+        </summary>
         <ServiceForm busy={busy} onSave={onSaveService} />
-      </div>
+      </details>
 
       <div className="crm-panel">
         <h2>Serviços cadastrados</h2>
@@ -1381,10 +1383,12 @@ function AvailabilityView({
 
   return (
     <section className="crm-page-grid">
-      <div className="crm-panel crm-wide-panel">
-        <div className="crm-section-title">
-          <h2>Bloquear horário</h2>
-        </div>
+      <details className="crm-panel crm-wide-panel crm-form-details">
+        <summary>
+          <div className="crm-section-title">
+            <h2>Bloquear horário</h2>
+          </div>
+        </summary>
         <form className="crm-form-grid" onSubmit={submit}>
           <CrmInput label="Data" required type="date" value={block.data} onChange={(value) => updateField("data", value)} />
           <label>
@@ -1402,7 +1406,7 @@ function AvailabilityView({
             Bloquear horário
           </button>
         </form>
-      </div>
+      </details>
     </section>
   );
 }

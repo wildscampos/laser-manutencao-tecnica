@@ -67,6 +67,16 @@ test.describe("CRM LaserFix", () => {
     await expect(page.getByRole("button", { name: /Salvar cliente/i })).toBeHidden();
     await page.getByText("Cadastrar cliente").click();
     await expect(page.getByRole("button", { name: /Salvar cliente/i })).toBeVisible();
+
+    await page.goto("/crm/servicos");
+    await expect(page.getByRole("button", { name: /Salvar serviço/i })).toBeHidden();
+    await page.getByText("Catálogo de serviços").click();
+    await expect(page.getByRole("button", { name: /Salvar serviço/i })).toBeVisible();
+
+    await page.goto("/crm/disponibilidade");
+    await expect(page.getByRole("button", { name: /Bloquear horário/i })).toBeHidden();
+    await page.locator("details.crm-form-details").filter({ hasText: "Bloquear horário" }).locator("summary").click();
+    await expect(page.getByRole("button", { name: /Bloquear horário/i })).toBeVisible();
   });
 
   test("mantém histórico financeiro recolhido por padrão", async ({ page }) => {
@@ -78,6 +88,7 @@ test.describe("CRM LaserFix", () => {
 
   test("lista somente horários disponíveis no bloqueio manual", async ({ page }) => {
     await page.goto("/crm/disponibilidade");
+    await page.locator("details.crm-form-details").filter({ hasText: "Bloquear horário" }).locator("summary").click();
     await page.getByLabel("Data").fill("2026-06-21");
 
     const timeSelect = page.getByLabel("Horário");
