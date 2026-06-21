@@ -9,7 +9,7 @@ test.describe("CRM LaserFix", () => {
     await page.goto("/crm");
     await page.getByLabel("Senha").fill(crmPassword!);
     await page.getByRole("button", { name: /Entrar/i }).click();
-    await expect(page.getByRole("heading", { name: /Home do CRM/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Início$/i })).toBeVisible();
   });
 
   test("exibe botões dos módulos principais", async ({ page }) => {
@@ -34,7 +34,7 @@ test.describe("CRM LaserFix", () => {
     for (const route of routes) {
       await page.goto(route.href);
       await expect(page.getByRole("heading", { level: 1, name: route.heading })).toBeVisible();
-      await expect(page.getByRole("link", { name: /Home/i })).toBeVisible();
+      await expect(page.getByRole("link", { name: /Início/i })).toBeVisible();
     }
   });
 

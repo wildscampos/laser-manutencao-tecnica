@@ -609,7 +609,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         <section className="crm-login-card">
           <Image src="/logo-laserfix-light.jpg" alt="LaserFix" width={360} height={203} priority />
           <div className="crm-login-title">
-            <h1>CRM LaserFix</h1>
+            <h1>LaserFix</h1>
           </div>
           {error && <p className="crm-error">{error}</p>}
           <form className="crm-login-form" onSubmit={login}>
@@ -641,7 +641,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
     <main className="crm-shell">
       <header className="crm-header">
         <div>
-          <p className="crm-kicker">CRM LaserFix</p>
+          <div className="crm-header-meta">
+            <p className="crm-kicker">LaserFix</p>
+            <span>{user.email}</span>
+          </div>
           <h1>
             {view === "appointments"
               ? "Agendamentos"
@@ -655,15 +658,14 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
                       ? "Financeiro"
                       : view === "availability"
                         ? "Disponibilidade"
-                        : "Home do CRM"}
+                        : "Início"}
           </h1>
-          <p>Logado como {user.email}</p>
         </div>
         <div className="crm-header-actions">
           {view !== "dashboard" && (
             <Link className="crm-secondary-button" href="/crm">
               <ArrowLeft aria-hidden="true" />
-              Home
+              Início
             </Link>
           )}
           <button
