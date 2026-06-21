@@ -943,9 +943,9 @@ function FinanceView({
           <h2>Histórico financeiro</h2>
           <span>{financialAppointments.length} atendimento(s)</span>
         </div>
-        <div className="crm-list">
+        <div className="crm-list crm-finance-list">
           {financialAppointments.map((appointment) => (
-            <article className="crm-appointment-card" key={appointment.id}>
+            <article className="crm-appointment-card crm-finance-card" key={appointment.id}>
               <div className="crm-appointment-main">
                 <div>
                   <h3>{appointment.nome}</h3>
@@ -991,10 +991,9 @@ function AvailabilityView({
 
   return (
     <section className="crm-page-grid">
-      <div className="crm-panel">
+      <div className="crm-panel crm-wide-panel">
         <div className="crm-section-title">
           <h2>Bloquear horário</h2>
-          <span>Indisponível no site</span>
         </div>
         <form className="crm-form-grid" onSubmit={submit}>
           <CrmInput label="Data" required type="date" value={block.data} onChange={(value) => updateField("data", value)} />
@@ -1012,24 +1011,6 @@ function AvailabilityView({
             Bloquear horário
           </button>
         </form>
-      </div>
-
-      <div className="crm-panel">
-        <h2>Como funciona</h2>
-        <div className="crm-service-list">
-          <div>
-            <span>Bloqueio manual</span>
-            <strong>Ocupa o slot</strong>
-          </div>
-          <div>
-            <span>Site público</span>
-            <strong>Não exibe o horário</strong>
-          </div>
-          <div>
-            <span>Uso recomendado</span>
-            <strong>Agenda externa, pausa ou compromisso</strong>
-          </div>
-        </div>
       </div>
     </section>
   );
