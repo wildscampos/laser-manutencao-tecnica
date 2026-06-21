@@ -677,6 +677,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
           </section>
 
           <section className="crm-dashboard" aria-label="Métricas do mês">
+            <MetricCard icon={CalendarClock} label="Agendamentos" value={String(monthMetrics.scheduled)} />
             <MetricCard icon={CalendarClock} label="Atendimentos no mês" value={String(monthMetrics.appointments)} />
             <MetricCard icon={CheckCircle2} label="Concluídos no mês" value={String(monthMetrics.completed)} />
             <MetricCard icon={DollarSign} label="Valor total no mês" value={formatCurrency(monthMetrics.totalValue)} />

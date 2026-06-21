@@ -115,6 +115,7 @@ export type AppointmentEditInput = {
 };
 
 export type CrmMetrics = {
+  scheduled: number;
   appointments: number;
   completed: number;
   inProgress: number;
@@ -472,6 +473,7 @@ export function calculateMetrics(appointments: CrmAppointment[]): CrmMetrics {
   });
 
   return {
+    scheduled: appointments.filter((appointment) => appointment.status !== "concluido").length,
     appointments: appointments.length,
     completed: completedAppointments.length,
     inProgress: appointments.filter((appointment) => appointment.status === "atendimento_iniciado").length,
