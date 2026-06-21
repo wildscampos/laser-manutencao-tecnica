@@ -1656,15 +1656,18 @@ html[data-theme] .site-shell .final-cta-button svg {
 
 .crm-home-actions {
   display: grid;
-  gap: 0.85rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   margin: 1rem auto 0;
   max-width: 86rem;
 }
 
 .crm-home-actions a {
-  min-height: 4rem;
-  padding-inline: 1rem;
+  min-height: 3.25rem;
+  padding-inline: 0.7rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.07em;
+  text-align: center;
 }
 
 .crm-toolbar,
@@ -1833,7 +1836,7 @@ html[data-theme] .site-shell .final-cta-button svg {
 }
 
 .crm-dashboard-total {
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .crm-metric-card {
@@ -2118,11 +2121,48 @@ html[data-theme] .site-shell .final-cta-button svg {
   }
 
   .crm-header-actions {
-    width: 100%;
+    width: auto;
   }
 
   .crm-header-actions button {
-    width: 100%;
+    width: auto;
+  }
+
+  .crm-secondary-button.crm-logout-button {
+    min-height: 2.35rem;
+    padding-inline: 0.75rem;
+    font-size: 0.72rem;
+  }
+
+  .crm-home-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-home-actions a {
+    min-height: 3.1rem;
+    gap: 0.35rem;
+    padding: 0.55rem 0.45rem;
+    font-size: 0.67rem;
+    letter-spacing: 0.055em;
+  }
+
+  .crm-home-actions a svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .crm-dashboard-total {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-dashboard-total .crm-metric-card {
+    min-width: 0;
+    padding: 0.85rem;
+  }
+
+  .crm-dashboard-total .crm-metric-card strong {
+    font-size: 1.25rem;
+    overflow-wrap: anywhere;
   }
 
   .crm-toolbar {
@@ -2131,7 +2171,6 @@ html[data-theme] .site-shell .final-cta-button svg {
 
   .crm-toolbar label,
   .crm-toolbar select,
-  .crm-home-actions a,
   .crm-actions button,
   .crm-actions a,
   .crm-payment-date {

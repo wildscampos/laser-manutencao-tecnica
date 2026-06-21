@@ -12,7 +12,6 @@ import {
   History,
   LogOut,
   Play,
-  Bell,
   Plus,
   Save,
   ShieldCheck,
@@ -247,7 +246,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   const [success, setSuccess] = useState("");
   const [busyId, setBusyId] = useState("");
   const [password, setPassword] = useState("");
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() =>
+  const [notificationPermission] = useState<NotificationPermission>(() =>
     typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default",
   );
   const knownAppointmentIdsRef = useRef<Set<string> | null>(null);
@@ -403,25 +402,6 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
     }
   }
 
-  async function enableNotifications() {
-    setError("");
-
-    if (!("Notification" in window)) {
-      setError("Este navegador não oferece suporte a notificações do PWA.");
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
-
-    if (permission !== "granted") {
-      setError("As notificações foram bloqueadas no navegador.");
-      return;
-    }
-
-    setSuccess("Notificações ativadas. Você receberá novos agendamentos e lembretes 30 minutos antes.");
-  }
-
   async function runAction(appointmentId: string, action: () => Promise<void>) {
     setBusyId(appointmentId);
     setError("");
@@ -516,11 +496,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
               Home
             </Link>
           )}
-          <button className="crm-secondary-button" onClick={enableNotifications} type="button">
-            <Bell aria-hidden="true" />
-            {notificationPermission === "granted" ? "Notificações ativas" : "Ativar notificações"}
-          </button>
-          <button className="crm-secondary-button" onClick={() => signOut(auth)} type="button">
+          <button className="crm-secondary-button crm-logout-button" onClick={() => signOut(auth)} type="button">
             <LogOut aria-hidden="true" />
             Sair
           </button>
