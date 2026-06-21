@@ -146,7 +146,7 @@ function formatDateTime(iso?: string) {
 }
 
 function formatChartMonth(month: string) {
-  return new Intl.DateTimeFormat("pt-BR", { month: "short", year: "2-digit" }).format(new Date(`${month}-01T12:00:00`));
+  return new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(`${month}-01T12:00:00`)).replace(".", "");
 }
 
 function getCurrentMonthKey() {
@@ -206,8 +206,13 @@ function getChartMetricValue(metrics: ReturnType<typeof calculateMetrics>, key: 
   return 0;
 }
 
-function buildDashboardCharts(appointments: CrmAppointment[], months: string[]) {
-  const ascendingMonths = [...months].sort();
+function getChartMonths(selectedMonth: string) {
+  const year = selectedMonth.slice(0, 4);
+  return Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`);
+}
+
+function buildDashboardCharts(appointments: CrmAppointment[], selectedMonth: string) {
+  const yearMonths = getChartMonths(selectedMonth);
   const chartConfigs: Array<{ key: DashboardChartKey; title: string; format: ChartFormat; cumulative?: boolean }> = [
     { key: "scheduled", title: "Agendamentos por mês", format: "number" },
     { key: "appointments", title: "Atendimentos por mês", format: "number" },
@@ -224,11 +229,8 @@ function buildDashboardCharts(appointments: CrmAppointment[], months: string[]) 
     { key: "totalGeneralMinutes", title: "Tempo total geral acumulado", format: "duration", cumulative: true },
   ];
 
-  return chartConfigs.map<DashboardChart>((config) => ({
-    format: config.format,
-    key: config.key,
-    title: config.title,
-    points: ascendingMonths.map((month) => {
+  return chartConfigs.map<DashboardChart>((config) => {
+    const points = yearMonths.map((month) => {
       const scopedAppointments = config.cumulative
         ? appointments.filter((appointment) => getMonthKey(appointment.data) <= month)
         : appointments.filter((appointment) => getMonthKey(appointment.data) === month);
@@ -236,8 +238,20 @@ function buildDashboardCharts(appointments: CrmAppointment[], months: string[]) 
         label: formatChartMonth(month),
         value: getChartMetricValue(calculateMetrics(scopedAppointments), config.key),
       };
-    }),
-  }));
+    });
+    const pointsWithData = points.filter((point) => point.value > 0);
+    const averageValue = pointsWithData.length
+      ? pointsWithData.reduce((sum, point) => sum + point.value, 0) / pointsWithData.length
+      : 0;
+
+    return {
+      averageValue,
+      format: config.format,
+      key: config.key,
+      title: config.title,
+      points,
+    };
+  });
 }
 
 function parsePerformedServices(value = "") {
@@ -352,6 +366,7 @@ type DashboardChartKey =
 type ChartFormat = "currency" | "duration" | "number";
 
 type DashboardChart = {
+  averageValue: number;
   format: ChartFormat;
   key: DashboardChartKey;
   points: Array<{ label: string; value: number }>;
@@ -407,7 +422,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   );
   const monthMetrics = useMemo(() => calculateMetrics(monthAppointments), [monthAppointments]);
   const totalMetrics = useMemo(() => calculateMetrics(appointments), [appointments]);
-  const dashboardCharts = useMemo(() => buildDashboardCharts(appointments, months), [appointments, months]);
+  const dashboardCharts = useMemo(() => buildDashboardCharts(appointments, selectedMonth), [appointments, selectedMonth]);
   const dashboardChartByKey = useMemo(() => new Map(dashboardCharts.map((chart) => [chart.key, chart])), [dashboardCharts]);
   const serviceOptions = useMemo(
     () => (services.length ? services.filter((service) => service.ativo).map((service) => service.nome) : performedServiceOptions),
@@ -865,30 +880,61 @@ function MetricCard({
 }
 
 function MetricChart({ chart }: { chart: DashboardChart }) {
-  const maxValue = Math.max(...chart.points.map((point) => point.value), 1);
-  const chartWidth = 320;
-  const chartHeight = 150;
-  const barGap = 8;
-  const barWidth = Math.max(14, (chartWidth - barGap * Math.max(0, chart.points.length - 1)) / Math.max(1, chart.points.length));
+  const maxValue = Math.max(...chart.points.map((point) => point.value), chart.averageValue, 1);
+  const chartWidth = 360;
+  const chartHeight = 190;
+  const axisLeft = 44;
+  const axisRight = 10;
+  const axisTop = 18;
+  const axisBottom = 34;
+  const plotWidth = chartWidth - axisLeft - axisRight;
+  const plotHeight = chartHeight - axisTop - axisBottom;
+  const barGap = 5;
+  const barWidth = (plotWidth - barGap * Math.max(0, chart.points.length - 1)) / Math.max(1, chart.points.length);
+  const averageY = axisTop + plotHeight - (chart.averageValue / maxValue) * plotHeight;
+  const gridValues = [maxValue, maxValue / 2, 0];
 
   return (
     <div className="crm-metric-chart" aria-label={chart.title}>
       <div className="crm-metric-chart-heading">
         <h3>{chart.title}</h3>
-        <span>{chart.points.length} mês(es)</span>
+        <span>Média: {formatChartValue(chart.averageValue, chart.format)}</span>
       </div>
       <svg role="img" viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none">
+        {gridValues.map((gridValue) => {
+          const y = axisTop + plotHeight - (gridValue / maxValue) * plotHeight;
+          return (
+            <g key={gridValue}>
+              <line className="crm-chart-grid" x1={axisLeft} x2={chartWidth - axisRight} y1={y} y2={y} />
+              <text className="crm-chart-axis" x="2" y={y + 3}>
+                {formatChartValue(gridValue, chart.format)}
+              </text>
+            </g>
+          );
+        })}
+        {chart.averageValue > 0 && (
+          <>
+            <line className="crm-chart-average-line" x1={axisLeft} x2={chartWidth - axisRight} y1={averageY} y2={averageY} />
+            <text className="crm-chart-average-label" x={chartWidth - axisRight} y={Math.max(10, averageY - 5)} textAnchor="end">
+              Média
+            </text>
+          </>
+        )}
         {chart.points.map((point, index) => {
-          const barHeight = Math.max(point.value ? 8 : 2, (point.value / maxValue) * 105);
-          const x = index * (barWidth + barGap);
-          const y = 118 - barHeight;
+          const barHeight = point.value ? Math.max(3, (point.value / maxValue) * plotHeight) : 0;
+          const x = axisLeft + index * (barWidth + barGap);
+          const y = axisTop + plotHeight - barHeight;
           return (
             <g key={`${point.label}-${index}`}>
-              <rect className="crm-chart-bar" x={x} y={y} width={barWidth} height={barHeight} rx="4" />
-              <text className="crm-chart-value" x={x + barWidth / 2} y={Math.max(12, y - 6)} textAnchor="middle">
-                {formatChartValue(point.value, chart.format)}
-              </text>
-              <text className="crm-chart-label" x={x + barWidth / 2} y="142" textAnchor="middle">
+              {point.value > 0 && (
+                <>
+                  <rect className="crm-chart-bar" x={x} y={y} width={barWidth} height={barHeight} rx="3" />
+                  <text className="crm-chart-value" x={x + barWidth / 2} y={Math.max(12, y - 5)} textAnchor="middle">
+                    {formatChartValue(point.value, chart.format)}
+                  </text>
+                </>
+              )}
+              <text className="crm-chart-label" x={x + barWidth / 2} y={chartHeight - 8} textAnchor="middle">
                 {point.label}
               </text>
             </g>

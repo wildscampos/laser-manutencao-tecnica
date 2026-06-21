@@ -93,6 +93,8 @@ test.describe("CRM LaserFix", () => {
     await expect(page.getByLabel("Valor total por mês")).toHaveCount(0);
     await metric.click();
     await expect(page.getByLabel("Valor total por mês")).toBeVisible();
+    await expect(page.locator(".crm-chart-label")).toHaveCount(12);
+    await expect(page.locator(".crm-chart-average-line")).toHaveCount(1);
     await metric.click();
     await expect(page.getByLabel("Valor total por mês")).toHaveCount(0);
   });
