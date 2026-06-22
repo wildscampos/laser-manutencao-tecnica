@@ -315,6 +315,7 @@ function buildAppointmentConfirmationWhatsAppUrl(appointment: CrmAppointment) {
     `Olá, ${appointment.nome}.`,
     "",
     "Confirmando seu atendimento LaserFix:",
+    "Técnico: Wilds Campos",
     `Data: ${formatDate(appointment.data)}`,
     `Horário: ${appointment.horario}`,
     isFilled(appointment.servico) ? `Serviço: ${appointment.servico}` : undefined,
