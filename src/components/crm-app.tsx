@@ -1123,29 +1123,33 @@ function AppointmentsView({
           {!scheduledAppointments.length && <p className="crm-empty">Nenhum atendimento agendado para o mês selecionado.</p>}
         </div>
 
-        <div className="crm-section-title crm-subsection-title">
-          <h2>Concluídos</h2>
-          <span>{completedAppointments.length} atendimento(s)</span>
-        </div>
-        <div className="crm-list crm-appointment-list">
-          {completedAppointments.map((appointment) => (
-            <AppointmentCard
-              allAppointments={appointments}
-              appointment={appointment}
-              busy={busyId === appointment.id}
-              isOpen={openAppointmentId === appointment.id}
-              key={appointment.id}
-              onComplete={() => onComplete(appointment)}
-              onEdit={(values) => onEditAppointment(appointment.id, values)}
-              onPayment={(status, date) => onPayment(appointment.id, status, date)}
-              onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
-              onStart={() => onStart(appointment)}
-              onToggle={() => setOpenAppointmentId((currentId) => (currentId === appointment.id ? "" : appointment.id))}
-              serviceOptions={serviceOptions}
-            />
-          ))}
-          {!completedAppointments.length && <p className="crm-empty">Nenhum atendimento concluído para o mês selecionado.</p>}
-        </div>
+        <details className="crm-completed-details">
+          <summary>
+            <div className="crm-section-title crm-subsection-title">
+              <h2>Concluídos</h2>
+              <span>{completedAppointments.length} atendimento(s)</span>
+            </div>
+          </summary>
+          <div className="crm-list crm-appointment-list">
+            {completedAppointments.map((appointment) => (
+              <AppointmentCard
+                allAppointments={appointments}
+                appointment={appointment}
+                busy={busyId === appointment.id}
+                isOpen={openAppointmentId === appointment.id}
+                key={appointment.id}
+                onComplete={() => onComplete(appointment)}
+                onEdit={(values) => onEditAppointment(appointment.id, values)}
+                onPayment={(status, date) => onPayment(appointment.id, status, date)}
+                onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
+                onStart={() => onStart(appointment)}
+                onToggle={() => setOpenAppointmentId((currentId) => (currentId === appointment.id ? "" : appointment.id))}
+                serviceOptions={serviceOptions}
+              />
+            ))}
+            {!completedAppointments.length && <p className="crm-empty">Nenhum atendimento concluído para o mês selecionado.</p>}
+          </div>
+        </details>
       </section>
     </>
   );

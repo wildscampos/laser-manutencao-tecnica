@@ -163,7 +163,11 @@ test.describe("CRM LaserFix", () => {
     await scheduledCard.getByRole("button").first().click();
     await expect(scheduledCard.getByRole("link", { name: /Confirmar agendamento/i })).toBeVisible();
 
-    const completedCard = page.locator(".crm-appointment-accordion").filter({ hasText: "Concluído" }).first();
+    const completedSection = page.locator(".crm-completed-details");
+    const completedCard = completedSection.locator(".crm-appointment-accordion").filter({ hasText: "Concluído" }).first();
+    await expect(completedCard).toBeHidden();
+    await completedSection.locator("summary").click();
+    await expect(completedCard).toBeVisible();
     await completedCard.getByRole("button").first().click();
     await expect(completedCard.getByRole("link", { name: /Enviar cobrança/i })).toBeVisible();
   });

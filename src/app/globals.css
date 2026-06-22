@@ -2194,6 +2194,39 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   font-size: 1rem;
 }
 
+.crm-completed-details {
+  margin-top: 1.25rem;
+}
+
+.crm-completed-details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.crm-completed-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.crm-completed-details > summary .crm-subsection-title {
+  margin-top: 0;
+}
+
+.crm-completed-details > summary .crm-subsection-title::after {
+  color: #0078d4;
+  content: "+";
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.crm-completed-details[open] > summary .crm-subsection-title::after {
+  content: "–";
+}
+
+.crm-completed-details[open] > summary .crm-subsection-title {
+  margin-bottom: 0.65rem;
+}
+
 .crm-section-title span {
   color: #475569;
   font-size: 0.9rem;
