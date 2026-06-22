@@ -214,7 +214,7 @@ function getChartMonths(selectedMonth: string) {
 function buildDashboardCharts(appointments: CrmAppointment[], selectedMonth: string) {
   const yearMonths = getChartMonths(selectedMonth);
   const chartConfigs: Array<{ key: DashboardChartKey; title: string; format: ChartFormat; cumulative?: boolean }> = [
-    { key: "scheduled", title: "Agendamentos por mês", format: "number" },
+    { key: "scheduled", title: "Atendimentos pendentes por mês", format: "number" },
     { key: "appointments", title: "Atendimentos por mês", format: "number" },
     { key: "completed", title: "Concluídos por mês", format: "number" },
     { key: "totalValue", title: "Valor total por mês", format: "currency" },
@@ -281,25 +281,87 @@ function normalizeWhatsAppNumber(value: string) {
   return digits;
 }
 
-function buildCustomerWhatsAppUrl(appointment: CrmAppointment, servicesDone: string) {
+function isFilled(value?: string) {
+  if (!value) return false;
+  const normalizedValue = value.trim().toLowerCase();
+  return Boolean(normalizedValue) && !["não informado", "s/n", "-"].includes(normalizedValue);
+}
+
+function buildAddressLine(appointment: CrmAppointment) {
+  const streetAndNumber = [appointment.rua, appointment.numero].filter(isFilled).join(", ");
+  const neighborhoodAndCity = [appointment.bairro, appointment.cidade].filter(isFilled).join(", ");
+  return [streetAndNumber, neighborhoodAndCity].filter(Boolean).join(" - ");
+}
+
+function getCustomerPaymentDebts(appointment: CrmAppointment, appointments: CrmAppointment[]) {
+  return appointments
+    .filter((currentAppointment) => currentAppointment.id !== appointment.id)
+    .filter((currentAppointment) => currentAppointment.status === "concluido")
+    .filter((currentAppointment) => currentAppointment.pagamentoStatus !== "recebido")
+    .filter((currentAppointment) => {
+      if (appointment.clienteId && currentAppointment.clienteId === appointment.clienteId) return true;
+      const appointmentPhone = normalizeWhatsAppNumber(appointment.whatsapp || appointment.telefone);
+      const currentPhone = normalizeWhatsAppNumber(currentAppointment.whatsapp || currentAppointment.telefone);
+      if (appointmentPhone && currentPhone && appointmentPhone === currentPhone) return true;
+      return currentAppointment.nome.trim().toLowerCase() === appointment.nome.trim().toLowerCase();
+    })
+    .sort((a, b) => a.data.localeCompare(b.data) || a.horario.localeCompare(b.horario));
+}
+
+function buildAppointmentConfirmationWhatsAppUrl(appointment: CrmAppointment) {
+  const phone = normalizeWhatsAppNumber(appointment.whatsapp || appointment.telefone);
+  const address = buildAddressLine(appointment);
+  const lines: Array<string | undefined> = [
+    `Olá, ${appointment.nome}.`,
+    "",
+    "Confirmando seu atendimento LaserFix:",
+    `Data: ${formatDate(appointment.data)}`,
+    `Horário: ${appointment.horario}`,
+    isFilled(appointment.servico) ? `Serviço: ${appointment.servico}` : undefined,
+    address ? `Endereço: ${address}` : undefined,
+    "",
+    "Qualquer alteração, me avise pelo WhatsApp.",
+  ];
+  const message = lines.filter((line): line is string => line !== undefined).join("\n");
+
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+function buildCustomerWhatsAppUrl(appointment: CrmAppointment, servicesDone: string, pendingAppointments: CrmAppointment[]) {
   const phone = normalizeWhatsAppNumber(appointment.whatsapp || appointment.telefone);
   const performedServices = servicesDone.trim() || appointment.servicosRealizados || appointment.servico;
-  const message = [
+  const currentTotal = appointment.valorTotal || 0;
+  const pendingTotal = pendingAppointments.reduce((sum, pendingAppointment) => sum + (pendingAppointment.valorTotal || 0), 0);
+  const grandTotal = currentTotal + pendingTotal;
+  const pendingLines = pendingAppointments.length
+    ? [
+        "",
+        "Também constam pagamentos anteriores ainda não confirmados:",
+        ...pendingAppointments.map((pendingAppointment) =>
+          `- ${formatDate(pendingAppointment.data)} · ${formatServiceListLabel(pendingAppointment.servicosRealizados || pendingAppointment.servico)}: ${formatCurrency(pendingAppointment.valorTotal || 0)} (${getPaymentLabel(pendingAppointment.pagamentoStatus)})`,
+        ),
+        `Total anterior pendente: ${formatCurrency(pendingTotal)}`,
+        `Valor total dos atendimentos: ${formatCurrency(grandTotal)}`,
+      ]
+    : [];
+  const lines: Array<string | undefined> = [
     `Olá, ${appointment.nome}.`,
     "",
     "Seu atendimento LaserFix foi concluído.",
     "",
-    `Tempo do serviço: ${formatDuration(appointment.tempoAtendimentoMin || 0)}`,
-    `Serviços realizados: ${performedServices}`,
-    `Valor do atendimento: ${formatCurrency(appointment.valorServico || 0)}`,
-    `Deslocamento: ${formatCurrency(appointment.deslocamentoValor || 0)}`,
-    `Valor total: ${formatCurrency(appointment.valorTotal || 0)}`,
+    appointment.tempoAtendimentoMin ? `Tempo do serviço: ${formatDuration(appointment.tempoAtendimentoMin)}` : undefined,
+    isFilled(performedServices) ? `Serviços realizados: ${performedServices}` : undefined,
+    appointment.valorServico ? `Valor do atendimento: ${formatCurrency(appointment.valorServico)}` : undefined,
+    appointment.deslocamentoValor ? `Deslocamento: ${formatCurrency(appointment.deslocamentoValor)}` : undefined,
+    currentTotal ? `Valor total: ${formatCurrency(currentTotal)}` : undefined,
+    ...pendingLines,
     "",
     "Dados para pagamento via Pix:",
     "Pix Celular: 12981823416",
     "Banco: C6",
     "Nome: Wilds M Campos",
-  ].join("\n");
+  ];
+  const message = lines.filter((line): line is string => line !== undefined).join("\n");
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
@@ -673,9 +735,9 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
               </button>
             </div>
           </div>
-          <h1>
-            {view === "appointments"
-              ? "Agendamentos"
+            <h1>
+              {view === "appointments"
+                ? "Atendimentos"
               : view === "customers"
                 ? "Clientes"
                 : view === "history"
@@ -694,7 +756,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
       <section className="crm-home-actions crm-module-nav" aria-label="Navegação principal do CRM">
         <Link aria-current={view === "appointments" ? "page" : undefined} href="/crm/agendamentos">
           <CalendarClock aria-hidden="true" />
-          Agendamentos
+          Atendimentos
         </Link>
         <Link aria-current={view === "customers" ? "page" : undefined} href="/crm/clientes">
           <Users aria-hidden="true" />
@@ -783,7 +845,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
           </section>
 
           <section className="crm-dashboard" aria-label="Métricas do mês">
-            <MetricCard active={activeChartKey === "scheduled"} chart={dashboardChartByKey.get("scheduled")} chartKey="scheduled" icon={CalendarClock} label="Agendamentos" onToggle={setActiveChartKey} value={String(monthMetrics.scheduled)} />
+            <MetricCard active={activeChartKey === "scheduled"} chart={dashboardChartByKey.get("scheduled")} chartKey="scheduled" icon={CalendarClock} label="Atendimentos pendentes" onToggle={setActiveChartKey} value={String(monthMetrics.scheduled)} />
             <MetricCard active={activeChartKey === "appointments"} chart={dashboardChartByKey.get("appointments")} chartKey="appointments" icon={CalendarClock} label="Atendimentos no mês" onToggle={setActiveChartKey} value={String(monthMetrics.appointments)} />
             <MetricCard active={activeChartKey === "completed"} chart={dashboardChartByKey.get("completed")} chartKey="completed" icon={CheckCircle2} label="Concluídos no mês" onToggle={setActiveChartKey} value={String(monthMetrics.completed)} />
             <MetricCard active={activeChartKey === "totalValue"} chart={dashboardChartByKey.get("totalValue")} chartKey="totalValue" icon={DollarSign} label="Valor total no mês" onToggle={setActiveChartKey} value={formatCurrency(monthMetrics.totalValue)} />
@@ -988,6 +1050,14 @@ function AppointmentsView({
     () => appointments.filter((appointment) => getMonthKey(appointment.data) === selectedMonth),
     [appointments, selectedMonth],
   );
+  const scheduledAppointments = useMemo(
+    () => monthAppointments.filter((appointment) => appointment.status !== "concluido"),
+    [monthAppointments],
+  );
+  const completedAppointments = useMemo(
+    () => monthAppointments.filter((appointment) => appointment.status === "concluido"),
+    [monthAppointments],
+  );
 
   return (
     <>
@@ -1024,13 +1094,18 @@ function AppointmentsView({
 
       <section className="crm-appointments">
         <div className="crm-section-title">
-          <h2>Agendamentos</h2>
+          <h2>Atendimentos</h2>
           <span>{monthAppointments.length} registro(s)</span>
         </div>
 
+        <div className="crm-section-title crm-subsection-title">
+          <h2>Agendados</h2>
+          <span>{scheduledAppointments.length} atendimento(s)</span>
+        </div>
         <div className="crm-list crm-appointment-list">
-          {monthAppointments.map((appointment) => (
+          {scheduledAppointments.map((appointment) => (
             <AppointmentCard
+              allAppointments={appointments}
               appointment={appointment}
               busy={busyId === appointment.id}
               isOpen={openAppointmentId === appointment.id}
@@ -1044,7 +1119,31 @@ function AppointmentsView({
               serviceOptions={serviceOptions}
             />
           ))}
-          {!monthAppointments.length && <p className="crm-empty">Nenhum agendamento para o mês selecionado.</p>}
+          {!scheduledAppointments.length && <p className="crm-empty">Nenhum atendimento agendado para o mês selecionado.</p>}
+        </div>
+
+        <div className="crm-section-title crm-subsection-title">
+          <h2>Concluídos</h2>
+          <span>{completedAppointments.length} atendimento(s)</span>
+        </div>
+        <div className="crm-list crm-appointment-list">
+          {completedAppointments.map((appointment) => (
+            <AppointmentCard
+              allAppointments={appointments}
+              appointment={appointment}
+              busy={busyId === appointment.id}
+              isOpen={openAppointmentId === appointment.id}
+              key={appointment.id}
+              onComplete={() => onComplete(appointment)}
+              onEdit={(values) => onEditAppointment(appointment.id, values)}
+              onPayment={(status, date) => onPayment(appointment.id, status, date)}
+              onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
+              onStart={() => onStart(appointment)}
+              onToggle={() => setOpenAppointmentId((currentId) => (currentId === appointment.id ? "" : appointment.id))}
+              serviceOptions={serviceOptions}
+            />
+          ))}
+          {!completedAppointments.length && <p className="crm-empty">Nenhum atendimento concluído para o mês selecionado.</p>}
         </div>
       </section>
     </>
@@ -1753,6 +1852,7 @@ function CrmInput({
 }
 
 function AppointmentCard({
+  allAppointments,
   appointment,
   busy,
   isOpen,
@@ -1764,6 +1864,7 @@ function AppointmentCard({
   onToggle,
   serviceOptions,
 }: {
+  allAppointments: CrmAppointment[];
   appointment: CrmAppointment;
   busy: boolean;
   isOpen: boolean;
@@ -1781,7 +1882,9 @@ function AppointmentCard({
   const [servicesOpen, setServicesOpen] = useState(false);
   const address = `${appointment.rua}, ${appointment.numero} - ${appointment.bairro}, ${appointment.cidade}`;
   const servicesDone = formatPerformedServices(selectedServices);
-  const customerPaymentUrl = buildCustomerWhatsAppUrl(appointment, servicesDone);
+  const pendingPayments = getCustomerPaymentDebts(appointment, allAppointments);
+  const appointmentConfirmationUrl = buildAppointmentConfirmationWhatsAppUrl(appointment);
+  const customerPaymentUrl = buildCustomerWhatsAppUrl(appointment, servicesDone, pendingPayments);
 
   function toggleService(service: string) {
     setSelectedServices((currentServices) =>
@@ -1880,10 +1983,16 @@ function AppointmentCard({
 
           <div className="crm-actions">
             {appointment.status === "agendado" && (
-              <button disabled={busy} onClick={onStart} type="button">
-                <Play aria-hidden="true" />
-                Iniciar atendimento
-              </button>
+              <>
+                <a href={appointmentConfirmationUrl} rel="noopener noreferrer" target="_blank">
+                  <span className="whatsapp-button-logo" aria-hidden="true" />
+                  Confirmar agendamento
+                </a>
+                <button disabled={busy} onClick={onStart} type="button">
+                  <Play aria-hidden="true" />
+                  Iniciar atendimento
+                </button>
+              </>
             )}
             {appointment.status === "atendimento_iniciado" && (
               <button disabled={busy} onClick={onComplete} type="button">

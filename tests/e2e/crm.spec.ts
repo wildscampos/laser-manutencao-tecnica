@@ -13,7 +13,7 @@ test.describe("CRM LaserFix", () => {
   });
 
   test("exibe botões dos módulos principais", async ({ page }) => {
-    await expect(page.getByRole("link", { name: /Agendamentos/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Atendimentos/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Cadastro de clientes/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Histórico dos clientes/i })).toBeVisible();
     await expect(page.getByRole("link", { name: /Serviços e valores/i })).toBeVisible();
@@ -23,7 +23,7 @@ test.describe("CRM LaserFix", () => {
 
   test("navega pelas páginas organizadas do CRM", async ({ page }) => {
     const routes = [
-      { href: "/crm/agendamentos", heading: /Agendamentos/i },
+      { href: "/crm/agendamentos", heading: /Atendimentos/i },
       { href: "/crm/clientes", heading: /Clientes/i },
       { href: "/crm/historico", heading: /Histórico/i },
       { href: "/crm/servicos", heading: /Serviços/i },
@@ -152,6 +152,20 @@ test.describe("CRM LaserFix", () => {
       await expect(cards.first().getByRole("button", { name: /Expandir/i })).toBeVisible();
       await expect(cards.nth(1).getByRole("button", { name: /Recolher/i })).toBeVisible();
     }
+  });
+
+  test("separa atendimentos por status e exibe ações de WhatsApp", async ({ page }) => {
+    await page.goto("/crm/agendamentos");
+    await expect(page.getByRole("heading", { name: /^Agendados$/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^Concluídos$/i })).toBeVisible();
+
+    const scheduledCard = page.locator(".crm-appointment-accordion").filter({ hasText: "Agendado" }).first();
+    await scheduledCard.getByRole("button").first().click();
+    await expect(scheduledCard.getByRole("link", { name: /Confirmar agendamento/i })).toBeVisible();
+
+    const completedCard = page.locator(".crm-appointment-accordion").filter({ hasText: "Concluído" }).first();
+    await completedCard.getByRole("button").first().click();
+    await expect(completedCard.getByRole("link", { name: /Enviar cobrança/i })).toBeVisible();
   });
 
   test("expande cards editaveis para largura total", async ({ page }) => {

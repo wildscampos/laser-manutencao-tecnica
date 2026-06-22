@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CrmApp } from "@/components/crm-app";
 
 export const metadata: Metadata = {
-  title: "Agendamentos | LaserFix",
+  title: "Atendimentos | LaserFix",
   description: "Agenda restrita de atendimentos LaserFix.",
   robots: {
     index: false,

@@ -2185,6 +2185,15 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   margin-bottom: 0.9rem;
 }
 
+.crm-subsection-title {
+  margin-top: 1.25rem;
+  margin-bottom: 0.65rem;
+}
+
+.crm-subsection-title h2 {
+  font-size: 1rem;
+}
+
 .crm-section-title span {
   color: #475569;
   font-size: 0.9rem;
