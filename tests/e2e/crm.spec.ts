@@ -188,4 +188,16 @@ test.describe("CRM LaserFix", () => {
     await expect(serviceCard).toHaveCSS("grid-column-end", "-1");
     await expect(serviceCard.getByRole("button", { name: /Salvar alterações/i })).toBeVisible();
   });
+
+  test("exibe avisos do CRM como popup temporario", async ({ page }) => {
+    await page.goto("/crm/agendamentos");
+    const scheduledCard = page.locator(".crm-appointment-accordion").filter({ hasText: "Agendado" }).first();
+    await scheduledCard.getByRole("button").first().click();
+    await scheduledCard.getByRole("button", { name: /Salvar observações/i }).click();
+
+    const toast = page.locator(".crm-toast");
+    await expect(toast).toBeVisible();
+    await expect(toast).toContainText("Atendimento atualizado.");
+    await expect(toast).toBeHidden({ timeout: 4000 });
+  });
 });

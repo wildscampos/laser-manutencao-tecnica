@@ -505,6 +505,15 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   }, []);
 
   useEffect(() => {
+    if (!error && !success) return;
+    const timerId = window.setTimeout(() => {
+      setError("");
+      setSuccess("");
+    }, 3000);
+    return () => window.clearTimeout(timerId);
+  }, [error, success]);
+
+  useEffect(() => {
     if (!isAdmin) return;
 
     const unsubscribeAppointments = listenToAppointments(
@@ -781,8 +790,16 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         </Link>
       </section>
 
-      {error && <p className="crm-error">{error}</p>}
-      {success && <p className="crm-success">{success}</p>}
+      {(error || success) && (
+        <div className="crm-toast-layer">
+          <div
+            className={`crm-toast ${error ? "crm-toast-error" : "crm-toast-success"}`}
+            role={error ? "alert" : "status"}
+          >
+            {error || success}
+          </div>
+        </div>
+      )}
 
       {view === "customers" && (
         <CustomersView
@@ -900,7 +917,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
             return "Atendimento atualizado.";
           })}
           onPayment={(appointmentId, status, date) => runAction(appointmentId, () => updatePaymentStatus(appointmentId, status, date))}
-          onSaveNotes={(appointmentId, values) => runAction(appointmentId, () => updateCrmNotes(appointmentId, values))}
+          onSaveNotes={(appointmentId, values) => runAction(appointmentId, async () => {
+            await updateCrmNotes(appointmentId, values);
+            return "Atendimento atualizado.";
+          })}
           onStart={(appointment) => runAction(appointment.id, () => startAppointment(appointment))}
           serviceOptions={serviceOptions}
         />
