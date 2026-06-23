@@ -30,14 +30,38 @@ import {
   cityOptions,
   crmLoginEmail,
   crmLoginName,
-  crmThemeStorageKey,
-  currencyFormatter,
   defaultServiceCatalog,
   emptyCustomer,
   monthFormatter,
   performedServiceOptions,
 } from "@/components/crm/constants";
-import type { ChartFormat, CrmTheme, CrmView, DashboardChart, DashboardChartKey } from "@/components/crm/types";
+import {
+  formatChartMonth,
+  formatChartValue,
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  formatDuration,
+  formatServiceListLabel,
+  getCurrentMonthKey,
+  getCurrentTimeValue,
+  getPaymentLabel,
+  getStatusLabel,
+} from "@/components/crm/formatters";
+import {
+  getAppointmentStartTime,
+  readNotificationKeys,
+  requestCrmNotificationPermission,
+  showCrmNotificationOnce,
+} from "@/components/crm/notifications";
+import { applyCrmTheme, getStoredCrmTheme, toggleStoredCrmTheme } from "@/components/crm/theme";
+import type { ChartFormat, CrmView, DashboardChart, DashboardChartKey } from "@/components/crm/types";
+import {
+  buildAppointmentConfirmationWhatsAppUrl,
+  buildCustomerWhatsAppUrl,
+  getCustomerPaymentDebts,
+  normalizeWhatsAppNumber,
+} from "@/components/crm/whatsapp";
 import {
   blockAvailability,
   calculateMetrics,
@@ -46,7 +70,6 @@ import {
   createManualAppointment,
   createReturnAppointment,
   createStartedManualAppointment,
-  formatServiceLabel,
   getMonthKey,
   listenToAppointments,
   listenToCustomers,
@@ -76,41 +99,6 @@ import {
 } from "@/lib/crm";
 import { getAvailableTimesForDate } from "@/lib/schedule";
 
-function formatCurrency(value = 0) {
-  return currencyFormatter.format(value);
-}
-
-function formatDuration(minutes = 0) {
-  const safeMinutes = Math.max(0, Math.round(minutes));
-  const hours = Math.floor(safeMinutes / 60);
-  const remainingMinutes = safeMinutes % 60;
-  if (!hours) return `${remainingMinutes} min`;
-  return `${hours}h ${String(remainingMinutes).padStart(2, "0")}min`;
-}
-
-function formatDate(dateValue: string) {
-  if (!dateValue) return "-";
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short" }).format(new Date(`${dateValue}T12:00:00`));
-}
-
-function formatDateTime(iso?: string) {
-  if (!iso) return "-";
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
-}
-
-function formatChartMonth(month: string) {
-  return new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(new Date(`${month}-01T12:00:00`)).replace(".", "");
-}
-
-function getCurrentMonthKey() {
-  return new Date().toISOString().slice(0, 7);
-}
-
-function getCurrentTimeValue() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-}
-
 function useAutoMonthSelection() {
   const [currentMonth, setCurrentMonth] = useState(getCurrentMonthKey);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey);
@@ -131,24 +119,6 @@ function useAutoMonthSelection() {
   }, []);
 
   return { currentMonth, selectedMonth, setSelectedMonth };
-}
-
-function getStatusLabel(status: string) {
-  if (status === "atendimento_iniciado") return "Iniciado";
-  if (status === "concluido") return "Concluído";
-  return "Agendado";
-}
-
-function getPaymentLabel(status?: PaymentStatus) {
-  if (status === "recebido") return "Recebido";
-  if (status === "agendado") return "Pagamento agendado";
-  return "Pendente";
-}
-
-function formatChartValue(value: number, format: ChartFormat) {
-  if (format === "currency") return formatCurrency(value);
-  if (format === "duration") return formatDuration(value);
-  return String(Math.round(value));
 }
 
 function getChartMetricValue(metrics: ReturnType<typeof calculateMetrics>, key: DashboardChartKey) {
@@ -222,188 +192,6 @@ function parsePerformedServices(value: string | string[] = "") {
 
 function formatPerformedServices(values: string[]) {
   return values.join(", ");
-}
-
-function formatServiceListLabel(value: string | string[] = "") {
-  return normalizeServiceText(value)
-    .split(",")
-    .map((service) => formatServiceLabel(service))
-    .filter(Boolean)
-    .join(", ");
-}
-
-function normalizeWhatsAppNumber(value: string) {
-  const digits = value.replace(/\D/g, "");
-  if (digits.startsWith("55")) return digits;
-  if (digits.length >= 10) return `55${digits}`;
-  return digits;
-}
-
-function isFilled(value?: string) {
-  if (!value) return false;
-  const normalizedValue = value.trim().toLowerCase();
-  return Boolean(normalizedValue) && !["não informado", "s/n", "-"].includes(normalizedValue);
-}
-
-function buildAddressLine(appointment: CrmAppointment) {
-  const streetAndNumber = [appointment.rua, appointment.numero].filter(isFilled).join(", ");
-  const neighborhoodAndCity = [appointment.bairro, appointment.cidade].filter(isFilled).join(", ");
-  return [streetAndNumber, neighborhoodAndCity].filter(Boolean).join(" - ");
-}
-
-function getCustomerPaymentDebts(appointment: CrmAppointment, appointments: CrmAppointment[]) {
-  return appointments
-    .filter((currentAppointment) => currentAppointment.id !== appointment.id)
-    .filter((currentAppointment) => currentAppointment.status === "concluido")
-    .filter((currentAppointment) => currentAppointment.pagamentoStatus !== "recebido")
-    .filter((currentAppointment) => {
-      if (appointment.clienteId && currentAppointment.clienteId === appointment.clienteId) return true;
-      const appointmentPhone = normalizeWhatsAppNumber(appointment.whatsapp || appointment.telefone);
-      const currentPhone = normalizeWhatsAppNumber(currentAppointment.whatsapp || currentAppointment.telefone);
-      if (appointmentPhone && currentPhone && appointmentPhone === currentPhone) return true;
-      return currentAppointment.nome.trim().toLowerCase() === appointment.nome.trim().toLowerCase();
-    })
-    .sort((a, b) => a.data.localeCompare(b.data) || a.horario.localeCompare(b.horario));
-}
-
-function buildAppointmentConfirmationWhatsAppUrl(appointment: CrmAppointment) {
-  const phone = normalizeWhatsAppNumber(appointment.whatsapp || appointment.telefone);
-  const address = buildAddressLine(appointment);
-  const lines: Array<string | undefined> = [
-    `Olá, ${appointment.nome}.`,
-    "",
-    "Confirmando seu atendimento LaserFix:",
-    "Técnico: Wilds Campos",
-    `Data: ${formatDate(appointment.data)}`,
-    `Horário: ${appointment.horario}`,
-    isFilled(appointment.servico) ? `Serviço: ${appointment.servico}` : undefined,
-    address ? `Endereço: ${address}` : undefined,
-    "",
-    "Qualquer alteração, me avise pelo WhatsApp.",
-  ];
-  const message = lines.filter((line): line is string => line !== undefined).join("\n");
-
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-}
-
-function buildCustomerWhatsAppUrl(appointment: CrmAppointment, servicesDone: string, pendingAppointments: CrmAppointment[]) {
-  const phone = normalizeWhatsAppNumber(appointment.whatsapp || appointment.telefone);
-  const performedServices = servicesDone.trim() || normalizeServiceText(appointment.servicosRealizados) || appointment.servico;
-  const currentTotal = appointment.valorTotal || 0;
-  const pendingTotal = pendingAppointments.reduce((sum, pendingAppointment) => sum + (pendingAppointment.valorTotal || 0), 0);
-  const grandTotal = currentTotal + pendingTotal;
-  const pendingLines = pendingAppointments.length
-    ? [
-        "",
-        "Também constam pagamentos anteriores ainda não confirmados:",
-        ...pendingAppointments.map((pendingAppointment) =>
-          `- ${formatDate(pendingAppointment.data)} · ${formatServiceListLabel(pendingAppointment.servicosRealizados || pendingAppointment.servico)}: ${formatCurrency(pendingAppointment.valorTotal || 0)} (${getPaymentLabel(pendingAppointment.pagamentoStatus)})`,
-        ),
-        `Total anterior pendente: ${formatCurrency(pendingTotal)}`,
-        `Valor total dos atendimentos: ${formatCurrency(grandTotal)}`,
-      ]
-    : [];
-  const lines: Array<string | undefined> = [
-    `Olá, ${appointment.nome}.`,
-    "",
-    "Seu atendimento LaserFix foi concluído.",
-    "",
-    appointment.tempoAtendimentoMin ? `Tempo do serviço: ${formatDuration(appointment.tempoAtendimentoMin)}` : undefined,
-    isFilled(performedServices) ? `Serviços realizados: ${performedServices}` : undefined,
-    appointment.valorServico ? `Valor do atendimento: ${formatCurrency(appointment.valorServico)}` : undefined,
-    appointment.deslocamentoValor ? `Deslocamento: ${formatCurrency(appointment.deslocamentoValor)}` : undefined,
-    currentTotal ? `Valor total: ${formatCurrency(currentTotal)}` : undefined,
-    ...pendingLines,
-    "",
-    "Dados para pagamento via Pix:",
-    "Pix Celular: 12981823416",
-    "Banco: C6",
-    "Nome: Wilds M Campos",
-  ];
-  const message = lines.filter((line): line is string => line !== undefined).join("\n");
-
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-}
-
-function getAppointmentStartTime(appointment: CrmAppointment) {
-  return new Date(`${appointment.data}T${appointment.horario}:00`).getTime();
-}
-
-async function showCrmNotification(title: string, body: string, tag: string) {
-  if (!("Notification" in window) || Notification.permission !== "granted") return false;
-
-  const options: NotificationOptions = {
-    body,
-    icon: "/pwa-icon-laserfix-192.png",
-    badge: "/pwa-icon-laserfix-192.png",
-    tag,
-    data: { url: "/crm" },
-  };
-
-  try {
-    if ("serviceWorker" in navigator) {
-      const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(title, options);
-      return true;
-    }
-
-    new Notification(title, options);
-    return true;
-  } catch {
-    try {
-      new Notification(title, options);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-}
-
-function readNotificationKeys(storageKey: string) {
-  try {
-    return new Set(JSON.parse(window.localStorage.getItem(storageKey) || "[]") as string[]);
-  } catch {
-    return new Set<string>();
-  }
-}
-
-function writeNotificationKeys(storageKey: string, keys: Set<string>) {
-  window.localStorage.setItem(storageKey, JSON.stringify(Array.from(keys)));
-}
-
-async function showCrmNotificationOnce(storageKey: string, uniqueKey: string, title: string, body: string, tag: string) {
-  const notifiedKeys = readNotificationKeys(storageKey);
-  if (notifiedKeys.has(uniqueKey)) return;
-
-  const shown = await showCrmNotification(title, body, tag);
-  if (!shown) return;
-
-  notifiedKeys.add(uniqueKey);
-  writeNotificationKeys(storageKey, notifiedKeys);
-}
-
-async function requestCrmNotificationPermission() {
-  if (!("Notification" in window)) return "denied" as NotificationPermission;
-  if (Notification.permission !== "default") return Notification.permission;
-  return Notification.requestPermission();
-}
-
-function getStoredCrmTheme(): CrmTheme {
-  if (typeof window === "undefined") return "light";
-  return window.localStorage.getItem(crmThemeStorageKey) === "dark" ? "dark" : "light";
-}
-
-function applyCrmTheme(theme: CrmTheme) {
-  if (typeof document === "undefined") return;
-  document.documentElement.dataset.crmTheme = theme;
-}
-
-function toggleStoredCrmTheme() {
-  if (typeof window === "undefined") return;
-  const currentTheme = document.documentElement.dataset.crmTheme === "dark" ? "dark" : "light";
-  const nextTheme = currentTheme === "dark" ? "light" : "dark";
-  window.localStorage.setItem(crmThemeStorageKey, nextTheme);
-  applyCrmTheme(nextTheme);
 }
 
 export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
