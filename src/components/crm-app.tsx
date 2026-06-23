@@ -6,8 +6,6 @@ import {
   ArrowLeft,
   CalendarClock,
   CheckCircle2,
-  Clock3,
-  DollarSign,
   History,
   LogOut,
   Moon,
@@ -24,6 +22,7 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } fr
 import { useEffect, useMemo, useRef, useState } from "react";
 import { auth } from "@/lib/firebase-client";
 import { getFreeTimes } from "@/lib/client-appointments";
+import { AvailabilityView } from "@/components/crm/availability";
 import {
   adminEmails,
   cityOptions,
@@ -34,7 +33,9 @@ import {
   monthFormatter,
   performedServiceOptions,
 } from "@/components/crm/constants";
-import { DashboardView, MetricCard } from "@/components/crm/dashboard";
+import { DashboardView } from "@/components/crm/dashboard";
+import { CrmInput } from "@/components/crm/form-controls";
+import { FinanceView } from "@/components/crm/finance";
 import {
   formatCurrency,
   formatDate,
@@ -52,6 +53,7 @@ import {
   requestCrmNotificationPermission,
   showCrmNotificationOnce,
 } from "@/components/crm/notifications";
+import { ServicesView } from "@/components/crm/services";
 import { applyCrmTheme, getStoredCrmTheme, toggleStoredCrmTheme } from "@/components/crm/theme";
 import type { CrmView, DashboardChartKey } from "@/components/crm/types";
 import {
@@ -83,7 +85,6 @@ import {
   updatePaymentStatus,
   updateService,
   type AppointmentEditInput,
-  type AvailabilityBlockInput,
   type CompletedManualAppointmentInput,
   type CrmCustomer,
   type CrmAppointment,
@@ -92,7 +93,6 @@ import {
   type ManualAppointmentInput,
   type PaymentStatus,
   type ReturnAppointmentInput,
-  type ServiceInput,
   type StartedManualAppointmentInput,
 } from "@/lib/crm";
 import { getAvailableTimesForDate } from "@/lib/schedule";
@@ -889,308 +889,6 @@ function HistoryView({ appointments, customers }: { appointments: CrmAppointment
   );
 }
 
-function ServicesView({
-  busy,
-  services,
-  onSaveService,
-  onUpdateService,
-}: {
-  busy: boolean;
-  services: CrmService[];
-  onSaveService: (service: ServiceInput) => Promise<boolean>;
-  onUpdateService: (serviceId: string, service: ServiceInput) => Promise<boolean>;
-}) {
-  const activeServices = services.filter((service) => service.ativo);
-  const inactiveServices = services.filter((service) => !service.ativo);
-
-  return (
-    <section className="crm-page-grid">
-      <details className="crm-panel crm-form-details">
-        <summary>
-          <div className="crm-section-title">
-            <h2>Catálogo de serviços</h2>
-            <span>{activeServices.length} ativo(s)</span>
-          </div>
-        </summary>
-        <ServiceForm busy={busy} onSave={onSaveService} />
-      </details>
-
-      <div className="crm-panel">
-        <h2>Serviços cadastrados</h2>
-        <div className="crm-service-catalog crm-two-column-list">
-          {services.map((service) => (
-            <article key={service.id} className="crm-service-record">
-              <div>
-                <h3>{service.nome}</h3>
-                <p>{service.descricao}</p>
-              </div>
-              <div className="crm-values">
-                <span>Valor base: {formatCurrency(service.valorBase)}</span>
-                <span>Duração: {formatDuration(service.duracaoMin)}</span>
-                <strong>{service.ativo ? "Ativo" : "Inativo"}</strong>
-              </div>
-              <details className="crm-edit-details">
-                <summary>Editar serviço</summary>
-                <ServiceForm
-                  busy={busy}
-                  initialService={serviceToInput(service)}
-                  onSave={(values) => onUpdateService(service.id, values)}
-                  submitLabel="Salvar alterações"
-                />
-              </details>
-            </article>
-          ))}
-          {!services.length && <p className="crm-empty">O catálogo será criado automaticamente com os serviços padrão.</p>}
-          {!!inactiveServices.length && <p className="crm-muted">{inactiveServices.length} serviço(s) inativo(s) ficam fora das listas de seleção.</p>}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FinanceView({
-  appointments,
-  months,
-  onMonthChange,
-  selectedMonth,
-}: {
-  appointments: CrmAppointment[];
-  months: string[];
-  onMonthChange: (month: string) => void;
-  selectedMonth: string;
-}) {
-  const monthAppointments = appointments.filter((appointment) => getMonthKey(appointment.data) === selectedMonth);
-  const monthMetrics = calculateMetrics(monthAppointments);
-  const totalMetrics = calculateMetrics(appointments);
-  const financialAppointments = monthAppointments
-    .filter((appointment) => appointment.status === "concluido")
-    .sort((a, b) => b.data.localeCompare(a.data) || b.horario.localeCompare(a.horario));
-
-  return (
-    <>
-      <section className="crm-toolbar">
-        <label>
-          <span>Mês financeiro</span>
-          <select value={selectedMonth} onChange={(event) => onMonthChange(event.target.value)}>
-            {months.map((month) => (
-              <option key={month} value={month}>
-                {monthFormatter.format(new Date(`${month}-01T12:00:00`))}
-              </option>
-            ))}
-          </select>
-        </label>
-      </section>
-
-      <section className="crm-dashboard" aria-label="Financeiro do mês">
-        <MetricCard icon={DollarSign} label="Faturamento do mês" value={formatCurrency(monthMetrics.totalValue)} />
-        <MetricCard icon={WalletCards} label="Recebido" value={formatCurrency(monthMetrics.receivedValue)} />
-        <MetricCard icon={CalendarClock} label="Pagamentos agendados" value={formatCurrency(monthMetrics.scheduledPaymentValue)} />
-        <MetricCard icon={Clock3} label="Pendente" value={formatCurrency(monthMetrics.pendingValue)} />
-      </section>
-
-      <section className="crm-dashboard crm-dashboard-total" aria-label="Financeiro geral">
-        <MetricCard icon={DollarSign} label="Faturamento geral" value={formatCurrency(totalMetrics.totalValue)} />
-        <MetricCard icon={WalletCards} label="Recebido geral" value={formatCurrency(totalMetrics.receivedValue)} />
-        <MetricCard icon={CalendarClock} label="Agendado geral" value={formatCurrency(totalMetrics.scheduledPaymentValue)} />
-        <MetricCard icon={Clock3} label="Pendente geral" value={formatCurrency(totalMetrics.pendingValue)} />
-      </section>
-
-      <details className="crm-appointments crm-finance-history-details">
-        <summary>
-          <div className="crm-section-title">
-            <h2>Histórico financeiro</h2>
-            <span>{financialAppointments.length} atendimento(s)</span>
-          </div>
-        </summary>
-        <div className="crm-list crm-finance-list">
-          {financialAppointments.map((appointment) => (
-            <article className="crm-appointment-card crm-finance-card" key={appointment.id}>
-              <div className="crm-appointment-main">
-                <div>
-                  <h3>{appointment.nome}</h3>
-                  <p>{formatDate(appointment.data)} às {appointment.horario} · {appointment.cidade}</p>
-                  <p>{formatServiceListLabel(appointment.servicosRealizados || appointment.servico)}</p>
-                </div>
-                <div className="crm-values">
-                  <strong>{formatCurrency(appointment.valorTotal || 0)}</strong>
-                  <span>{getPaymentLabel(appointment.pagamentoStatus)}</span>
-                  {appointment.pagamentoAgendadoPara && <span>Receber em {formatDate(appointment.pagamentoAgendadoPara)}</span>}
-                </div>
-              </div>
-            </article>
-          ))}
-          {!financialAppointments.length && <p className="crm-empty">Nenhum atendimento concluído no mês selecionado.</p>}
-        </div>
-      </details>
-    </>
-  );
-}
-
-function AvailabilityView({
-  appointments,
-  busy,
-  onBlock,
-}: {
-  appointments: CrmAppointment[];
-  busy: boolean;
-  onBlock: (input: AvailabilityBlockInput) => Promise<boolean>;
-}) {
-  const [block, setBlock] = useState<AvailabilityBlockInput>({
-    data: new Date().toISOString().slice(0, 10),
-    horario: "",
-    motivo: "Agenda externa",
-  });
-  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    const data = block.data;
-
-    async function loadAvailableTimes() {
-      try {
-        const freeTimes = await getFreeTimes(data);
-        if (!active) return;
-        setAvailableTimes(freeTimes);
-        setBlock((current) => ({
-          ...current,
-          horario: freeTimes.includes(current.horario) ? current.horario : freeTimes[0] || "",
-        }));
-      } catch {
-        const occupiedTimes = new Set(
-          appointments
-            .filter((appointment) => appointment.data === data && appointment.status !== "concluido")
-            .map((appointment) => appointment.horario),
-        );
-        const fallbackTimes = getAvailableTimesForDate(data).filter((time) => !occupiedTimes.has(time));
-        if (!active) return;
-        setAvailableTimes(fallbackTimes);
-        setBlock((current) => ({
-          ...current,
-          horario: fallbackTimes.includes(current.horario) ? current.horario : fallbackTimes[0] || "",
-        }));
-      }
-    }
-
-    void loadAvailableTimes();
-
-    return () => {
-      active = false;
-    };
-  }, [appointments, block.data]);
-
-  function updateField(field: keyof AvailabilityBlockInput, value: string) {
-    setBlock((current) => ({ ...current, [field]: value }));
-  }
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!block.horario) return;
-    const blocked = await onBlock(block);
-    if (!blocked) return;
-    setAvailableTimes((currentTimes) => currentTimes.filter((time) => time !== block.horario));
-    setBlock((current) => {
-      const nextTimes = availableTimes.filter((time) => time !== current.horario);
-      return { ...current, horario: nextTimes[0] || "" };
-    });
-  }
-
-  return (
-    <section className="crm-page-grid">
-      <details className="crm-panel crm-wide-panel crm-form-details">
-        <summary>
-          <div className="crm-section-title">
-            <h2>Bloquear horário</h2>
-          </div>
-        </summary>
-        <form className="crm-form-grid" onSubmit={submit}>
-          <CrmInput label="Data" required type="date" value={block.data} onChange={(value) => updateField("data", value)} />
-          <label>
-            <span>Horário</span>
-            <select value={block.horario} onChange={(event) => updateField("horario", event.target.value)}>
-              {!availableTimes.length && <option value="">Nenhum horário livre</option>}
-              {availableTimes.map((time) => (
-                <option key={time} value={time}>{time}</option>
-              ))}
-            </select>
-          </label>
-          <CrmInput label="Motivo" value={block.motivo} onChange={(value) => updateField("motivo", value)} />
-          <button className="crm-primary-button crm-form-wide" disabled={busy || !block.horario} type="submit">
-            <ShieldCheck aria-hidden="true" />
-            Bloquear horário
-          </button>
-        </form>
-      </details>
-    </section>
-  );
-}
-
-function serviceToInput(service: CrmService): ServiceInput {
-  return {
-    nome: service.nome,
-    descricao: service.descricao,
-    valorBase: service.valorBase,
-    duracaoMin: service.duracaoMin,
-    ativo: service.ativo,
-  };
-}
-
-function ServiceForm({
-  busy,
-  initialService,
-  onSave,
-  submitLabel = "Salvar serviço",
-}: {
-  busy: boolean;
-  initialService?: ServiceInput;
-  onSave: (service: ServiceInput) => Promise<boolean>;
-  submitLabel?: string;
-}) {
-  const blankService: ServiceInput = {
-    nome: "",
-    descricao: "",
-    valorBase: 100,
-    duracaoMin: 60,
-    ativo: true,
-  };
-  const [service, setService] = useState<ServiceInput>(initialService || blankService);
-
-  function updateField(field: keyof ServiceInput, value: string | boolean) {
-    setService((current) => ({
-      ...current,
-      [field]: field === "valorBase" || field === "duracaoMin" ? Number(value) : value,
-    }));
-  }
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const saved = await onSave(service);
-    if (saved && !initialService) setService(blankService);
-  }
-
-  return (
-    <form className="crm-form-grid" onSubmit={submit}>
-      <CrmInput label="Nome do serviço" required value={service.nome} onChange={(value) => updateField("nome", value)} />
-      <CrmInput label="Valor base" required type="number" value={String(service.valorBase)} onChange={(value) => updateField("valorBase", value)} />
-      <CrmInput label="Duração estimada em minutos" required type="number" value={String(service.duracaoMin)} onChange={(value) => updateField("duracaoMin", value)} />
-      <label>
-        <span>Status</span>
-        <select value={service.ativo ? "ativo" : "inativo"} onChange={(event) => updateField("ativo", event.target.value === "ativo")}>
-          <option value="ativo">Ativo</option>
-          <option value="inativo">Inativo</option>
-        </select>
-      </label>
-      <label className="crm-form-wide">
-        <span>Descrição</span>
-        <textarea value={service.descricao} onChange={(event) => updateField("descricao", event.target.value)} />
-      </label>
-      <button className="crm-primary-button crm-form-wide" disabled={busy} type="submit">
-        <Save aria-hidden="true" />
-        {submitLabel}
-      </button>
-    </form>
-  );
-}
-
 function customerToInput(customer: CrmCustomer): CustomerInput {
   return {
     nome: customer.nome,
@@ -1691,27 +1389,6 @@ function CompletedManualAppointmentForm({
         Registrar atendimento concluído
       </button>
     </form>
-  );
-}
-
-function CrmInput({
-  label,
-  onChange,
-  required,
-  type = "text",
-  value,
-}: {
-  label: string;
-  onChange: (value: string) => void;
-  required?: boolean;
-  type?: string;
-  value: string;
-}) {
-  return (
-    <label>
-      <span>{label}</span>
-      <input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} />
-    </label>
   );
 }
 
