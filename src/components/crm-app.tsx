@@ -26,6 +26,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { auth } from "@/lib/firebase-client";
 import { getFreeTimes } from "@/lib/client-appointments";
 import {
+  adminEmails,
+  cityOptions,
+  crmLoginEmail,
+  crmLoginName,
+  crmThemeStorageKey,
+  currencyFormatter,
+  defaultServiceCatalog,
+  emptyCustomer,
+  monthFormatter,
+  performedServiceOptions,
+} from "@/components/crm/constants";
+import type { ChartFormat, CrmTheme, CrmView, DashboardChart, DashboardChartKey } from "@/components/crm/types";
+import {
   blockAvailability,
   calculateMetrics,
   completeAppointment,
@@ -62,73 +75,6 @@ import {
   type StartedManualAppointmentInput,
 } from "@/lib/crm";
 import { getAvailableTimesForDate } from "@/lib/schedule";
-
-const crmLoginName = "Wilds Campos";
-const crmLoginEmail = "wilds.campos@laserfix.app";
-const crmThemeStorageKey = "laserfix-crm-theme";
-
-const adminEmails = (process.env.NEXT_PUBLIC_CRM_ADMIN_EMAILS || "wilds.campos@laserfix.app,wilds.mc@gmail.com")
-  .split(",")
-  .map((email) => email.trim().toLowerCase())
-  .filter(Boolean);
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
-const monthFormatter = new Intl.DateTimeFormat("pt-BR", {
-  month: "long",
-  year: "numeric",
-});
-
-const performedServiceOptions = [
-  "Manutenção preventiva",
-  "Manutenção corretiva",
-  "Limpeza técnica",
-  "Alinhamento óptico",
-  "Troca de espelhos",
-  "Troca de lente",
-  "Troca de tubo CO₂",
-  "Troca de fonte",
-  "Troca de driver",
-  "Troca de painel",
-  "Troca de controladora",
-  "Troca de sensor de fim de curso",
-  "Configuração de motor de passo",
-  "Configuração RD Works",
-  "Backup/restauração de parâmetros",
-  "Criação de arte para corte e gravação",
-  "Testes operacionais",
-];
-
-const defaultServiceCatalog: ServiceInput[] = performedServiceOptions.map((serviceName) => ({
-  nome: serviceName,
-  descricao: "Serviço técnico LaserFix para máquinas de corte e gravação laser CO₂.",
-  valorBase: serviceName.includes("arte") || serviceName.includes("Arte") ? 40 : 100,
-  duracaoMin: serviceName.includes("arte") || serviceName.includes("Arte") ? 60 : 60,
-  ativo: true,
-}));
-
-const cityOptions = ["Aparecida", "Cachoeira Paulista", "Canas", "Guaratinguetá", "Lorena", "Potim"];
-
-const emptyCustomer: CustomerInput = {
-  nome: "",
-  telefone: "",
-  whatsapp: "",
-  empresa: "",
-  cpfCnpj: "",
-  rua: "",
-  numero: "",
-  bairro: "",
-  cidade: "Guaratinguetá",
-  modeloMaquina: "",
-  etiquetas: "",
-  preferenciasHorario: "",
-  aniversario: "",
-  camposCustomizados: "",
-  observacoes: "",
-};
 
 function formatCurrency(value = 0) {
   return currencyFormatter.format(value);
@@ -441,32 +387,6 @@ async function requestCrmNotificationPermission() {
   if (Notification.permission !== "default") return Notification.permission;
   return Notification.requestPermission();
 }
-
-type CrmView = "dashboard" | "appointments" | "customers" | "history" | "services" | "finance" | "availability";
-type DashboardChartKey =
-  | "scheduled"
-  | "appointments"
-  | "completed"
-  | "totalValue"
-  | "receivedValue"
-  | "pendingValue"
-  | "averageValue"
-  | "totalMinutes"
-  | "averageMinutes"
-  | "totalAppointments"
-  | "totalCompleted"
-  | "totalGeneralValue"
-  | "totalGeneralMinutes";
-type ChartFormat = "currency" | "duration" | "number";
-
-type DashboardChart = {
-  averageValue: number;
-  format: ChartFormat;
-  key: DashboardChartKey;
-  points: Array<{ label: string; value: number }>;
-  title: string;
-};
-type CrmTheme = "light" | "dark";
 
 function getStoredCrmTheme(): CrmTheme {
   if (typeof window === "undefined") return "light";
