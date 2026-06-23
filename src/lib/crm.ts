@@ -101,6 +101,16 @@ export type ManualAppointmentInput = {
   observacoes: string;
 };
 
+export type CompletedManualAppointmentInput = ManualAppointmentInput & {
+  deslocamentoValor: number;
+  pagamentoAgendadoPara?: string;
+  pagamentoStatus: PaymentStatus;
+  servicosRealizados: string;
+  tempoAtendimentoMin: number;
+  valorServico: number;
+  valorTotal: number;
+};
+
 export type AppointmentEditInput = {
   servico: string;
   observacoes?: string;
@@ -340,6 +350,73 @@ export async function createManualAppointment(input: ManualAppointmentInput) {
       createdAtIso: nowIso,
       origem: "crm-manual",
     });
+  });
+}
+
+export async function createCompletedManualAppointment(input: CompletedManualAppointmentInput) {
+  const nowIso = new Date().toISOString();
+  const customer = {
+    ...input.cliente,
+    nome: input.cliente.nome.trim() || "Cliente sem nome",
+    cidade: input.cliente.cidade || "Guaratinguetá",
+  };
+  const customerId = input.clienteId || makeCustomerId(customer.nome, customer.cidade);
+  const appointmentRef = doc(collection(db, "agendamentos"));
+  const customerRef = doc(db, "clientes", customerId);
+  const customerSnapshot = await getDoc(customerRef);
+  const durationMinutes = Math.max(1, Number(input.tempoAtendimentoMin) || 1);
+  const startedAt = new Date(`${input.data}T${input.horario || "12:00"}:00`);
+  const safeStartedAt = Number.isFinite(startedAt.getTime()) ? startedAt : new Date();
+  const completedAt = new Date(safeStartedAt.getTime() + durationMinutes * 60000);
+  const serviceValue = Number(input.valorServico) || 0;
+  const travelValue = Number(input.deslocamentoValor) || 0;
+  const totalValue = Number(input.valorTotal) || serviceValue + travelValue;
+
+  await setDoc(
+    customerRef,
+    {
+      id: customerId,
+      ...customer,
+      createdAtIso: customerSnapshot.exists() ? customerSnapshot.data().createdAtIso || nowIso : nowIso,
+      updatedAt: serverTimestamp(),
+      updatedAtIso: nowIso,
+    },
+    { merge: true },
+  );
+
+  await setDoc(appointmentRef, {
+    id: appointmentRef.id,
+    clienteId: customerId,
+    nome: customer.nome,
+    telefone: customer.telefone,
+    whatsapp: customer.whatsapp,
+    empresa: customer.empresa || "",
+    rua: customer.rua || "Não informado",
+    numero: customer.numero || "S/N",
+    bairro: customer.bairro || "Não informado",
+    cidade: customer.cidade,
+    modeloMaquina: customer.modeloMaquina || "",
+    servico: input.servico,
+    data: input.data,
+    horario: input.horario || "12:00",
+    observacoes: input.observacoes,
+    deslocamentoKm: 0,
+    deslocamentoValor: travelValue,
+    status: "concluido",
+    atendimentoIniciadoAtIso: safeStartedAt.toISOString(),
+    atendimentoConcluidoAtIso: completedAt.toISOString(),
+    tempoAtendimentoMin: durationMinutes,
+    valorServico: serviceValue,
+    valorTotal: totalValue,
+    pagamentoStatus: input.pagamentoStatus,
+    pagamentoAgendadoPara: input.pagamentoStatus === "agendado" ? input.pagamentoAgendadoPara || "" : "",
+    servicosRealizados: input.servicosRealizados || input.servico,
+    crmObservacoes: "Atendimento registrado fora da agenda.",
+    createdAt: serverTimestamp(),
+    createdAtIso: nowIso,
+    updatedAt: serverTimestamp(),
+    updatedAtIso: nowIso,
+    origem: "crm-atendimento-avulso",
   });
 }
 

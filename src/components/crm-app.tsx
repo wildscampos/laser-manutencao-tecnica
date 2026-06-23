@@ -29,6 +29,7 @@ import {
   blockAvailability,
   calculateMetrics,
   completeAppointment,
+  createCompletedManualAppointment,
   createManualAppointment,
   formatServiceLabel,
   getMonthKey,
@@ -46,6 +47,7 @@ import {
   updateService,
   type AppointmentEditInput,
   type AvailabilityBlockInput,
+  type CompletedManualAppointmentInput,
   type CrmCustomer,
   type CrmAppointment,
   type CrmService,
@@ -151,6 +153,11 @@ function formatChartMonth(month: string) {
 
 function getCurrentMonthKey() {
   return new Date().toISOString().slice(0, 7);
+}
+
+function getCurrentTimeValue() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
 function useAutoMonthSelection() {
@@ -911,6 +918,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
             await createManualAppointment(input);
             return "Agendamento manual criado e horário bloqueado.";
           })}
+          onCreateCompletedAppointment={(input) => runGlobalAction(async () => {
+            await createCompletedManualAppointment(input);
+            return "Atendimento avulso registrado.";
+          })}
           onComplete={(appointment) => runAction(appointment.id, () => completeAppointment(appointment))}
           onEditAppointment={(appointmentId, values) => runAction(appointmentId, async () => {
             await updateAppointmentDetails(appointmentId, values);
@@ -1042,6 +1053,7 @@ function AppointmentsView({
   busyId,
   customers,
   onCreateAppointment,
+  onCreateCompletedAppointment,
   onComplete,
   onEditAppointment,
   onPayment,
@@ -1053,6 +1065,7 @@ function AppointmentsView({
   busyId: string;
   customers: CrmCustomer[];
   onCreateAppointment: (input: ManualAppointmentInput) => Promise<boolean>;
+  onCreateCompletedAppointment: (input: CompletedManualAppointmentInput) => Promise<boolean>;
   onComplete: (appointment: CrmAppointment) => void;
   onEditAppointment: (appointmentId: string, values: AppointmentEditInput) => Promise<boolean>;
   onPayment: (appointmentId: string, status: PaymentStatus, scheduledDate?: string) => void;
@@ -1108,6 +1121,21 @@ function AppointmentsView({
             busy={busyId === "global"}
             customers={customers}
             onCreate={onCreateAppointment}
+            serviceOptions={serviceOptions}
+          />
+        </details>
+        <details className="crm-panel crm-wide-panel crm-form-details">
+          <summary>
+            <div className="crm-section-title">
+              <h2>Atendimento avulso</h2>
+              <span>Já realizado</span>
+            </div>
+          </summary>
+          <CompletedManualAppointmentForm
+            appointments={appointments}
+            busy={busyId === "global"}
+            customers={customers}
+            onCreate={onCreateCompletedAppointment}
             serviceOptions={serviceOptions}
           />
         </details>
@@ -1850,6 +1878,226 @@ function ManualAppointmentForm({
       <button className="crm-primary-button crm-form-wide" disabled={busy || !appointment.horario} type="submit">
         <Plus aria-hidden="true" />
         Criar agendamento
+      </button>
+    </form>
+  );
+}
+
+function CompletedManualAppointmentForm({
+  appointments,
+  busy,
+  customers,
+  onCreate,
+  serviceOptions,
+}: {
+  appointments: CrmAppointment[];
+  busy: boolean;
+  customers: CrmCustomer[];
+  onCreate: (input: CompletedManualAppointmentInput) => Promise<boolean>;
+  serviceOptions: string[];
+}) {
+  const defaultService = serviceOptions[0] || performedServiceOptions[0];
+  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [newCustomer, setNewCustomer] = useState<CustomerInput>(emptyCustomer);
+  const [selectedServices, setSelectedServices] = useState<string[]>([defaultService]);
+  const [appointment, setAppointment] = useState({
+    data: new Date().toISOString().slice(0, 10),
+    horario: getCurrentTimeValue(),
+    observacoes: "",
+    deslocamentoValor: 0,
+    pagamentoAgendadoPara: "",
+    pagamentoStatus: "pendente" as PaymentStatus,
+    tempoAtendimentoMin: 60,
+    valorServico: 100,
+    valorTotal: 100,
+  });
+
+  const selectedCustomer = customers.find((customer) => customer.id === selectedCustomerId) || customers[0];
+  const effectiveMode = customers.length ? mode : "new";
+  const serviceName = selectedServices[0] || defaultService;
+
+  function updateNewCustomer(field: keyof CustomerInput, value: string) {
+    setNewCustomer((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateAppointment(field: keyof typeof appointment, value: string) {
+    setAppointment((current) => {
+      const next = {
+        ...current,
+        [field]:
+          field === "deslocamentoValor" || field === "tempoAtendimentoMin" || field === "valorServico" || field === "valorTotal"
+            ? Number(value)
+            : value,
+      };
+
+      if (field === "deslocamentoValor" || field === "valorServico") {
+        next.valorTotal = (Number(next.valorServico) || 0) + (Number(next.deslocamentoValor) || 0);
+      }
+
+      return next;
+    });
+  }
+
+  function toggleService(service: string) {
+    setSelectedServices((currentServices) =>
+      currentServices.includes(service)
+        ? currentServices.filter((currentService) => currentService !== service)
+        : [...currentServices, service],
+    );
+  }
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const customer = effectiveMode === "existing" && selectedCustomer ? selectedCustomer : newCustomer;
+    const normalizedCustomer = {
+      nome: customer.nome,
+      telefone: customer.telefone || "",
+      whatsapp: customer.whatsapp || customer.telefone || "",
+      empresa: customer.empresa || "",
+      rua: customer.rua || "Não informado",
+      numero: customer.numero || "S/N",
+      bairro: customer.bairro || "Não informado",
+      cidade: customer.cidade || "Guaratinguetá",
+      modeloMaquina: customer.modeloMaquina || "",
+      observacoes: customer.observacoes || "",
+    };
+    const servicesDone = formatPerformedServices(selectedServices) || serviceName;
+    const previewAppointment: CrmAppointment = {
+      id: "atendimento-avulso-preview",
+      clienteId: effectiveMode === "existing" ? selectedCustomer?.id : undefined,
+      ...normalizedCustomer,
+      data: appointment.data,
+      deslocamentoValor: appointment.deslocamentoValor,
+      horario: appointment.horario,
+      observacoes: appointment.observacoes,
+      pagamentoAgendadoPara: appointment.pagamentoAgendadoPara,
+      pagamentoStatus: appointment.pagamentoStatus,
+      servico: serviceName,
+      servicosRealizados: servicesDone,
+      status: "concluido",
+      tempoAtendimentoMin: appointment.tempoAtendimentoMin,
+      valorServico: appointment.valorServico,
+      valorTotal: appointment.valorTotal,
+    };
+    const created = await onCreate({
+      clienteId: effectiveMode === "existing" ? selectedCustomer?.id : undefined,
+      cliente: normalizedCustomer,
+      data: appointment.data,
+      deslocamentoValor: appointment.deslocamentoValor,
+      horario: appointment.horario,
+      observacoes: appointment.observacoes,
+      pagamentoAgendadoPara: appointment.pagamentoAgendadoPara,
+      pagamentoStatus: appointment.pagamentoStatus,
+      servico: serviceName,
+      servicosRealizados: servicesDone,
+      tempoAtendimentoMin: appointment.tempoAtendimentoMin,
+      valorServico: appointment.valorServico,
+      valorTotal: appointment.valorTotal,
+    });
+
+    if (!created) return;
+
+    const pendingPayments = getCustomerPaymentDebts(previewAppointment, appointments);
+    const whatsappUrl = buildCustomerWhatsAppUrl(previewAppointment, servicesDone, pendingPayments);
+    if (normalizeWhatsAppNumber(normalizedCustomer.whatsapp)) {
+      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+    }
+
+    setNewCustomer(emptyCustomer);
+    setSelectedCustomerId("");
+    setMode(customers.length ? "existing" : "new");
+    setSelectedServices([defaultService]);
+    setAppointment({
+      data: new Date().toISOString().slice(0, 10),
+      horario: getCurrentTimeValue(),
+      observacoes: "",
+      deslocamentoValor: 0,
+      pagamentoAgendadoPara: "",
+      pagamentoStatus: "pendente",
+      tempoAtendimentoMin: 60,
+      valorServico: 100,
+      valorTotal: 100,
+    });
+  }
+
+  return (
+    <form className="crm-form-grid" onSubmit={submit}>
+      <label className="crm-form-wide">
+        <span>Cliente</span>
+        <select value={effectiveMode} onChange={(event) => setMode(event.target.value as "existing" | "new")}>
+          <option value="existing" disabled={!customers.length}>Selecionar cliente cadastrado</option>
+          <option value="new">Identificar novo cliente</option>
+        </select>
+      </label>
+
+      {effectiveMode === "existing" && customers.length ? (
+        <label className="crm-form-wide">
+          <span>Cliente cadastrado</span>
+          <select value={selectedCustomerId || customers[0]?.id || ""} onChange={(event) => setSelectedCustomerId(event.target.value)}>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>{customer.nome} · {customer.cidade}</option>
+            ))}
+          </select>
+        </label>
+      ) : (
+        <>
+          <CrmInput label="Nome" value={newCustomer.nome} onChange={(value) => updateNewCustomer("nome", value)} />
+          <CrmInput label="WhatsApp" value={newCustomer.whatsapp} onChange={(value) => updateNewCustomer("whatsapp", value)} />
+          <CrmInput label="Telefone" value={newCustomer.telefone} onChange={(value) => updateNewCustomer("telefone", value)} />
+          <CrmInput label="Empresa" value={newCustomer.empresa || ""} onChange={(value) => updateNewCustomer("empresa", value)} />
+          <CrmInput label="Rua" value={newCustomer.rua} onChange={(value) => updateNewCustomer("rua", value)} />
+          <CrmInput label="Número" value={newCustomer.numero} onChange={(value) => updateNewCustomer("numero", value)} />
+          <CrmInput label="Bairro" value={newCustomer.bairro} onChange={(value) => updateNewCustomer("bairro", value)} />
+          <label>
+            <span>Cidade</span>
+            <select value={newCustomer.cidade} onChange={(event) => updateNewCustomer("cidade", event.target.value)}>
+              {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
+            </select>
+          </label>
+        </>
+      )}
+
+      <CrmInput label="Data" required type="date" value={appointment.data} onChange={(value) => updateAppointment("data", value)} />
+      <CrmInput label="Horário aproximado" required type="time" value={appointment.horario} onChange={(value) => updateAppointment("horario", value)} />
+      <CrmInput label="Tempo em minutos" required type="number" value={String(appointment.tempoAtendimentoMin)} onChange={(value) => updateAppointment("tempoAtendimentoMin", value)} />
+      <CrmInput label="Valor do serviço" required type="number" value={String(appointment.valorServico)} onChange={(value) => updateAppointment("valorServico", value)} />
+      <CrmInput label="Deslocamento" type="number" value={String(appointment.deslocamentoValor)} onChange={(value) => updateAppointment("deslocamentoValor", value)} />
+      <CrmInput label="Valor total" required type="number" value={String(appointment.valorTotal)} onChange={(value) => updateAppointment("valorTotal", value)} />
+      <label>
+        <span>Pagamento</span>
+        <select value={appointment.pagamentoStatus} onChange={(event) => updateAppointment("pagamentoStatus", event.target.value)}>
+          <option value="pendente">Pendente</option>
+          <option value="recebido">Recebido</option>
+          <option value="agendado">Pagamento agendado</option>
+        </select>
+      </label>
+      {appointment.pagamentoStatus === "agendado" && (
+        <CrmInput
+          label="Data do pagamento"
+          type="date"
+          value={appointment.pagamentoAgendadoPara}
+          onChange={(value) => updateAppointment("pagamentoAgendadoPara", value)}
+        />
+      )}
+
+      <div className="crm-form-wide crm-service-options crm-inline-service-options">
+        <span>Serviços realizados</span>
+        {serviceOptions.map((service) => (
+          <label key={service}>
+            <input checked={selectedServices.includes(service)} onChange={() => toggleService(service)} type="checkbox" />
+            <span>{service}</span>
+          </label>
+        ))}
+      </div>
+
+      <label className="crm-form-wide">
+        <span>Observações</span>
+        <textarea value={appointment.observacoes} onChange={(event) => updateAppointment("observacoes", event.target.value)} />
+      </label>
+      <button className="crm-primary-button crm-form-wide" disabled={busy || !appointment.data || !appointment.horario} type="submit">
+        <CheckCircle2 aria-hidden="true" />
+        Registrar atendimento concluído
       </button>
     </form>
   );
