@@ -878,22 +878,30 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
               appointmentList={monthAppointments.filter((appointment) => appointment.status !== "concluido")}
               chartKey="scheduled"
               icon={CalendarClock}
-              label="Atendimentos pendentes"
-              listTitle="Atendimentos pendentes"
+              label="Atendimentos Agendados"
+              listTitle="Atendimentos Agendados"
               onToggle={setActiveChartKey}
               value={String(monthMetrics.scheduled)}
             />
             <MetricCard
+              active={activeChartKey === "completed"}
+              appointmentList={monthAppointments.filter((appointment) => appointment.status === "concluido")}
+              chartKey="completed"
+              icon={CheckCircle2}
+              label="Atendimentos Concluídos"
+              listTitle="Atendimentos Concluídos"
+              onToggle={setActiveChartKey}
+              value={String(monthMetrics.completed)}
+            />
+            <MetricCard
               active={activeChartKey === "appointments"}
-              appointmentList={monthAppointments}
+              chart={dashboardChartByKey.get("appointments")}
               chartKey="appointments"
               icon={CalendarClock}
-              label="Atendimentos no mês"
-              listTitle="Atendimentos no mês"
+              label="Total de Atendimentos no Mês"
               onToggle={setActiveChartKey}
               value={String(monthMetrics.appointments)}
             />
-            <MetricCard active={activeChartKey === "completed"} chart={dashboardChartByKey.get("completed")} chartKey="completed" icon={CheckCircle2} label="Concluídos no mês" onToggle={setActiveChartKey} value={String(monthMetrics.completed)} />
             <MetricCard active={activeChartKey === "totalValue"} chart={dashboardChartByKey.get("totalValue")} chartKey="totalValue" icon={DollarSign} label="Valor total no mês" onToggle={setActiveChartKey} value={formatCurrency(monthMetrics.totalValue)} />
             <MetricCard active={activeChartKey === "receivedValue"} chart={dashboardChartByKey.get("receivedValue")} chartKey="receivedValue" icon={WalletCards} label="Recebido no mês" onToggle={setActiveChartKey} value={formatCurrency(monthMetrics.receivedValue)} />
             <MetricCard active={activeChartKey === "pendingValue"} chart={dashboardChartByKey.get("pendingValue")} chartKey="pendingValue" icon={DollarSign} label="A receber no mês" onToggle={setActiveChartKey} value={formatCurrency(monthMetrics.pendingValue + monthMetrics.scheduledPaymentValue)} />

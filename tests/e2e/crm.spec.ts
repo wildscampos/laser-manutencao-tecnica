@@ -114,23 +114,28 @@ test.describe("CRM LaserFix", () => {
     await expect(page.getByLabel("Valor total por mês")).toHaveCount(0);
   });
 
-  test("exibe lista de atendimentos nos dois primeiros cards do dashboard", async ({ page }) => {
+  test("exibe listas nos cards de agendados e concluidos do dashboard", async ({ page }) => {
     await page.goto("/crm");
 
-    const pendingMetric = page.getByRole("button", { name: /Atendimentos pendentes/i });
-    await pendingMetric.click();
-    await expect(page.getByLabel("Atendimentos pendentes")).toBeVisible();
-    await expect(page.getByLabel("Atendimentos pendentes").locator(".crm-metric-appointment-value").first()).toBeVisible();
+    const scheduledMetric = page.getByRole("button", { name: /Atendimentos Agendados/i });
+    await scheduledMetric.click();
+    await expect(page.getByLabel("Atendimentos Agendados")).toBeVisible();
+    await expect(page.getByLabel("Atendimentos Agendados").locator(".crm-metric-appointment-value").first()).toBeVisible();
     await expect(page.getByLabel("Atendimentos pendentes por mês")).toHaveCount(0);
 
-    await pendingMetric.click();
-    await expect(page.getByLabel("Atendimentos pendentes")).toHaveCount(0);
+    await scheduledMetric.click();
+    await expect(page.getByLabel("Atendimentos Agendados")).toHaveCount(0);
 
-    const monthMetric = page.getByRole("button", { name: /Atendimentos no mês/i });
+    const completedMetric = page.getByRole("button", { name: /Atendimentos Concluídos/i });
+    await completedMetric.click();
+    await expect(page.getByLabel("Atendimentos Concluídos")).toBeVisible();
+    await expect(page.getByLabel("Atendimentos Concluídos").locator(".crm-metric-appointment-value").first()).toBeVisible();
+    await expect(page.getByLabel("Concluídos por mês")).toHaveCount(0);
+
+    const monthMetric = page.getByRole("button", { name: /Total de Atendimentos no Mês/i });
     await monthMetric.click();
-    await expect(page.getByLabel("Atendimentos no mês")).toBeVisible();
-    await expect(page.getByLabel("Atendimentos no mês").locator(".crm-metric-appointment-value").first()).toBeVisible();
-    await expect(page.getByLabel("Atendimentos por mês")).toHaveCount(0);
+    await expect(page.getByLabel("Atendimentos por mês")).toBeVisible();
+    await expect(page.getByLabel("Total de Atendimentos no Mês")).toHaveCount(0);
   });
 
   test("nao preenche meses sem dados em grafico acumulado", async ({ page }) => {
