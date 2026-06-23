@@ -384,7 +384,7 @@ function getAppointmentStartTime(appointment: CrmAppointment) {
 }
 
 async function showCrmNotification(title: string, body: string, tag: string) {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  if (!("Notification" in window) || Notification.permission !== "granted") return false;
 
   const options: NotificationOptions = {
     body,
@@ -394,13 +394,23 @@ async function showCrmNotification(title: string, body: string, tag: string) {
     data: { url: "/crm" },
   };
 
-  if ("serviceWorker" in navigator) {
-    const registration = await navigator.serviceWorker.ready;
-    await registration.showNotification(title, options);
-    return;
-  }
+  try {
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(title, options);
+      return true;
+    }
 
-  new Notification(title, options);
+    new Notification(title, options);
+    return true;
+  } catch {
+    try {
+      new Notification(title, options);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 function readNotificationKeys(storageKey: string) {
@@ -419,9 +429,17 @@ async function showCrmNotificationOnce(storageKey: string, uniqueKey: string, ti
   const notifiedKeys = readNotificationKeys(storageKey);
   if (notifiedKeys.has(uniqueKey)) return;
 
+  const shown = await showCrmNotification(title, body, tag);
+  if (!shown) return;
+
   notifiedKeys.add(uniqueKey);
   writeNotificationKeys(storageKey, notifiedKeys);
-  await showCrmNotification(title, body, tag);
+}
+
+async function requestCrmNotificationPermission() {
+  if (!("Notification" in window)) return "denied" as NotificationPermission;
+  if (Notification.permission !== "default") return Notification.permission;
+  return Notification.requestPermission();
 }
 
 type CrmView = "dashboard" | "appointments" | "customers" | "history" | "services" | "finance" | "availability";
@@ -480,7 +498,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   const [busyId, setBusyId] = useState("");
   const [password, setPassword] = useState("");
   const [activeChartKey, setActiveChartKey] = useState<DashboardChartKey | "">("");
-  const [notificationPermission] = useState<NotificationPermission>(() =>
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(() =>
     typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default",
   );
   const knownAppointmentIdsRef = useRef<Set<string> | null>(null);
@@ -562,6 +580,24 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   }, [isAdmin, services.length]);
 
   useEffect(() => {
+    if (!isAdmin || notificationPermission !== "default") return;
+    if (navigator.webdriver) return;
+
+    async function requestOnNextInteraction() {
+      const permission = await requestCrmNotificationPermission();
+      setNotificationPermission(permission);
+    }
+
+    window.addEventListener("pointerdown", requestOnNextInteraction, { once: true });
+    window.addEventListener("keydown", requestOnNextInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", requestOnNextInteraction);
+      window.removeEventListener("keydown", requestOnNextInteraction);
+    };
+  }, [isAdmin, notificationPermission]);
+
+  useEffect(() => {
     if (!isAdmin || notificationPermission !== "granted") {
       knownAppointmentIdsRef.current = null;
       return;
@@ -607,9 +643,21 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         if (notifiedReminders.has(reminderKey)) return;
 
         const reminderTime = getAppointmentStartTime(appointment) - 30 * 60 * 1000;
+        const appointmentStartTime = getAppointmentStartTime(appointment);
         const delay = reminderTime - now;
 
-        if (delay < 0 || delay > 2147483647) return;
+        if (delay <= 0 && now <= appointmentStartTime) {
+          void showCrmNotificationOnce(
+            "laserfix-crm-reminders",
+            reminderKey,
+            "Atendimento em 30 minutos",
+            `${appointment.nome} está agendado para ${appointment.horario} em ${appointment.cidade}.`,
+            `appointment-reminder-${appointment.id}`,
+          );
+          return;
+        }
+
+        if (delay > 2147483647 || now > appointmentStartTime) return;
 
         const timerId = window.setTimeout(() => {
           void showCrmNotificationOnce(
