@@ -48,20 +48,24 @@ test.describe("CRM LaserFix", () => {
 
   test("oculta horários indisponíveis no agendamento manual", async ({ page }) => {
     await page.goto("/crm/agendamentos");
-    await expect(page.getByLabel("Data")).toBeHidden();
-    await page.getByText("Agendamento manual").click();
-    await page.getByLabel("Data").fill("2026-06-21");
+    const manualAppointment = page.locator("details.crm-form-details").filter({ hasText: "Agendamento manual" });
+    await expect(manualAppointment.getByLabel("Data")).toBeHidden();
+    await manualAppointment.locator("summary").click();
+    await manualAppointment.getByLabel("Data").fill("2026-06-21");
 
-    const timeSelect = page.getByLabel("Horário");
+    const timeSelect = manualAppointment.getByLabel("Horário");
     await expect(timeSelect).toContainText("Nenhum horário livre");
     await expect(timeSelect).not.toContainText("18:00");
   });
 
   test("mantém formulários de criação recolhidos por padrão", async ({ page }) => {
     await page.goto("/crm/agendamentos");
-    await expect(page.getByLabel("Data")).toBeHidden();
-    await page.getByText("Agendamento manual").click();
-    await expect(page.getByLabel("Data")).toBeVisible();
+    const manualAppointment = page.locator("details.crm-form-details").filter({ hasText: "Agendamento manual" });
+    const walkInAppointment = page.locator("details.crm-form-details").filter({ hasText: "Atendimento avulso" });
+    await expect(manualAppointment.getByLabel("Data")).toBeHidden();
+    await expect(walkInAppointment.getByLabel("Data")).toBeHidden();
+    await manualAppointment.locator("summary").click();
+    await expect(manualAppointment.getByLabel("Data")).toBeVisible();
 
     await page.goto("/crm/clientes");
     await expect(page.getByRole("button", { name: /Salvar cliente/i })).toBeHidden();
@@ -140,6 +144,7 @@ test.describe("CRM LaserFix", () => {
 
   test("mantém apenas um agendamento expandido por vez", async ({ page }) => {
     await page.goto("/crm/agendamentos");
+    await page.locator(".crm-completed-details summary").click();
 
     const cards = page.locator(".crm-appointment-accordion");
     await expect(cards.first()).toBeVisible();

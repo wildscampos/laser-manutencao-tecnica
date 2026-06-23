@@ -43,7 +43,7 @@ export type CrmAppointment = {
   valorTotal?: number;
   pagamentoStatus?: PaymentStatus;
   pagamentoAgendadoPara?: string;
-  servicosRealizados?: string;
+  servicosRealizados?: string | string[];
   crmObservacoes?: string;
   updatedAtIso?: string;
   clienteId?: string;
@@ -582,6 +582,11 @@ export function formatServiceLabel(service: string) {
   return trimmedService.charAt(0).toLocaleUpperCase("pt-BR") + trimmedService.slice(1);
 }
 
+export function normalizeServiceText(value?: string | string[]) {
+  if (Array.isArray(value)) return value.map((service) => String(service).trim()).filter(Boolean).join(", ");
+  return String(value || "").trim();
+}
+
 export function calculateMetrics(appointments: CrmAppointment[]): CrmMetrics {
   const completedAppointments = appointments.filter((appointment) => appointment.status === "concluido");
   const totalValue = completedAppointments.reduce((sum, appointment) => sum + (appointment.valorTotal || 0), 0);
@@ -598,7 +603,7 @@ export function calculateMetrics(appointments: CrmAppointment[]): CrmMetrics {
   const serviceMap = new Map<string, number>();
 
   completedAppointments.forEach((appointment) => {
-    const services = (appointment.servicosRealizados?.trim() || appointment.servico)
+    const services = (normalizeServiceText(appointment.servicosRealizados) || appointment.servico)
       .split(",")
       .map((service) => service.trim())
       .filter(Boolean);

@@ -37,6 +37,7 @@ import {
   listenToAppointments,
   listenToCustomers,
   listenToServices,
+  normalizeServiceText,
   saveService,
   saveCustomer,
   seedDefaultServices,
@@ -264,8 +265,8 @@ function buildDashboardCharts(appointments: CrmAppointment[], selectedMonth: str
   });
 }
 
-function parsePerformedServices(value = "") {
-  return value
+function parsePerformedServices(value: string | string[] = "") {
+  return normalizeServiceText(value)
     .split(",")
     .map((service) => service.trim())
     .filter(Boolean);
@@ -275,8 +276,8 @@ function formatPerformedServices(values: string[]) {
   return values.join(", ");
 }
 
-function formatServiceListLabel(value = "") {
-  return value
+function formatServiceListLabel(value: string | string[] = "") {
+  return normalizeServiceText(value)
     .split(",")
     .map((service) => formatServiceLabel(service))
     .filter(Boolean)
@@ -339,7 +340,7 @@ function buildAppointmentConfirmationWhatsAppUrl(appointment: CrmAppointment) {
 
 function buildCustomerWhatsAppUrl(appointment: CrmAppointment, servicesDone: string, pendingAppointments: CrmAppointment[]) {
   const phone = normalizeWhatsAppNumber(appointment.whatsapp || appointment.telefone);
-  const performedServices = servicesDone.trim() || appointment.servicosRealizados || appointment.servico;
+  const performedServices = servicesDone.trim() || normalizeServiceText(appointment.servicosRealizados) || appointment.servico;
   const currentTotal = appointment.valorTotal || 0;
   const pendingTotal = pendingAppointments.reduce((sum, pendingAppointment) => sum + (pendingAppointment.valorTotal || 0), 0);
   const grandTotal = currentTotal + pendingTotal;
@@ -2363,7 +2364,7 @@ function AppointmentEditForm({
     tempoAtendimentoMin: appointment.tempoAtendimentoMin || 0,
     pagamentoStatus: appointment.pagamentoStatus || "pendente",
     pagamentoAgendadoPara: appointment.pagamentoAgendadoPara || "",
-    servicosRealizados: appointment.servicosRealizados || "",
+    servicosRealizados: normalizeServiceText(appointment.servicosRealizados),
     crmObservacoes: appointment.crmObservacoes || "",
   }));
 
