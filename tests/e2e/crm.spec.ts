@@ -199,6 +199,7 @@ test.describe("CRM LaserFix", () => {
     await expect(completedCard).toBeVisible();
     await completedCard.getByRole("button").first().click();
     await expect(completedCard.getByRole("link", { name: /Enviar cobrança/i })).toBeVisible();
+    await expect(completedCard.locator(".crm-edit-details").filter({ hasText: /Retorno sem cobrança/i })).toBeVisible();
   });
 
   test("expande cards editaveis para largura total", async ({ page }) => {

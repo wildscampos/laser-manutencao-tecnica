@@ -31,6 +31,7 @@ import {
   completeAppointment,
   createCompletedManualAppointment,
   createManualAppointment,
+  createReturnAppointment,
   createStartedManualAppointment,
   formatServiceLabel,
   getMonthKey,
@@ -56,6 +57,7 @@ import {
   type CustomerInput,
   type ManualAppointmentInput,
   type PaymentStatus,
+  type ReturnAppointmentInput,
   type ServiceInput,
   type StartedManualAppointmentInput,
 } from "@/lib/crm";
@@ -955,6 +957,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
             await createStartedManualAppointment(input);
             return "Atendimento avulso iniciado.";
           })}
+          onCreateReturn={(appointment, input) => runAction(appointment.id, async () => {
+            await createReturnAppointment(appointment, input);
+            return "Retorno agendado sem cobrança.";
+          })}
           onComplete={(appointment) => runAction(appointment.id, () => completeAppointment(appointment))}
           onEditAppointment={(appointmentId, values) => runAction(appointmentId, async () => {
             await updateAppointmentDetails(appointmentId, values);
@@ -1123,6 +1129,7 @@ function AppointmentsView({
   onCreateAppointment,
   onCreateCompletedAppointment,
   onCreateStartedAppointment,
+  onCreateReturn,
   onComplete,
   onEditAppointment,
   onPayment,
@@ -1136,6 +1143,7 @@ function AppointmentsView({
   onCreateAppointment: (input: ManualAppointmentInput) => Promise<boolean>;
   onCreateCompletedAppointment: (input: CompletedManualAppointmentInput) => Promise<boolean>;
   onCreateStartedAppointment: (input: StartedManualAppointmentInput) => Promise<boolean>;
+  onCreateReturn: (appointment: CrmAppointment, input: ReturnAppointmentInput) => Promise<boolean>;
   onComplete: (appointment: CrmAppointment) => void;
   onEditAppointment: (appointmentId: string, values: AppointmentEditInput) => Promise<boolean>;
   onPayment: (appointmentId: string, status: PaymentStatus, scheduledDate?: string) => void;
@@ -1231,6 +1239,7 @@ function AppointmentsView({
               isOpen={openAppointmentId === appointment.id}
               key={appointment.id}
               onComplete={() => onComplete(appointment)}
+              onCreateReturn={(input) => onCreateReturn(appointment, input)}
               onEdit={(values) => onEditAppointment(appointment.id, values)}
               onPayment={(status, date) => onPayment(appointment.id, status, date)}
               onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
@@ -1258,6 +1267,7 @@ function AppointmentsView({
                 isOpen={openAppointmentId === appointment.id}
                 key={appointment.id}
                 onComplete={() => onComplete(appointment)}
+                onCreateReturn={(input) => onCreateReturn(appointment, input)}
                 onEdit={(values) => onEditAppointment(appointment.id, values)}
                 onPayment={(status, date) => onPayment(appointment.id, status, date)}
                 onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
@@ -2231,6 +2241,7 @@ function AppointmentCard({
   busy,
   isOpen,
   onComplete,
+  onCreateReturn,
   onEdit,
   onPayment,
   onSaveNotes,
@@ -2243,6 +2254,7 @@ function AppointmentCard({
   busy: boolean;
   isOpen: boolean;
   onComplete: () => void;
+  onCreateReturn: (input: ReturnAppointmentInput) => Promise<boolean>;
   onEdit: (values: AppointmentEditInput) => Promise<boolean>;
   onPayment: (status: PaymentStatus, scheduledDate?: string) => void;
   onSaveNotes: (values: { servicosRealizados?: string; crmObservacoes?: string }) => void;
@@ -2259,6 +2271,7 @@ function AppointmentCard({
   const pendingPayments = getCustomerPaymentDebts(appointment, allAppointments);
   const appointmentConfirmationUrl = buildAppointmentConfirmationWhatsAppUrl(appointment);
   const customerPaymentUrl = buildCustomerWhatsAppUrl(appointment, servicesDone, pendingPayments);
+  const isFreeReturn = appointment.retornoSemCobranca === true;
 
   function toggleService(service: string) {
     setSelectedServices((currentServices) =>
@@ -2296,6 +2309,7 @@ function AppointmentCard({
               <p>WhatsApp: {appointment.whatsapp}</p>
               {appointment.modeloMaquina && <p>Máquina: {appointment.modeloMaquina}</p>}
               <p>Serviço solicitado: {appointment.servico}</p>
+              {isFreeReturn && <p className="crm-return-note">Retorno técnico sem cobrança.</p>}
               {appointment.observacoes && <p>Observações do cliente: {appointment.observacoes}</p>}
             </div>
 
@@ -2318,6 +2332,18 @@ function AppointmentCard({
             <summary>Editar atendimento</summary>
             <AppointmentEditForm appointment={appointment} busy={busy} onSave={onEdit} serviceOptions={serviceOptions} />
           </details>
+
+          {appointment.status === "concluido" && (
+            <details className="crm-edit-details">
+              <summary>Retorno sem cobrança</summary>
+              <ReturnAppointmentForm
+                allAppointments={allAppointments}
+                appointment={appointment}
+                busy={busy}
+                onCreate={onCreateReturn}
+              />
+            </details>
+          )}
 
           <div className="crm-edit-grid">
             <div className="crm-service-picker">
@@ -2402,6 +2428,103 @@ function AppointmentCard({
         </>
       )}
     </article>
+  );
+}
+
+function ReturnAppointmentForm({
+  allAppointments,
+  appointment,
+  busy,
+  onCreate,
+}: {
+  allAppointments: CrmAppointment[];
+  appointment: CrmAppointment;
+  busy: boolean;
+  onCreate: (input: ReturnAppointmentInput) => Promise<boolean>;
+}) {
+  const [returnData, setReturnData] = useState<ReturnAppointmentInput>({
+    data: new Date().toISOString().slice(0, 10),
+    horario: "",
+    observacoes: "Retorno sem cobrança: problema voltou ao cortar a segunda fileira.",
+  });
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const data = returnData.data;
+
+    async function loadAvailableTimes() {
+      try {
+        const freeTimes = await getFreeTimes(data);
+        if (!active) return;
+        setAvailableTimes(freeTimes);
+        setReturnData((current) => ({
+          ...current,
+          horario: freeTimes.includes(current.horario) ? current.horario : freeTimes[0] || "",
+        }));
+      } catch {
+        const occupiedTimes = new Set(
+          allAppointments
+            .filter((currentAppointment) => currentAppointment.data === data && currentAppointment.status !== "concluido")
+            .map((currentAppointment) => currentAppointment.horario),
+        );
+        const fallbackTimes = getAvailableTimesForDate(data).filter((time) => !occupiedTimes.has(time));
+        if (!active) return;
+        setAvailableTimes(fallbackTimes);
+        setReturnData((current) => ({
+          ...current,
+          horario: fallbackTimes.includes(current.horario) ? current.horario : fallbackTimes[0] || "",
+        }));
+      }
+    }
+
+    void loadAvailableTimes();
+
+    return () => {
+      active = false;
+    };
+  }, [allAppointments, returnData.data]);
+
+  function updateField(field: keyof ReturnAppointmentInput, value: string) {
+    setReturnData((current) => ({ ...current, [field]: value }));
+  }
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!returnData.horario) return;
+    const created = await onCreate(returnData);
+    if (!created) return;
+    setReturnData({
+      data: new Date().toISOString().slice(0, 10),
+      horario: "",
+      observacoes: "Retorno sem cobrança: problema voltou ao cortar a segunda fileira.",
+    });
+  }
+
+  return (
+    <form className="crm-form-grid crm-compact-edit-form" onSubmit={submit}>
+      <p className="crm-muted crm-form-wide">
+        Cria um novo atendimento sem cobrança, vinculado ao atendimento de {appointment.nome}.
+      </p>
+      <CrmInput label="Data do retorno" required type="date" value={returnData.data} onChange={(value) => updateField("data", value)} />
+      <label>
+        <span>Horário</span>
+        <select value={returnData.horario} onChange={(event) => updateField("horario", event.target.value)}>
+          {!availableTimes.length && <option value="">Nenhum horário livre</option>}
+          {availableTimes.map((time) => (
+            <option key={time} value={time}>{time}</option>
+          ))}
+        </select>
+      </label>
+      <label className="crm-form-wide">
+        <span>Observações do retorno</span>
+        <textarea value={returnData.observacoes} onChange={(event) => updateField("observacoes", event.target.value)} />
+      </label>
+      <button className="crm-primary-button crm-form-wide" disabled={busy || !returnData.horario} type="submit">
+        <CalendarClock aria-hidden="true" />
+        Agendar retorno sem cobrança
+      </button>
+    </form>
   );
 }
 

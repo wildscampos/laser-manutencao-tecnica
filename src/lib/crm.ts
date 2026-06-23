@@ -48,6 +48,8 @@ export type CrmAppointment = {
   updatedAtIso?: string;
   clienteId?: string;
   origem?: string;
+  retornoDeId?: string;
+  retornoSemCobranca?: boolean;
 };
 
 export type CrmCustomer = {
@@ -113,6 +115,12 @@ export type CompletedManualAppointmentInput = ManualAppointmentInput & {
 
 export type StartedManualAppointmentInput = ManualAppointmentInput & {
   servicosRealizados: string;
+};
+
+export type ReturnAppointmentInput = {
+  data: string;
+  horario: string;
+  observacoes: string;
 };
 
 export type AppointmentEditInput = {
@@ -479,6 +487,68 @@ export async function createStartedManualAppointment(input: StartedManualAppoint
   });
 }
 
+export async function createReturnAppointment(original: CrmAppointment, input: ReturnAppointmentInput) {
+  const nowIso = new Date().toISOString();
+  const appointmentId = slotId(input.data, input.horario);
+  const appointmentRef = doc(db, "agendamentos", appointmentId);
+  const slotRef = doc(db, "slots", appointmentId);
+  const returnNotes =
+    input.observacoes ||
+    `Retorno técnico sem cobrança vinculado ao atendimento de ${original.data} às ${original.horario}.`;
+
+  await runTransaction(db, async (transaction) => {
+    const slotSnapshot = await transaction.get(slotRef);
+    const appointmentSnapshot = await transaction.get(appointmentRef);
+    if (slotSnapshot.exists() || appointmentSnapshot.exists()) {
+      throw new Error("Este horário já está reservado.");
+    }
+
+    transaction.set(slotRef, {
+      id: appointmentId,
+      data: input.data,
+      horario: input.horario,
+      status: "agendado",
+      createdAt: serverTimestamp(),
+      createdAtIso: nowIso,
+      origem: "crm-retorno",
+      retornoDeId: original.id,
+    });
+
+    transaction.set(appointmentRef, {
+      id: appointmentId,
+      clienteId: original.clienteId || "",
+      nome: original.nome,
+      telefone: original.telefone || "",
+      whatsapp: original.whatsapp || "",
+      empresa: original.empresa || "",
+      rua: original.rua || "Não informado",
+      numero: original.numero || "S/N",
+      bairro: original.bairro || "Não informado",
+      cidade: original.cidade || "Guaratinguetá",
+      modeloMaquina: original.modeloMaquina || "",
+      servico: "Retorno técnico sem cobrança",
+      data: input.data,
+      horario: input.horario,
+      observacoes: returnNotes,
+      deslocamentoKm: 0,
+      deslocamentoValor: 0,
+      status: "agendado",
+      valorServico: 0,
+      valorTotal: 0,
+      pagamentoStatus: "recebido",
+      servicosRealizados: "Retorno técnico sem cobrança",
+      crmObservacoes: `Retorno vinculado ao atendimento ${original.id}.`,
+      retornoDeId: original.id,
+      retornoSemCobranca: true,
+      createdAt: serverTimestamp(),
+      createdAtIso: nowIso,
+      updatedAt: serverTimestamp(),
+      updatedAtIso: nowIso,
+      origem: "crm-retorno",
+    });
+  });
+}
+
 export async function blockAvailability(input: AvailabilityBlockInput) {
   const id = slotId(input.data, input.horario);
   const slotRef = doc(db, "slots", id);
@@ -534,8 +604,9 @@ export async function completeAppointment(appointment: CrmAppointment) {
   const nowIso = new Date().toISOString();
   const startedAt = appointment.atendimentoIniciadoAtIso || nowIso;
   const durationMinutes = calculateDurationMinutes(startedAt, nowIso);
-  const serviceValue = calculateServiceValue(durationMinutes);
-  const travelValue = appointment.deslocamentoValor || 0;
+  const isFreeReturn = appointment.retornoSemCobranca === true;
+  const serviceValue = isFreeReturn ? 0 : calculateServiceValue(durationMinutes);
+  const travelValue = isFreeReturn ? 0 : appointment.deslocamentoValor || 0;
 
   await updateDoc(doc(db, "agendamentos", appointment.id), {
     status: "concluido",
@@ -544,7 +615,8 @@ export async function completeAppointment(appointment: CrmAppointment) {
     tempoAtendimentoMin: durationMinutes,
     valorServico: serviceValue,
     valorTotal: serviceValue + travelValue,
-    pagamentoStatus: appointment.pagamentoStatus || "pendente",
+    deslocamentoValor: travelValue,
+    pagamentoStatus: isFreeReturn ? "recebido" : appointment.pagamentoStatus || "pendente",
     updatedAt: serverTimestamp(),
     updatedAtIso: nowIso,
   });
