@@ -873,8 +873,26 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
           </section>
 
           <section className="crm-dashboard" aria-label="Métricas do mês">
-            <MetricCard active={activeChartKey === "scheduled"} chart={dashboardChartByKey.get("scheduled")} chartKey="scheduled" icon={CalendarClock} label="Atendimentos pendentes" onToggle={setActiveChartKey} value={String(monthMetrics.scheduled)} />
-            <MetricCard active={activeChartKey === "appointments"} chart={dashboardChartByKey.get("appointments")} chartKey="appointments" icon={CalendarClock} label="Atendimentos no mês" onToggle={setActiveChartKey} value={String(monthMetrics.appointments)} />
+            <MetricCard
+              active={activeChartKey === "scheduled"}
+              appointmentList={monthAppointments.filter((appointment) => appointment.status !== "concluido")}
+              chartKey="scheduled"
+              icon={CalendarClock}
+              label="Atendimentos pendentes"
+              listTitle="Atendimentos pendentes"
+              onToggle={setActiveChartKey}
+              value={String(monthMetrics.scheduled)}
+            />
+            <MetricCard
+              active={activeChartKey === "appointments"}
+              appointmentList={monthAppointments}
+              chartKey="appointments"
+              icon={CalendarClock}
+              label="Atendimentos no mês"
+              listTitle="Atendimentos no mês"
+              onToggle={setActiveChartKey}
+              value={String(monthMetrics.appointments)}
+            />
             <MetricCard active={activeChartKey === "completed"} chart={dashboardChartByKey.get("completed")} chartKey="completed" icon={CheckCircle2} label="Concluídos no mês" onToggle={setActiveChartKey} value={String(monthMetrics.completed)} />
             <MetricCard active={activeChartKey === "totalValue"} chart={dashboardChartByKey.get("totalValue")} chartKey="totalValue" icon={DollarSign} label="Valor total no mês" onToggle={setActiveChartKey} value={formatCurrency(monthMetrics.totalValue)} />
             <MetricCard active={activeChartKey === "receivedValue"} chart={dashboardChartByKey.get("receivedValue")} chartKey="receivedValue" icon={WalletCards} label="Recebido no mês" onToggle={setActiveChartKey} value={formatCurrency(monthMetrics.receivedValue)} />
@@ -949,22 +967,26 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
 
 function MetricCard({
   active,
+  appointmentList,
   chart,
   chartKey,
   icon: Icon,
   label,
+  listTitle,
   onToggle,
   value,
 }: {
   active?: boolean;
+  appointmentList?: CrmAppointment[];
   chart?: DashboardChart;
   chartKey?: DashboardChartKey;
   icon: React.ElementType;
   label: string;
+  listTitle?: string;
   onToggle?: (key: DashboardChartKey | "") => void;
   value: string;
 }) {
-  const canExpand = Boolean(chart && chartKey && onToggle);
+  const canExpand = Boolean((chart || appointmentList) && chartKey && onToggle);
 
   function toggleChart() {
     if (!canExpand || !chartKey || !onToggle) return;
@@ -984,8 +1006,39 @@ function MetricCard({
         <span>{label}</span>
         <strong>{value}</strong>
       </button>
+      {active && appointmentList && <MetricAppointmentList appointments={appointmentList} title={listTitle || label} />}
       {active && chart && <MetricChart chart={chart} />}
     </article>
+  );
+}
+
+function MetricAppointmentList({ appointments, title }: { appointments: CrmAppointment[]; title: string }) {
+  const sortedAppointments = [...appointments].sort((a, b) => b.data.localeCompare(a.data) || b.horario.localeCompare(a.horario));
+
+  return (
+    <div className="crm-metric-appointment-list" aria-label={title}>
+      <div className="crm-metric-chart-heading">
+        <h3>{title}</h3>
+        <span>{appointments.length} atendimento(s)</span>
+      </div>
+      {sortedAppointments.length ? (
+        <div className="crm-metric-appointment-items">
+          {sortedAppointments.map((appointment) => (
+            <article key={appointment.id}>
+              <div>
+                <strong>{appointment.nome}</strong>
+                <span className={`crm-status crm-status-${appointment.status}`}>{getStatusLabel(appointment.status)}</span>
+              </div>
+              <p>{formatDate(appointment.data)} às {appointment.horario}</p>
+              <p>{appointment.cidade} · {formatServiceListLabel(appointment.servicosRealizados || appointment.servico)}</p>
+              <strong className="crm-metric-appointment-value">{formatCurrency(appointment.valorTotal || 0)}</strong>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="crm-muted">Nenhum atendimento para exibir.</p>
+      )}
+    </div>
   );
 }
 

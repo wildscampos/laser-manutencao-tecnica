@@ -114,6 +114,25 @@ test.describe("CRM LaserFix", () => {
     await expect(page.getByLabel("Valor total por mês")).toHaveCount(0);
   });
 
+  test("exibe lista de atendimentos nos dois primeiros cards do dashboard", async ({ page }) => {
+    await page.goto("/crm");
+
+    const pendingMetric = page.getByRole("button", { name: /Atendimentos pendentes/i });
+    await pendingMetric.click();
+    await expect(page.getByLabel("Atendimentos pendentes")).toBeVisible();
+    await expect(page.getByLabel("Atendimentos pendentes").locator(".crm-metric-appointment-value").first()).toBeVisible();
+    await expect(page.getByLabel("Atendimentos pendentes por mês")).toHaveCount(0);
+
+    await pendingMetric.click();
+    await expect(page.getByLabel("Atendimentos pendentes")).toHaveCount(0);
+
+    const monthMetric = page.getByRole("button", { name: /Atendimentos no mês/i });
+    await monthMetric.click();
+    await expect(page.getByLabel("Atendimentos no mês")).toBeVisible();
+    await expect(page.getByLabel("Atendimentos no mês").locator(".crm-metric-appointment-value").first()).toBeVisible();
+    await expect(page.getByLabel("Atendimentos por mês")).toHaveCount(0);
+  });
+
   test("nao preenche meses sem dados em grafico acumulado", async ({ page }) => {
     await page.goto("/crm");
 

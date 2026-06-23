@@ -2031,6 +2031,50 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   padding-top: 0.85rem;
 }
 
+.crm-metric-appointment-list {
+  display: grid;
+  gap: 0.8rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  padding-top: 0.85rem;
+}
+
+.crm-metric-appointment-items {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.crm-metric-appointment-items article {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid rgba(0, 168, 255, 0.22);
+  border-radius: 0.7rem;
+  background: rgba(0, 168, 255, 0.06);
+  padding: 0.8rem;
+}
+
+.crm-metric-appointment-items div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.crm-metric-appointment-items strong {
+  font-size: 1rem;
+}
+
+.crm-metric-appointment-items p {
+  color: #475569;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.crm-metric-appointment-items .crm-metric-appointment-value {
+  color: #07111f;
+  font-size: 1rem;
+}
+
 .crm-metric-chart-heading {
   display: flex;
   align-items: baseline;
@@ -2574,6 +2618,7 @@ html[data-crm-theme="dark"] .crm-shell .crm-appointment-card h3,
 html[data-crm-theme="dark"] .crm-shell .crm-card-heading h3,
 html[data-crm-theme="dark"] .crm-shell .crm-metric-chart-heading h3,
 html[data-crm-theme="dark"] .crm-shell .crm-metric-card strong,
+html[data-crm-theme="dark"] .crm-shell .crm-metric-appointment-value,
 html[data-crm-theme="dark"] .crm-shell .crm-values strong,
 html[data-crm-theme="dark"] .crm-shell .crm-service-toggle span,
 html[data-crm-theme="dark"] .crm-shell .crm-service-picker label span,
@@ -2656,8 +2701,14 @@ html[data-crm-theme="dark"] .crm-shell .crm-edit-details {
 html[data-crm-theme="dark"] .crm-shell .crm-collapsible-content,
 html[data-crm-theme="dark"] .crm-shell .crm-history-list,
 html[data-crm-theme="dark"] .crm-shell .crm-service-list div,
-html[data-crm-theme="dark"] .crm-shell .crm-metric-chart {
+html[data-crm-theme="dark"] .crm-shell .crm-metric-chart,
+html[data-crm-theme="dark"] .crm-shell .crm-metric-appointment-list {
   border-color: rgba(148, 163, 184, 0.22);
+}
+
+html[data-crm-theme="dark"] .crm-shell .crm-metric-appointment-items article {
+  border-color: rgba(0, 168, 255, 0.3);
+  background: rgba(0, 168, 255, 0.08);
 }
 
 html[data-crm-theme="dark"] .crm-shell .crm-chart-value {
@@ -2927,6 +2978,10 @@ html[data-crm-theme="dark"] .crm-shell .crm-status-concluido {
 
   .crm-actions {
     display: grid;
+  }
+
+  .crm-metric-appointment-items {
+    grid-template-columns: 1fr;
   }
 
   .crm-collapsible-card summary,
