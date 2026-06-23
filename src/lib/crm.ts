@@ -111,6 +111,10 @@ export type CompletedManualAppointmentInput = ManualAppointmentInput & {
   valorTotal: number;
 };
 
+export type StartedManualAppointmentInput = ManualAppointmentInput & {
+  servicosRealizados: string;
+};
+
 export type AppointmentEditInput = {
   servico: string;
   observacoes?: string;
@@ -412,6 +416,61 @@ export async function createCompletedManualAppointment(input: CompletedManualApp
     pagamentoAgendadoPara: input.pagamentoStatus === "agendado" ? input.pagamentoAgendadoPara || "" : "",
     servicosRealizados: input.servicosRealizados || input.servico,
     crmObservacoes: "Atendimento registrado fora da agenda.",
+    createdAt: serverTimestamp(),
+    createdAtIso: nowIso,
+    updatedAt: serverTimestamp(),
+    updatedAtIso: nowIso,
+    origem: "crm-atendimento-avulso",
+  });
+}
+
+export async function createStartedManualAppointment(input: StartedManualAppointmentInput) {
+  const nowIso = new Date().toISOString();
+  const customer = {
+    ...input.cliente,
+    nome: input.cliente.nome.trim() || "Cliente sem nome",
+    cidade: input.cliente.cidade || "Guaratinguetá",
+  };
+  const customerId = input.clienteId || makeCustomerId(customer.nome, customer.cidade);
+  const appointmentRef = doc(collection(db, "agendamentos"));
+  const customerRef = doc(db, "clientes", customerId);
+  const customerSnapshot = await getDoc(customerRef);
+
+  await setDoc(
+    customerRef,
+    {
+      id: customerId,
+      ...customer,
+      createdAtIso: customerSnapshot.exists() ? customerSnapshot.data().createdAtIso || nowIso : nowIso,
+      updatedAt: serverTimestamp(),
+      updatedAtIso: nowIso,
+    },
+    { merge: true },
+  );
+
+  await setDoc(appointmentRef, {
+    id: appointmentRef.id,
+    clienteId: customerId,
+    nome: customer.nome,
+    telefone: customer.telefone,
+    whatsapp: customer.whatsapp,
+    empresa: customer.empresa || "",
+    rua: customer.rua || "Não informado",
+    numero: customer.numero || "S/N",
+    bairro: customer.bairro || "Não informado",
+    cidade: customer.cidade,
+    modeloMaquina: customer.modeloMaquina || "",
+    servico: input.servico,
+    data: input.data,
+    horario: input.horario || "12:00",
+    observacoes: input.observacoes,
+    deslocamentoKm: 0,
+    deslocamentoValor: 0,
+    status: "atendimento_iniciado",
+    atendimentoIniciadoAtIso: nowIso,
+    pagamentoStatus: "pendente",
+    servicosRealizados: input.servicosRealizados || input.servico,
+    crmObservacoes: "Atendimento avulso iniciado fora da agenda.",
     createdAt: serverTimestamp(),
     createdAtIso: nowIso,
     updatedAt: serverTimestamp(),

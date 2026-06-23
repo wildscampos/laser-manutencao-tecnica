@@ -31,6 +31,7 @@ import {
   completeAppointment,
   createCompletedManualAppointment,
   createManualAppointment,
+  createStartedManualAppointment,
   formatServiceLabel,
   getMonthKey,
   listenToAppointments,
@@ -55,6 +56,7 @@ import {
   type ManualAppointmentInput,
   type PaymentStatus,
   type ServiceInput,
+  type StartedManualAppointmentInput,
 } from "@/lib/crm";
 import { getAvailableTimesForDate } from "@/lib/schedule";
 
@@ -922,6 +924,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
             await createCompletedManualAppointment(input);
             return "Atendimento avulso registrado.";
           })}
+          onCreateStartedAppointment={(input) => runGlobalAction(async () => {
+            await createStartedManualAppointment(input);
+            return "Atendimento avulso iniciado.";
+          })}
           onComplete={(appointment) => runAction(appointment.id, () => completeAppointment(appointment))}
           onEditAppointment={(appointmentId, values) => runAction(appointmentId, async () => {
             await updateAppointmentDetails(appointmentId, values);
@@ -1054,6 +1060,7 @@ function AppointmentsView({
   customers,
   onCreateAppointment,
   onCreateCompletedAppointment,
+  onCreateStartedAppointment,
   onComplete,
   onEditAppointment,
   onPayment,
@@ -1066,6 +1073,7 @@ function AppointmentsView({
   customers: CrmCustomer[];
   onCreateAppointment: (input: ManualAppointmentInput) => Promise<boolean>;
   onCreateCompletedAppointment: (input: CompletedManualAppointmentInput) => Promise<boolean>;
+  onCreateStartedAppointment: (input: StartedManualAppointmentInput) => Promise<boolean>;
   onComplete: (appointment: CrmAppointment) => void;
   onEditAppointment: (appointmentId: string, values: AppointmentEditInput) => Promise<boolean>;
   onPayment: (appointmentId: string, status: PaymentStatus, scheduledDate?: string) => void;
@@ -1136,6 +1144,7 @@ function AppointmentsView({
             busy={busyId === "global"}
             customers={customers}
             onCreate={onCreateCompletedAppointment}
+            onStart={onCreateStartedAppointment}
             serviceOptions={serviceOptions}
           />
         </details>
@@ -1888,12 +1897,14 @@ function CompletedManualAppointmentForm({
   busy,
   customers,
   onCreate,
+  onStart,
   serviceOptions,
 }: {
   appointments: CrmAppointment[];
   busy: boolean;
   customers: CrmCustomer[];
   onCreate: (input: CompletedManualAppointmentInput) => Promise<boolean>;
+  onStart: (input: StartedManualAppointmentInput) => Promise<boolean>;
   serviceOptions: string[];
 }) {
   const defaultService = serviceOptions[0] || performedServiceOptions[0];
@@ -1947,10 +1958,9 @@ function CompletedManualAppointmentForm({
     );
   }
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function getNormalizedCustomer() {
     const customer = effectiveMode === "existing" && selectedCustomer ? selectedCustomer : newCustomer;
-    const normalizedCustomer = {
+    return {
       nome: customer.nome,
       telefone: customer.telefone || "",
       whatsapp: customer.whatsapp || customer.telefone || "",
@@ -1962,6 +1972,45 @@ function CompletedManualAppointmentForm({
       modeloMaquina: customer.modeloMaquina || "",
       observacoes: customer.observacoes || "",
     };
+  }
+
+  function resetForm() {
+    setNewCustomer(emptyCustomer);
+    setSelectedCustomerId("");
+    setMode(customers.length ? "existing" : "new");
+    setSelectedServices([defaultService]);
+    setAppointment({
+      data: new Date().toISOString().slice(0, 10),
+      horario: getCurrentTimeValue(),
+      observacoes: "",
+      deslocamentoValor: 0,
+      pagamentoAgendadoPara: "",
+      pagamentoStatus: "pendente",
+      tempoAtendimentoMin: 60,
+      valorServico: 100,
+      valorTotal: 100,
+    });
+  }
+
+  async function startWalkInAppointment() {
+    const normalizedCustomer = getNormalizedCustomer();
+    const servicesDone = formatPerformedServices(selectedServices) || serviceName;
+    const started = await onStart({
+      clienteId: effectiveMode === "existing" ? selectedCustomer?.id : undefined,
+      cliente: normalizedCustomer,
+      data: appointment.data,
+      horario: appointment.horario,
+      observacoes: appointment.observacoes,
+      servico: serviceName,
+      servicosRealizados: servicesDone,
+    });
+
+    if (started) resetForm();
+  }
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalizedCustomer = getNormalizedCustomer();
     const servicesDone = formatPerformedServices(selectedServices) || serviceName;
     const previewAppointment: CrmAppointment = {
       id: "atendimento-avulso-preview",
@@ -2004,21 +2053,7 @@ function CompletedManualAppointmentForm({
       window.open(whatsappUrl, "_blank", "noopener,noreferrer");
     }
 
-    setNewCustomer(emptyCustomer);
-    setSelectedCustomerId("");
-    setMode(customers.length ? "existing" : "new");
-    setSelectedServices([defaultService]);
-    setAppointment({
-      data: new Date().toISOString().slice(0, 10),
-      horario: getCurrentTimeValue(),
-      observacoes: "",
-      deslocamentoValor: 0,
-      pagamentoAgendadoPara: "",
-      pagamentoStatus: "pendente",
-      tempoAtendimentoMin: 60,
-      valorServico: 100,
-      valorTotal: 100,
-    });
+    resetForm();
   }
 
   return (
@@ -2095,6 +2130,10 @@ function CompletedManualAppointmentForm({
         <span>Observações</span>
         <textarea value={appointment.observacoes} onChange={(event) => updateAppointment("observacoes", event.target.value)} />
       </label>
+      <button className="crm-secondary-button crm-form-wide" disabled={busy || !appointment.data || !appointment.horario} onClick={startWalkInAppointment} type="button">
+        <Play aria-hidden="true" />
+        Iniciar atendimento avulso
+      </button>
       <button className="crm-primary-button crm-form-wide" disabled={busy || !appointment.data || !appointment.horario} type="submit">
         <CheckCircle2 aria-hidden="true" />
         Registrar atendimento concluído
