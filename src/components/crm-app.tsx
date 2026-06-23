@@ -29,9 +29,7 @@ import {
 import { CustomersView, HistoryView } from "@/components/crm/customers";
 import { DashboardView } from "@/components/crm/dashboard";
 import { FinanceView } from "@/components/crm/finance";
-import {
-  formatDate,
-} from "@/components/crm/formatters";
+import { formatDate } from "@/components/crm/formatters";
 import { useAutoMonthSelection } from "@/components/crm/month-selection";
 import {
   getAppointmentStartTime,
