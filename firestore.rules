@@ -127,6 +127,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /gastos/{gastoId} {
+      allow read, create, update: if isAdmin();
+      allow delete: if false;
+    }
+
     function isAdmin() {
       return request.auth != null &&
         request.auth.token.email in ['wilds.campos@laserfix.app', 'wilds.mc@gmail.com'];

@@ -1,8 +1,9 @@
 "use client";
 
-import type { ElementType } from "react";
-import { BarChart3, CalendarClock, CheckCircle2, Clock3, DollarSign, WalletCards } from "lucide-react";
-import { calculateMetrics, getMonthKey, type CrmAppointment } from "@/lib/crm";
+import type { ElementType, ReactNode } from "react";
+import { useState } from "react";
+import { BarChart3, CalendarClock, CheckCircle2, Clock3, DollarSign, ReceiptText, WalletCards } from "lucide-react";
+import { calculateExpenseTotal, calculateMetrics, getMonthKey, type CrmAppointment, type CrmExpense } from "@/lib/crm";
 import { monthFormatter } from "@/components/crm/constants";
 import {
   formatChartMonth,
@@ -29,6 +30,18 @@ function getChartMetricValue(metrics: ReturnType<typeof calculateMetrics>, key: 
   return 0;
 }
 
+function getDashboardMetricValue(
+  appointments: CrmAppointment[],
+  expenses: CrmExpense[],
+  key: DashboardChartKey,
+) {
+  const metrics = calculateMetrics(appointments);
+  const expenseTotal = calculateExpenseTotal(expenses);
+  if (key === "expensesValue" || key === "totalExpensesValue") return expenseTotal;
+  if (key === "netValue" || key === "totalNetValue") return metrics.receivedValue - expenseTotal;
+  return getChartMetricValue(metrics, key);
+}
+
 function getAverageHourlyValue(metrics: ReturnType<typeof calculateMetrics>) {
   return metrics.totalMinutes > 0 ? metrics.totalValue / (metrics.totalMinutes / 60) : 0;
 }
@@ -38,7 +51,7 @@ function getChartMonths(selectedMonth: string) {
   return Array.from({ length: 12 }, (_, index) => `${year}-${String(index + 1).padStart(2, "0")}`);
 }
 
-function buildDashboardCharts(appointments: CrmAppointment[], selectedMonth: string) {
+function buildDashboardCharts(appointments: CrmAppointment[], expenses: CrmExpense[], selectedMonth: string) {
   const yearMonths = getChartMonths(selectedMonth);
   const chartConfigs: Array<{ key: DashboardChartKey; title: string; format: ChartFormat; cumulative?: boolean }> = [
     { key: "scheduled", title: "Atendimentos pendentes por mês", format: "number" },
@@ -49,23 +62,30 @@ function buildDashboardCharts(appointments: CrmAppointment[], selectedMonth: str
     { key: "pendingValue", title: "A receber por mês", format: "currency" },
     { key: "averageValue", title: "Valor médio por atendimento", format: "currency" },
     { key: "averageHourlyValue", title: "Valor médio por hora", format: "currency" },
+    { key: "expensesValue", title: "Gastos por mês", format: "currency" },
+    { key: "netValue", title: "Lucro líquido por mês", format: "currency" },
     { key: "totalMinutes", title: "Tempo total por mês", format: "duration" },
     { key: "averageMinutes", title: "Tempo médio por mês", format: "duration" },
     { key: "totalAppointments", title: "Atendimentos gerais acumulados", format: "number", cumulative: true },
     { key: "totalCompleted", title: "Concluídos gerais acumulados", format: "number", cumulative: true },
     { key: "totalGeneralValue", title: "Valor total geral acumulado", format: "currency", cumulative: true },
+    { key: "totalExpensesValue", title: "Gastos gerais acumulados", format: "currency", cumulative: true },
+    { key: "totalNetValue", title: "Lucro líquido geral acumulado", format: "currency", cumulative: true },
     { key: "totalGeneralMinutes", title: "Tempo total geral acumulado", format: "duration", cumulative: true },
   ];
 
   return chartConfigs.map<DashboardChart>((config) => {
     const points = yearMonths.map((month) => {
       const monthAppointments = appointments.filter((appointment) => getMonthKey(appointment.data) === month);
+      const monthExpenses = expenses.filter((expense) => getMonthKey(expense.data) === month);
+      const monthHasData = monthAppointments.length > 0 || monthExpenses.length > 0;
       const scopedAppointments = config.cumulative
         ? appointments.filter((appointment) => getMonthKey(appointment.data) <= month)
         : monthAppointments;
+      const scopedExpenses = config.cumulative ? expenses.filter((expense) => getMonthKey(expense.data) <= month) : monthExpenses;
       return {
         label: formatChartMonth(month),
-        value: config.cumulative && !monthAppointments.length ? 0 : getChartMetricValue(calculateMetrics(scopedAppointments), config.key),
+        value: config.cumulative && !monthHasData ? 0 : getDashboardMetricValue(scopedAppointments, scopedExpenses, config.key),
       };
     });
     const pointsWithData = points.filter((point) => point.value > 0);
@@ -86,6 +106,7 @@ function buildDashboardCharts(appointments: CrmAppointment[], selectedMonth: str
 export function DashboardView({
   activeChartKey,
   appointments,
+  expenses,
   monthAppointments,
   monthMetrics,
   months,
@@ -96,6 +117,7 @@ export function DashboardView({
 }: {
   activeChartKey: DashboardChartKey | "";
   appointments: CrmAppointment[];
+  expenses: CrmExpense[];
   monthAppointments: CrmAppointment[];
   monthMetrics: ReturnType<typeof calculateMetrics>;
   months: string[];
@@ -104,8 +126,13 @@ export function DashboardView({
   selectedMonth: string;
   totalMetrics: ReturnType<typeof calculateMetrics>;
 }) {
-  const dashboardCharts = buildDashboardCharts(appointments, selectedMonth);
+  const dashboardCharts = buildDashboardCharts(appointments, expenses, selectedMonth);
   const dashboardChartByKey = new Map(dashboardCharts.map((chart) => [chart.key, chart]));
+  const monthExpenses = expenses.filter((expense) => getMonthKey(expense.data) === selectedMonth);
+  const monthExpenseTotal = calculateExpenseTotal(monthExpenses);
+  const totalExpenseValue = calculateExpenseTotal(expenses);
+  const monthNetValue = monthMetrics.receivedValue - monthExpenseTotal;
+  const totalNetValue = totalMetrics.receivedValue - totalExpenseValue;
 
   return (
     <>
@@ -122,50 +149,58 @@ export function DashboardView({
         </label>
       </section>
 
-      <section className="crm-dashboard" aria-label="Métricas do mês">
-        <MetricCard
-          active={activeChartKey === "scheduled"}
-          appointmentList={monthAppointments.filter((appointment) => appointment.status !== "concluido")}
-          chartKey="scheduled"
-          icon={CalendarClock}
-          label="Atendimentos Agendados"
-          listTitle="Atendimentos Agendados"
-          onToggle={onToggleChart}
-          value={String(monthMetrics.scheduled)}
-        />
-        <MetricCard
-          active={activeChartKey === "completed"}
-          appointmentList={monthAppointments.filter((appointment) => appointment.status === "concluido")}
-          chartKey="completed"
-          icon={CheckCircle2}
-          label="Atendimentos Concluídos"
-          listTitle="Atendimentos Concluídos"
-          onToggle={onToggleChart}
-          value={String(monthMetrics.completed)}
-        />
-        <MetricCard
-          active={activeChartKey === "appointments"}
-          chart={dashboardChartByKey.get("appointments")}
-          chartKey="appointments"
-          icon={CalendarClock}
-          label="Total de Atendimentos no Mês"
-          onToggle={onToggleChart}
-          value={String(monthMetrics.appointments)}
-        />
-        <MetricCard active={activeChartKey === "totalValue"} chart={dashboardChartByKey.get("totalValue")} chartKey="totalValue" icon={DollarSign} label="Valor total no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.totalValue)} />
-        <MetricCard active={activeChartKey === "receivedValue"} chart={dashboardChartByKey.get("receivedValue")} chartKey="receivedValue" icon={WalletCards} label="Recebido no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.receivedValue)} />
-        <MetricCard active={activeChartKey === "pendingValue"} chart={dashboardChartByKey.get("pendingValue")} chartKey="pendingValue" icon={DollarSign} label="A receber no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.pendingValue + monthMetrics.scheduledPaymentValue)} />
-        <MetricCard active={activeChartKey === "averageValue"} chart={dashboardChartByKey.get("averageValue")} chartKey="averageValue" icon={WalletCards} label="Valor médio por atendimento" onToggle={onToggleChart} value={formatCurrency(monthMetrics.averageValue)} />
-        <MetricCard active={activeChartKey === "totalMinutes"} chart={dashboardChartByKey.get("totalMinutes")} chartKey="totalMinutes" icon={Clock3} label="Tempo total" onToggle={onToggleChart} value={formatDuration(monthMetrics.totalMinutes)} />
-        <MetricCard active={activeChartKey === "averageMinutes"} chart={dashboardChartByKey.get("averageMinutes")} chartKey="averageMinutes" icon={BarChart3} label="Tempo médio" onToggle={onToggleChart} value={formatDuration(monthMetrics.averageMinutes)} />
-        <MetricCard active={activeChartKey === "averageHourlyValue"} chart={dashboardChartByKey.get("averageHourlyValue")} chartKey="averageHourlyValue" icon={DollarSign} label="Valor médio por hora" onToggle={onToggleChart} value={formatCurrency(getAverageHourlyValue(monthMetrics))} />
-      </section>
+      <section className="crm-dashboard-groups" aria-label="Métricas do CRM">
+        <DashboardGroup
+          activeChartKey={activeChartKey}
+          chartKeys={["totalValue", "receivedValue", "pendingValue", "averageValue", "averageHourlyValue", "totalGeneralValue"]}
+          defaultOpen
+          onToggleChart={onToggleChart}
+          title="Recebimentos"
+        >
+          <MetricCard active={activeChartKey === "totalValue"} chart={dashboardChartByKey.get("totalValue")} chartKey="totalValue" icon={DollarSign} label="Valor total no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.totalValue)} />
+          <MetricCard active={activeChartKey === "receivedValue"} chart={dashboardChartByKey.get("receivedValue")} chartKey="receivedValue" icon={WalletCards} label="Recebido no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.receivedValue)} />
+          <MetricCard active={activeChartKey === "pendingValue"} chart={dashboardChartByKey.get("pendingValue")} chartKey="pendingValue" icon={DollarSign} label="A receber no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.pendingValue + monthMetrics.scheduledPaymentValue)} />
+          <MetricCard active={activeChartKey === "averageValue"} chart={dashboardChartByKey.get("averageValue")} chartKey="averageValue" icon={WalletCards} label="Valor médio por atendimento" onToggle={onToggleChart} value={formatCurrency(monthMetrics.averageValue)} />
+          <MetricCard active={activeChartKey === "averageHourlyValue"} chart={dashboardChartByKey.get("averageHourlyValue")} chartKey="averageHourlyValue" icon={DollarSign} label="Valor médio por hora" onToggle={onToggleChart} value={formatCurrency(getAverageHourlyValue(monthMetrics))} />
+          <MetricCard active={activeChartKey === "totalGeneralValue"} chart={dashboardChartByKey.get("totalGeneralValue")} chartKey="totalGeneralValue" icon={DollarSign} label="Valor total geral" onToggle={onToggleChart} value={formatCurrency(totalMetrics.totalValue)} />
+        </DashboardGroup>
 
-      <section className="crm-dashboard crm-dashboard-total" aria-label="Métricas gerais">
-        <MetricCard active={activeChartKey === "totalAppointments"} chart={dashboardChartByKey.get("totalAppointments")} chartKey="totalAppointments" icon={CalendarClock} label="Atendimentos gerais" onToggle={onToggleChart} value={String(totalMetrics.appointments)} />
-        <MetricCard active={activeChartKey === "totalCompleted"} chart={dashboardChartByKey.get("totalCompleted")} chartKey="totalCompleted" icon={CheckCircle2} label="Concluídos gerais" onToggle={onToggleChart} value={String(totalMetrics.completed)} />
-        <MetricCard active={activeChartKey === "totalGeneralValue"} chart={dashboardChartByKey.get("totalGeneralValue")} chartKey="totalGeneralValue" icon={DollarSign} label="Valor total geral" onToggle={onToggleChart} value={formatCurrency(totalMetrics.totalValue)} />
-        <MetricCard active={activeChartKey === "totalGeneralMinutes"} chart={dashboardChartByKey.get("totalGeneralMinutes")} chartKey="totalGeneralMinutes" icon={Clock3} label="Tempo total geral" onToggle={onToggleChart} value={formatDuration(totalMetrics.totalMinutes)} />
+        <DashboardGroup
+          activeChartKey={activeChartKey}
+          chartKeys={["expensesValue", "netValue", "totalExpensesValue", "totalNetValue"]}
+          onToggleChart={onToggleChart}
+          title="Gastos"
+        >
+          <MetricCard active={activeChartKey === "expensesValue"} chart={dashboardChartByKey.get("expensesValue")} chartKey="expensesValue" icon={ReceiptText} label="Gastos no mês" onToggle={onToggleChart} value={formatCurrency(monthExpenseTotal)} />
+          <MetricCard active={activeChartKey === "netValue"} chart={dashboardChartByKey.get("netValue")} chartKey="netValue" icon={DollarSign} label="Lucro líquido no mês" onToggle={onToggleChart} value={formatCurrency(monthNetValue)} />
+          <MetricCard active={activeChartKey === "totalExpensesValue"} chart={dashboardChartByKey.get("totalExpensesValue")} chartKey="totalExpensesValue" icon={ReceiptText} label="Gastos gerais" onToggle={onToggleChart} value={formatCurrency(totalExpenseValue)} />
+          <MetricCard active={activeChartKey === "totalNetValue"} chart={dashboardChartByKey.get("totalNetValue")} chartKey="totalNetValue" icon={DollarSign} label="Lucro líquido geral" onToggle={onToggleChart} value={formatCurrency(totalNetValue)} />
+        </DashboardGroup>
+
+        <DashboardGroup
+          activeChartKey={activeChartKey}
+          chartKeys={["scheduled", "completed", "appointments", "totalAppointments", "totalCompleted"]}
+          defaultOpen
+          onToggleChart={onToggleChart}
+          title="Atendimentos"
+        >
+          <MetricCard active={activeChartKey === "scheduled"} appointmentList={monthAppointments.filter((appointment) => appointment.status !== "concluido")} chartKey="scheduled" icon={CalendarClock} label="Atendimentos Agendados" listTitle="Atendimentos Agendados" onToggle={onToggleChart} value={String(monthMetrics.scheduled)} />
+          <MetricCard active={activeChartKey === "completed"} appointmentList={monthAppointments.filter((appointment) => appointment.status === "concluido")} chartKey="completed" icon={CheckCircle2} label="Atendimentos Concluídos" listTitle="Atendimentos Concluídos" onToggle={onToggleChart} value={String(monthMetrics.completed)} />
+          <MetricCard active={activeChartKey === "appointments"} chart={dashboardChartByKey.get("appointments")} chartKey="appointments" icon={CalendarClock} label="Total de Atendimentos no Mês" onToggle={onToggleChart} value={String(monthMetrics.appointments)} />
+          <MetricCard active={activeChartKey === "totalAppointments"} chart={dashboardChartByKey.get("totalAppointments")} chartKey="totalAppointments" icon={CalendarClock} label="Atendimentos gerais" onToggle={onToggleChart} value={String(totalMetrics.appointments)} />
+          <MetricCard active={activeChartKey === "totalCompleted"} chart={dashboardChartByKey.get("totalCompleted")} chartKey="totalCompleted" icon={CheckCircle2} label="Concluídos gerais" onToggle={onToggleChart} value={String(totalMetrics.completed)} />
+        </DashboardGroup>
+
+        <DashboardGroup
+          activeChartKey={activeChartKey}
+          chartKeys={["totalMinutes", "averageMinutes", "totalGeneralMinutes"]}
+          onToggleChart={onToggleChart}
+          title="Tempo"
+        >
+          <MetricCard active={activeChartKey === "totalMinutes"} chart={dashboardChartByKey.get("totalMinutes")} chartKey="totalMinutes" icon={Clock3} label="Tempo total" onToggle={onToggleChart} value={formatDuration(monthMetrics.totalMinutes)} />
+          <MetricCard active={activeChartKey === "averageMinutes"} chart={dashboardChartByKey.get("averageMinutes")} chartKey="averageMinutes" icon={BarChart3} label="Tempo médio" onToggle={onToggleChart} value={formatDuration(monthMetrics.averageMinutes)} />
+          <MetricCard active={activeChartKey === "totalGeneralMinutes"} chart={dashboardChartByKey.get("totalGeneralMinutes")} chartKey="totalGeneralMinutes" icon={Clock3} label="Tempo total geral" onToggle={onToggleChart} value={formatDuration(totalMetrics.totalMinutes)} />
+        </DashboardGroup>
       </section>
 
       <section className="crm-panels">
@@ -186,6 +221,42 @@ export function DashboardView({
         </div>
       </section>
     </>
+  );
+}
+
+function DashboardGroup({
+  activeChartKey,
+  chartKeys,
+  children,
+  defaultOpen,
+  onToggleChart,
+  title,
+}: {
+  activeChartKey: DashboardChartKey | "";
+  chartKeys: DashboardChartKey[];
+  children: ReactNode;
+  defaultOpen?: boolean;
+  onToggleChart: (key: DashboardChartKey | "") => void;
+  title: string;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen === true);
+
+  return (
+    <details
+      className="crm-dashboard-group"
+      open={isOpen}
+      onToggle={(event) => {
+        setIsOpen(event.currentTarget.open);
+        if (!event.currentTarget.open && activeChartKey && chartKeys.includes(activeChartKey)) {
+          onToggleChart("");
+        }
+      }}
+    >
+      <summary>
+        <h2>{title}</h2>
+      </summary>
+      <div className="crm-dashboard">{children}</div>
+    </details>
   );
 }
 

@@ -59,6 +59,8 @@ export function buildCustomerWhatsAppUrl(appointment: CrmAppointment, servicesDo
   const phone = normalizeWhatsAppNumber(appointment.whatsapp || appointment.telefone);
   const performedServices = servicesDone.trim() || normalizeServiceText(appointment.servicosRealizados) || appointment.servico;
   const currentTotal = appointment.valorTotal || 0;
+  const chargeExpenses = Array.isArray(appointment.gastosAtendimento) ? appointment.gastosAtendimento : [];
+  const chargeExpensesTotal = appointment.gastosAtendimentoTotal || chargeExpenses.reduce((sum, expense) => sum + (Number(expense.valor) || 0), 0);
   const pendingTotal = pendingAppointments.reduce((sum, pendingAppointment) => sum + (pendingAppointment.valorTotal || 0), 0);
   const grandTotal = currentTotal + pendingTotal;
   const pendingLines = pendingAppointments.length
@@ -81,6 +83,8 @@ export function buildCustomerWhatsAppUrl(appointment: CrmAppointment, servicesDo
     isFilled(performedServices) ? `Serviços realizados: ${performedServices}` : undefined,
     appointment.valorServico ? `Valor do atendimento: ${formatCurrency(appointment.valorServico)}` : undefined,
     appointment.deslocamentoValor ? `Deslocamento: ${formatCurrency(appointment.deslocamentoValor)}` : undefined,
+    chargeExpensesTotal ? `Gastos do atendimento: ${formatCurrency(chargeExpensesTotal)}` : undefined,
+    ...chargeExpenses.map((expense) => `- ${expense.nome}: ${formatCurrency(expense.valor || 0)}`),
     currentTotal ? `Valor total: ${formatCurrency(currentTotal)}` : undefined,
     ...pendingLines,
     "",

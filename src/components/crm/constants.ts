@@ -1,4 +1,4 @@
-import type { CustomerInput, ServiceInput } from "@/lib/crm";
+import type { CustomerInput, ExpenseCategory, ServiceInput } from "@/lib/crm";
 
 export const crmLoginName = "Wilds Campos";
 export const crmLoginEmail = "wilds.campos@laserfix.app";
@@ -48,6 +48,18 @@ export const defaultServiceCatalog: ServiceInput[] = performedServiceOptions.map
 }));
 
 export const cityOptions = ["Aparecida", "Cachoeira Paulista", "Canas", "Guaratinguetá", "Lorena", "Potim"];
+
+export const expenseCategoryOptions: Array<{ value: ExpenseCategory; label: string }> = [
+  { value: "combustivel", label: "Combustível" },
+  { value: "alimentacao", label: "Alimentação" },
+  { value: "pedagio", label: "Pedágio" },
+  { value: "estacionamento", label: "Estacionamento" },
+  { value: "pecas", label: "Peças" },
+  { value: "ferramentas", label: "Ferramentas" },
+  { value: "materiais", label: "Materiais" },
+  { value: "extras", label: "Gastos extras" },
+  { value: "outros", label: "Outros" },
+];
 
 export const emptyCustomer: CustomerInput = {
   nome: "",

@@ -1,4 +1,4 @@
-export type CrmView = "dashboard" | "appointments" | "customers" | "history" | "services" | "finance" | "availability";
+export type CrmView = "dashboard" | "appointments" | "customers" | "history" | "services" | "finance" | "expenses" | "availability";
 
 export type DashboardChartKey =
   | "scheduled"
@@ -9,11 +9,15 @@ export type DashboardChartKey =
   | "pendingValue"
   | "averageValue"
   | "averageHourlyValue"
+  | "expensesValue"
+  | "netValue"
   | "totalMinutes"
   | "averageMinutes"
   | "totalAppointments"
   | "totalCompleted"
   | "totalGeneralValue"
+  | "totalExpensesValue"
+  | "totalNetValue"
   | "totalGeneralMinutes";
 
 export type ChartFormat = "currency" | "duration" | "number";

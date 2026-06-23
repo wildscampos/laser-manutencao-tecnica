@@ -41,6 +41,8 @@ export type CrmAppointment = {
   tempoAtendimentoMin?: number;
   valorServico?: number;
   valorTotal?: number;
+  gastosAtendimento?: AppointmentChargeExpense[];
+  gastosAtendimentoTotal?: number;
   pagamentoStatus?: PaymentStatus;
   pagamentoAgendadoPara?: string;
   servicosRealizados?: string | string[];
@@ -50,6 +52,12 @@ export type CrmAppointment = {
   origem?: string;
   retornoDeId?: string;
   retornoSemCobranca?: boolean;
+};
+
+export type AppointmentChargeExpense = {
+  id: string;
+  nome: string;
+  valor: number;
 };
 
 export type CrmCustomer = {
@@ -88,6 +96,32 @@ export type CrmService = {
 
 export type ServiceInput = Omit<CrmService, "id" | "createdAtIso" | "updatedAtIso">;
 
+export type ExpenseCategory =
+  | "combustivel"
+  | "alimentacao"
+  | "pedagio"
+  | "estacionamento"
+  | "pecas"
+  | "ferramentas"
+  | "materiais"
+  | "extras"
+  | "outros";
+
+export type CrmExpense = {
+  id: string;
+  data: string;
+  categoria: ExpenseCategory;
+  descricao: string;
+  valor: number;
+  clienteId?: string;
+  atendimentoId?: string;
+  observacoes?: string;
+  createdAtIso?: string;
+  updatedAtIso?: string;
+};
+
+export type ExpenseInput = Omit<CrmExpense, "id" | "createdAtIso" | "updatedAtIso">;
+
 export type AvailabilityBlockInput = {
   data: string;
   horario: string;
@@ -111,6 +145,7 @@ export type CompletedManualAppointmentInput = ManualAppointmentInput & {
   tempoAtendimentoMin: number;
   valorServico: number;
   valorTotal: number;
+  gastosAtendimento?: AppointmentChargeExpense[];
 };
 
 export type StartedManualAppointmentInput = ManualAppointmentInput & {
@@ -129,6 +164,7 @@ export type AppointmentEditInput = {
   deslocamentoValor: number;
   valorServico: number;
   valorTotal: number;
+  gastosAtendimento?: AppointmentChargeExpense[];
   tempoAtendimentoMin: number;
   pagamentoStatus: PaymentStatus;
   pagamentoAgendadoPara?: string;
@@ -195,6 +231,18 @@ export function listenToServices(onChange: (services: CrmService[]) => void, onE
   );
 }
 
+export function listenToExpenses(onChange: (expenses: CrmExpense[]) => void, onError: (error: Error) => void): Unsubscribe {
+  const expensesQuery = query(collection(db, "gastos"), orderBy("data", "desc"));
+
+  return onSnapshot(
+    expensesQuery,
+    (snapshot) => {
+      onChange(snapshot.docs.map((expense) => ({ id: expense.id, ...expense.data() }) as CrmExpense));
+    },
+    onError,
+  );
+}
+
 function normalizeId(value: string) {
   return value
     .normalize("NFD")
@@ -203,6 +251,20 @@ function normalizeId(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
+}
+
+export function normalizeAppointmentChargeExpenses(expenses: AppointmentChargeExpense[] = []) {
+  return expenses
+    .map((expense) => ({
+      id: expense.id || normalizeId(`${expense.nome}-${Date.now()}`) || `gasto-${Date.now()}`,
+      nome: expense.nome.trim(),
+      valor: Number(expense.valor) || 0,
+    }))
+    .filter((expense) => expense.nome && expense.valor > 0);
+}
+
+export function calculateAppointmentChargeExpensesTotal(expenses: AppointmentChargeExpense[] = []) {
+  return normalizeAppointmentChargeExpenses(expenses).reduce((sum, expense) => sum + expense.valor, 0);
 }
 
 export function makeCustomerId(name: string, city: string) {
@@ -260,6 +322,31 @@ export async function saveService(service: ServiceInput, serviceId?: string) {
   return id;
 }
 
+export async function saveExpense(expense: ExpenseInput, expenseId?: string) {
+  const nowIso = new Date().toISOString();
+  const expenseRef = expenseId ? doc(db, "gastos", expenseId) : doc(collection(db, "gastos"));
+  const existingExpense = expenseId ? await getDoc(expenseRef) : null;
+
+  await setDoc(
+    expenseRef,
+    {
+      id: expenseRef.id,
+      ...expense,
+      descricao: expense.descricao.trim() || "Gasto sem descrição",
+      valor: Number(expense.valor) || 0,
+      clienteId: expense.clienteId || "",
+      atendimentoId: expense.atendimentoId || "",
+      observacoes: expense.observacoes || "",
+      createdAtIso: existingExpense?.exists() ? existingExpense.data().createdAtIso || nowIso : nowIso,
+      updatedAt: serverTimestamp(),
+      updatedAtIso: nowIso,
+    },
+    { merge: true },
+  );
+
+  return expenseRef.id;
+}
+
 export async function updateCustomer(customerId: string, customer: CustomerInput) {
   return saveCustomer(customer, customerId);
 }
@@ -268,11 +355,17 @@ export async function updateService(serviceId: string, service: ServiceInput) {
   return saveService(service, serviceId);
 }
 
+export async function updateExpense(expenseId: string, expense: ExpenseInput) {
+  return saveExpense(expense, expenseId);
+}
+
 export async function updateAppointmentDetails(appointmentId: string, values: AppointmentEditInput) {
   const nowIso = new Date().toISOString();
   const serviceValue = Number(values.valorServico) || 0;
   const travelValue = Number(values.deslocamentoValor) || 0;
-  const totalValue = Number(values.valorTotal) || serviceValue + travelValue;
+  const chargeExpenses = normalizeAppointmentChargeExpenses(values.gastosAtendimento);
+  const chargeExpensesTotal = calculateAppointmentChargeExpensesTotal(chargeExpenses);
+  const totalValue = Number(values.valorTotal) || serviceValue + travelValue + chargeExpensesTotal;
 
   await updateDoc(doc(db, "agendamentos", appointmentId), {
     servico: values.servico,
@@ -280,11 +373,29 @@ export async function updateAppointmentDetails(appointmentId: string, values: Ap
     deslocamentoValor: travelValue,
     valorServico: serviceValue,
     valorTotal: totalValue,
+    gastosAtendimento: chargeExpenses,
+    gastosAtendimentoTotal: chargeExpensesTotal,
     tempoAtendimentoMin: Math.max(0, Number(values.tempoAtendimentoMin) || 0),
     pagamentoStatus: values.pagamentoStatus,
     pagamentoAgendadoPara: values.pagamentoStatus === "agendado" ? values.pagamentoAgendadoPara || "" : "",
     servicosRealizados: values.servicosRealizados || "",
     crmObservacoes: values.crmObservacoes || "",
+    updatedAt: serverTimestamp(),
+    updatedAtIso: nowIso,
+  });
+}
+
+export async function updateAppointmentChargeExpenses(appointment: CrmAppointment, expenses: AppointmentChargeExpense[]) {
+  const nowIso = new Date().toISOString();
+  const chargeExpenses = normalizeAppointmentChargeExpenses(expenses);
+  const chargeExpensesTotal = calculateAppointmentChargeExpensesTotal(chargeExpenses);
+  const serviceValue = Number(appointment.valorServico) || 0;
+  const travelValue = Number(appointment.deslocamentoValor) || 0;
+
+  await updateDoc(doc(db, "agendamentos", appointment.id), {
+    gastosAtendimento: chargeExpenses,
+    gastosAtendimentoTotal: chargeExpensesTotal,
+    valorTotal: serviceValue + travelValue + chargeExpensesTotal,
     updatedAt: serverTimestamp(),
     updatedAtIso: nowIso,
   });
@@ -382,7 +493,9 @@ export async function createCompletedManualAppointment(input: CompletedManualApp
   const completedAt = new Date(safeStartedAt.getTime() + durationMinutes * 60000);
   const serviceValue = Number(input.valorServico) || 0;
   const travelValue = Number(input.deslocamentoValor) || 0;
-  const totalValue = Number(input.valorTotal) || serviceValue + travelValue;
+  const chargeExpenses = normalizeAppointmentChargeExpenses(input.gastosAtendimento);
+  const chargeExpensesTotal = calculateAppointmentChargeExpensesTotal(chargeExpenses);
+  const totalValue = Number(input.valorTotal) || serviceValue + travelValue + chargeExpensesTotal;
 
   await setDoc(
     customerRef,
@@ -420,6 +533,8 @@ export async function createCompletedManualAppointment(input: CompletedManualApp
     tempoAtendimentoMin: durationMinutes,
     valorServico: serviceValue,
     valorTotal: totalValue,
+    gastosAtendimento: chargeExpenses,
+    gastosAtendimentoTotal: chargeExpensesTotal,
     pagamentoStatus: input.pagamentoStatus,
     pagamentoAgendadoPara: input.pagamentoStatus === "agendado" ? input.pagamentoAgendadoPara || "" : "",
     servicosRealizados: input.servicosRealizados || input.servico,
@@ -607,6 +722,8 @@ export async function completeAppointment(appointment: CrmAppointment) {
   const isFreeReturn = appointment.retornoSemCobranca === true;
   const serviceValue = isFreeReturn ? 0 : calculateServiceValue(durationMinutes);
   const travelValue = isFreeReturn ? 0 : appointment.deslocamentoValor || 0;
+  const chargeExpenses = isFreeReturn ? [] : normalizeAppointmentChargeExpenses(appointment.gastosAtendimento);
+  const chargeExpensesTotal = isFreeReturn ? 0 : calculateAppointmentChargeExpensesTotal(chargeExpenses);
 
   await updateDoc(doc(db, "agendamentos", appointment.id), {
     status: "concluido",
@@ -614,8 +731,10 @@ export async function completeAppointment(appointment: CrmAppointment) {
     atendimentoConcluidoAtIso: nowIso,
     tempoAtendimentoMin: durationMinutes,
     valorServico: serviceValue,
-    valorTotal: serviceValue + travelValue,
+    valorTotal: serviceValue + travelValue + chargeExpensesTotal,
     deslocamentoValor: travelValue,
+    gastosAtendimento: chargeExpenses,
+    gastosAtendimentoTotal: chargeExpensesTotal,
     pagamentoStatus: isFreeReturn ? "recebido" : appointment.pagamentoStatus || "pendente",
     updatedAt: serverTimestamp(),
     updatedAtIso: nowIso,
@@ -700,4 +819,8 @@ export function calculateMetrics(appointments: CrmAppointment[]): CrmMetrics {
     averageMinutes: completedAppointments.length ? totalMinutes / completedAppointments.length : 0,
     serviceCounts: Array.from(serviceMap, ([service, count]) => ({ service, count })).sort((a, b) => b.count - a.count),
   };
+}
+
+export function calculateExpenseTotal(expenses: CrmExpense[]) {
+  return expenses.reduce((sum, expense) => sum + (Number(expense.valor) || 0), 0);
 }

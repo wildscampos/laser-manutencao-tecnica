@@ -8,6 +8,9 @@ import { getAvailableTimesForDate } from "@/lib/schedule";
 import {
   getMonthKey,
   normalizeServiceText,
+  calculateAppointmentChargeExpensesTotal,
+  normalizeAppointmentChargeExpenses,
+  type AppointmentChargeExpense,
   type AppointmentEditInput,
   type CompletedManualAppointmentInput,
   type CrmAppointment,
@@ -58,6 +61,7 @@ export function AppointmentsView({
   onComplete,
   onEditAppointment,
   onPayment,
+  onSaveChargeExpenses,
   onSaveNotes,
   onStart,
   serviceOptions,
@@ -72,6 +76,7 @@ export function AppointmentsView({
   onComplete: (appointment: CrmAppointment) => void;
   onEditAppointment: (appointmentId: string, values: AppointmentEditInput) => Promise<boolean>;
   onPayment: (appointmentId: string, status: PaymentStatus, scheduledDate?: string) => void;
+  onSaveChargeExpenses: (appointment: CrmAppointment, expenses: AppointmentChargeExpense[]) => Promise<boolean>;
   onSaveNotes: (appointmentId: string, values: { servicosRealizados?: string; crmObservacoes?: string }) => void;
   onStart: (appointment: CrmAppointment) => void;
   serviceOptions: string[];
@@ -167,6 +172,7 @@ export function AppointmentsView({
               onCreateReturn={(input) => onCreateReturn(appointment, input)}
               onEdit={(values) => onEditAppointment(appointment.id, values)}
               onPayment={(status, date) => onPayment(appointment.id, status, date)}
+              onSaveChargeExpenses={(expenses) => onSaveChargeExpenses(appointment, expenses)}
               onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
               onStart={() => onStart(appointment)}
               onToggle={() => setOpenAppointmentId((currentId) => (currentId === appointment.id ? "" : appointment.id))}
@@ -195,6 +201,7 @@ export function AppointmentsView({
                 onCreateReturn={(input) => onCreateReturn(appointment, input)}
                 onEdit={(values) => onEditAppointment(appointment.id, values)}
                 onPayment={(status, date) => onPayment(appointment.id, status, date)}
+                onSaveChargeExpenses={(expenses) => onSaveChargeExpenses(appointment, expenses)}
                 onSaveNotes={(values) => onSaveNotes(appointment.id, values)}
                 onStart={() => onStart(appointment)}
                 onToggle={() => setOpenAppointmentId((currentId) => (currentId === appointment.id ? "" : appointment.id))}
@@ -635,6 +642,7 @@ function AppointmentCard({
   onCreateReturn,
   onEdit,
   onPayment,
+  onSaveChargeExpenses,
   onSaveNotes,
   onStart,
   onToggle,
@@ -648,6 +656,7 @@ function AppointmentCard({
   onCreateReturn: (input: ReturnAppointmentInput) => Promise<boolean>;
   onEdit: (values: AppointmentEditInput) => Promise<boolean>;
   onPayment: (status: PaymentStatus, scheduledDate?: string) => void;
+  onSaveChargeExpenses: (expenses: AppointmentChargeExpense[]) => Promise<boolean>;
   onSaveNotes: (values: { servicosRealizados?: string; crmObservacoes?: string }) => void;
   onStart: () => void;
   onToggle: () => void;
@@ -655,6 +664,9 @@ function AppointmentCard({
 }) {
   const [paymentDate, setPaymentDate] = useState(appointment.pagamentoAgendadoPara || "");
   const [selectedServices, setSelectedServices] = useState<string[]>(() => parsePerformedServices(appointment.servicosRealizados));
+  const [chargeExpenses, setChargeExpenses] = useState<AppointmentChargeExpense[]>(() =>
+    normalizeAppointmentChargeExpenses(appointment.gastosAtendimento),
+  );
   const [notes, setNotes] = useState(appointment.crmObservacoes || "");
   const [servicesOpen, setServicesOpen] = useState(false);
   const address = `${appointment.rua}, ${appointment.numero} - ${appointment.bairro}, ${appointment.cidade}`;
@@ -663,6 +675,9 @@ function AppointmentCard({
   const appointmentConfirmationUrl = buildAppointmentConfirmationWhatsAppUrl(appointment);
   const customerPaymentUrl = buildCustomerWhatsAppUrl(appointment, servicesDone, pendingPayments);
   const isFreeReturn = appointment.retornoSemCobranca === true;
+  const chargeExpensesTotal = calculateAppointmentChargeExpensesTotal(chargeExpenses);
+  const savedChargeExpensesTotal = appointment.gastosAtendimentoTotal || calculateAppointmentChargeExpensesTotal(appointment.gastosAtendimento);
+  const displayTotal = (appointment.valorServico || 0) + (appointment.deslocamentoValor || 0) + chargeExpensesTotal;
 
   function toggleService(service: string) {
     setSelectedServices((currentServices) =>
@@ -707,7 +722,8 @@ function AppointmentCard({
             <div className="crm-values">
               <span>Deslocamento: {formatCurrency(appointment.deslocamentoValor || 0)}</span>
               <span>Serviço: {formatCurrency(appointment.valorServico || 0)}</span>
-              <strong>Total: {formatCurrency(appointment.valorTotal || 0)}</strong>
+              {!!chargeExpensesTotal && <span>Gastos do atendimento: {formatCurrency(chargeExpensesTotal)}</span>}
+              <strong>Total: {formatCurrency(chargeExpensesTotal !== savedChargeExpensesTotal ? displayTotal : appointment.valorTotal || displayTotal || 0)}</strong>
               <span>Tempo: {formatDuration(appointment.tempoAtendimentoMin || 0)}</span>
               <span>Pagamento: {getPaymentLabel(appointment.pagamentoStatus)}</span>
               {appointment.pagamentoAgendadoPara && <span>Data pagamento: {formatDate(appointment.pagamentoAgendadoPara)}</span>}
@@ -737,6 +753,14 @@ function AppointmentCard({
           )}
 
           <div className="crm-edit-grid">
+            {!isFreeReturn && (
+              <AppointmentChargeExpenses
+                busy={busy}
+                expenses={chargeExpenses}
+                onChange={setChargeExpenses}
+                onSave={() => onSaveChargeExpenses(chargeExpenses)}
+              />
+            )}
             <div className="crm-service-picker">
               <button
                 aria-expanded={servicesOpen}
@@ -819,6 +843,85 @@ function AppointmentCard({
         </>
       )}
     </article>
+  );
+}
+
+function AppointmentChargeExpenses({
+  busy,
+  expenses,
+  onChange,
+  onSave,
+}: {
+  busy: boolean;
+  expenses: AppointmentChargeExpense[];
+  onChange: (expenses: AppointmentChargeExpense[]) => void;
+  onSave: () => Promise<boolean>;
+}) {
+  const [newExpense, setNewExpense] = useState({ nome: "", valor: "" });
+  const expensesTotal = calculateAppointmentChargeExpensesTotal(expenses);
+
+  function addExpense() {
+    const normalizedValue = Number(newExpense.valor) || 0;
+    if (!newExpense.nome.trim() || normalizedValue <= 0) return;
+    onChange([
+      ...expenses,
+      {
+        id: `gasto-${Date.now()}`,
+        nome: newExpense.nome.trim(),
+        valor: normalizedValue,
+      },
+    ]);
+    setNewExpense({ nome: "", valor: "" });
+  }
+
+  function removeExpense(expenseId: string) {
+    onChange(expenses.filter((expense) => expense.id !== expenseId));
+  }
+
+  return (
+    <div className="crm-service-picker crm-charge-expenses">
+      <div className="crm-service-toggle">
+        <span>Gastos do atendimento</span>
+        <strong>{formatCurrency(expensesTotal)}</strong>
+      </div>
+      <div className="crm-charge-expense-form">
+        <input
+          aria-label="Nome do gasto"
+          placeholder="Nome do gasto"
+          value={newExpense.nome}
+          onChange={(event) => setNewExpense((current) => ({ ...current, nome: event.target.value }))}
+        />
+        <input
+          aria-label="Valor do gasto"
+          inputMode="decimal"
+          placeholder="Valor"
+          type="number"
+          value={newExpense.valor}
+          onChange={(event) => setNewExpense((current) => ({ ...current, valor: event.target.value }))}
+        />
+        <button className="crm-secondary-button" onClick={addExpense} type="button">
+          <Plus aria-hidden="true" />
+          Adicionar
+        </button>
+      </div>
+      {expenses.length > 0 && (
+        <div className="crm-charge-expense-list">
+          {expenses.map((expense) => (
+            <div key={expense.id}>
+              <span>{expense.nome}</span>
+              <strong>{formatCurrency(expense.valor)}</strong>
+              <button aria-label={`Remover ${expense.nome}`} onClick={() => removeExpense(expense.id)} type="button">
+                Remover
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <button className="crm-save-services" disabled={busy} onClick={onSave} type="button">
+        <Save aria-hidden="true" />
+        Salvar gastos
+      </button>
+    </div>
   );
 }
 
@@ -936,6 +1039,7 @@ function AppointmentEditForm({
     deslocamentoValor: appointment.deslocamentoValor || 0,
     valorServico: appointment.valorServico || 0,
     valorTotal: appointment.valorTotal || (appointment.valorServico || 0) + (appointment.deslocamentoValor || 0),
+    gastosAtendimento: normalizeAppointmentChargeExpenses(appointment.gastosAtendimento),
     tempoAtendimentoMin: appointment.tempoAtendimentoMin || 0,
     pagamentoStatus: appointment.pagamentoStatus || "pendente",
     pagamentoAgendadoPara: appointment.pagamentoAgendadoPara || "",
@@ -956,7 +1060,10 @@ function AppointmentEditForm({
   function recalculateTotal() {
     setValues((current) => ({
       ...current,
-      valorTotal: (Number(current.valorServico) || 0) + (Number(current.deslocamentoValor) || 0),
+      valorTotal:
+        (Number(current.valorServico) || 0) +
+        (Number(current.deslocamentoValor) || 0) +
+        calculateAppointmentChargeExpensesTotal(current.gastosAtendimento),
     }));
   }
 
@@ -975,6 +1082,10 @@ function AppointmentEditForm({
       </label>
       <CrmInput label="Valor do serviço" type="number" value={String(values.valorServico)} onChange={(value) => updateField("valorServico", value)} />
       <CrmInput label="Deslocamento" type="number" value={String(values.deslocamentoValor)} onChange={(value) => updateField("deslocamentoValor", value)} />
+      <label>
+        <span>Gastos do atendimento</span>
+        <input readOnly value={String(calculateAppointmentChargeExpensesTotal(values.gastosAtendimento))} />
+      </label>
       <CrmInput label="Valor total" type="number" value={String(values.valorTotal)} onChange={(value) => updateField("valorTotal", value)} />
       <CrmInput label="Tempo em minutos" type="number" value={String(values.tempoAtendimentoMin)} onChange={(value) => updateField("tempoAtendimentoMin", value)} />
       <label>

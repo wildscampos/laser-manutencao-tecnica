@@ -1,18 +1,20 @@
 "use client";
 
 import { CalendarClock, Clock3, DollarSign, WalletCards } from "lucide-react";
-import { calculateMetrics, getMonthKey, type CrmAppointment } from "@/lib/crm";
+import { calculateExpenseTotal, calculateMetrics, getMonthKey, type CrmAppointment, type CrmExpense } from "@/lib/crm";
 import { monthFormatter } from "@/components/crm/constants";
 import { MetricCard } from "@/components/crm/dashboard";
 import { formatCurrency, formatDate, formatServiceListLabel, getPaymentLabel } from "@/components/crm/formatters";
 
 export function FinanceView({
   appointments,
+  expenses,
   months,
   onMonthChange,
   selectedMonth,
 }: {
   appointments: CrmAppointment[];
+  expenses: CrmExpense[];
   months: string[];
   onMonthChange: (month: string) => void;
   selectedMonth: string;
@@ -20,6 +22,9 @@ export function FinanceView({
   const monthAppointments = appointments.filter((appointment) => getMonthKey(appointment.data) === selectedMonth);
   const monthMetrics = calculateMetrics(monthAppointments);
   const totalMetrics = calculateMetrics(appointments);
+  const monthExpenses = expenses.filter((expense) => getMonthKey(expense.data) === selectedMonth);
+  const monthExpenseTotal = calculateExpenseTotal(monthExpenses);
+  const totalExpenseValue = calculateExpenseTotal(expenses);
   const financialAppointments = monthAppointments
     .filter((appointment) => appointment.status === "concluido")
     .sort((a, b) => b.data.localeCompare(a.data) || b.horario.localeCompare(a.horario));
@@ -44,6 +49,8 @@ export function FinanceView({
         <MetricCard icon={WalletCards} label="Recebido" value={formatCurrency(monthMetrics.receivedValue)} />
         <MetricCard icon={CalendarClock} label="Pagamentos agendados" value={formatCurrency(monthMetrics.scheduledPaymentValue)} />
         <MetricCard icon={Clock3} label="Pendente" value={formatCurrency(monthMetrics.pendingValue)} />
+        <MetricCard icon={WalletCards} label="Gastos do mês" value={formatCurrency(monthExpenseTotal)} />
+        <MetricCard icon={DollarSign} label="Lucro líquido" value={formatCurrency(monthMetrics.receivedValue - monthExpenseTotal)} />
       </section>
 
       <section className="crm-dashboard crm-dashboard-total" aria-label="Financeiro geral">
@@ -51,6 +58,8 @@ export function FinanceView({
         <MetricCard icon={WalletCards} label="Recebido geral" value={formatCurrency(totalMetrics.receivedValue)} />
         <MetricCard icon={CalendarClock} label="Agendado geral" value={formatCurrency(totalMetrics.scheduledPaymentValue)} />
         <MetricCard icon={Clock3} label="Pendente geral" value={formatCurrency(totalMetrics.pendingValue)} />
+        <MetricCard icon={WalletCards} label="Gastos gerais" value={formatCurrency(totalExpenseValue)} />
+        <MetricCard icon={DollarSign} label="Lucro líquido geral" value={formatCurrency(totalMetrics.receivedValue - totalExpenseValue)} />
       </section>
 
       <details className="crm-appointments crm-finance-history-details">

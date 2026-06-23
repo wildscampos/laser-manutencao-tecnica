@@ -1970,6 +1970,51 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
+.crm-dashboard-groups {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.crm-dashboard-group {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.75rem;
+}
+
+.crm-dashboard-group > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+}
+
+.crm-dashboard-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.crm-dashboard-group > summary::after {
+  color: #0078d4;
+  content: "+";
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.crm-dashboard-group[open] > summary {
+  margin-bottom: 0.75rem;
+}
+
+.crm-dashboard-group[open] > summary::after {
+  content: "–";
+}
+
+.crm-dashboard-group h2 {
+  color: #07111f;
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
 .crm-dashboard-total {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -2531,6 +2576,54 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   width: 100%;
 }
 
+.crm-charge-expense-form {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.45fr) auto;
+}
+
+.crm-charge-expense-form input {
+  min-height: 2.65rem;
+  min-width: 0;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 4px;
+  background: #ffffff;
+  color: #07111f;
+  padding-inline: 0.75rem;
+}
+
+.crm-charge-expense-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.crm-charge-expense-list div {
+  display: grid;
+  align-items: center;
+  gap: 0.55rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  border: 1px solid rgba(0, 122, 204, 0.16);
+  border-radius: 4px;
+  background: rgba(0, 168, 255, 0.06);
+  padding: 0.65rem;
+}
+
+.crm-charge-expense-list span {
+  color: #07111f;
+  font-weight: 700;
+}
+
+.crm-charge-expense-list strong {
+  color: #0078d4;
+}
+
+.crm-charge-expense-list button {
+  color: #be123c;
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
 .crm-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2601,6 +2694,7 @@ html[data-crm-theme="dark"] .crm-shell .crm-login-card,
 html[data-crm-theme="dark"] .crm-shell .crm-panel,
 html[data-crm-theme="dark"] .crm-shell .crm-appointment-card,
 html[data-crm-theme="dark"] .crm-shell .crm-metric-card,
+html[data-crm-theme="dark"] .crm-shell .crm-dashboard-group,
 html[data-crm-theme="dark"] .crm-shell .crm-collapsible-card {
   border-color: rgba(148, 163, 184, 0.28);
   background: rgba(15, 23, 42, 0.9);
@@ -2618,10 +2712,12 @@ html[data-crm-theme="dark"] .crm-shell .crm-appointment-card h3,
 html[data-crm-theme="dark"] .crm-shell .crm-card-heading h3,
 html[data-crm-theme="dark"] .crm-shell .crm-metric-chart-heading h3,
 html[data-crm-theme="dark"] .crm-shell .crm-metric-card strong,
+html[data-crm-theme="dark"] .crm-shell .crm-dashboard-group h2,
 html[data-crm-theme="dark"] .crm-shell .crm-metric-appointment-value,
 html[data-crm-theme="dark"] .crm-shell .crm-values strong,
 html[data-crm-theme="dark"] .crm-shell .crm-service-toggle span,
 html[data-crm-theme="dark"] .crm-shell .crm-service-picker label span,
+html[data-crm-theme="dark"] .crm-shell .crm-charge-expense-list span,
 html[data-crm-theme="dark"] .crm-shell .crm-history-list strong {
   color: #f8fafc;
 }
@@ -2676,6 +2772,7 @@ html[data-crm-theme="dark"] .crm-shell .crm-form-grid input,
 html[data-crm-theme="dark"] .crm-shell .crm-form-grid select,
 html[data-crm-theme="dark"] .crm-shell .crm-form-grid textarea,
 html[data-crm-theme="dark"] .crm-shell .crm-edit-grid input,
+html[data-crm-theme="dark"] .crm-shell .crm-charge-expense-form input,
 html[data-crm-theme="dark"] .crm-shell .crm-payment-date input,
 html[data-crm-theme="dark"] .crm-shell .crm-login-form input {
   border-color: rgba(148, 163, 184, 0.36);
@@ -2690,6 +2787,7 @@ html[data-crm-theme="dark"] .crm-shell .crm-login-form input[readonly] {
 
 html[data-crm-theme="dark"] .crm-shell .crm-values,
 html[data-crm-theme="dark"] .crm-shell .crm-service-toggle,
+html[data-crm-theme="dark"] .crm-shell .crm-charge-expense-list div,
 html[data-crm-theme="dark"] .crm-shell .crm-history-list div,
 html[data-crm-theme="dark"] .crm-shell .crm-service-picker label,
 html[data-crm-theme="dark"] .crm-shell .crm-service-record,
@@ -2981,6 +3079,11 @@ html[data-crm-theme="dark"] .crm-shell .crm-status-concluido {
   }
 
   .crm-metric-appointment-items {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-charge-expense-form,
+  .crm-charge-expense-list div {
     grid-template-columns: 1fr;
   }
 

@@ -8,6 +8,7 @@ import {
   History,
   LogOut,
   Moon,
+  ReceiptText,
   Save,
   ShieldCheck,
   Sun,
@@ -28,6 +29,7 @@ import {
 } from "@/components/crm/constants";
 import { CustomersView, HistoryView } from "@/components/crm/customers";
 import { DashboardView } from "@/components/crm/dashboard";
+import { ExpensesView } from "@/components/crm/expenses";
 import { FinanceView } from "@/components/crm/finance";
 import { formatDate } from "@/components/crm/formatters";
 import { useAutoMonthSelection } from "@/components/crm/month-selection";
@@ -51,18 +53,23 @@ import {
   getMonthKey,
   listenToAppointments,
   listenToCustomers,
+  listenToExpenses,
   listenToServices,
+  saveExpense,
   saveService,
   saveCustomer,
   seedDefaultServices,
   startAppointment,
   updateAppointmentDetails,
+  updateAppointmentChargeExpenses,
   updateCrmNotes,
   updateCustomer,
+  updateExpense,
   updatePaymentStatus,
   updateService,
   type CrmCustomer,
   type CrmAppointment,
+  type CrmExpense,
   type CrmService,
 } from "@/lib/crm";
 
@@ -71,6 +78,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   const [user, setUser] = useState<User | null>(null);
   const [appointments, setAppointments] = useState<CrmAppointment[]>([]);
   const [customers, setCustomers] = useState<CrmCustomer[]>([]);
+  const [expenses, setExpenses] = useState<CrmExpense[]>([]);
   const [services, setServices] = useState<CrmService[]>([]);
   const { currentMonth, selectedMonth, setSelectedMonth } = useAutoMonthSelection();
   const [error, setError] = useState("");
@@ -87,9 +95,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   const isAdmin = user?.email ? adminEmails.includes(user.email.toLowerCase()) : false;
   const months = useMemo(() => {
     const monthSet = new Set(appointments.map((appointment) => getMonthKey(appointment.data)).filter(Boolean));
+    expenses.map((expense) => getMonthKey(expense.data)).filter(Boolean).forEach((month) => monthSet.add(month));
     monthSet.add(currentMonth);
     return Array.from(monthSet).sort().reverse();
-  }, [appointments, currentMonth]);
+  }, [appointments, currentMonth, expenses]);
   const monthAppointments = useMemo(
     () => appointments.filter((appointment) => getMonthKey(appointment.data) === selectedMonth),
     [appointments, selectedMonth],
@@ -142,11 +151,18 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         setError(snapshotError.message);
       },
     );
+    const unsubscribeExpenses = listenToExpenses(
+      setExpenses,
+      (snapshotError) => {
+        setError(snapshotError.message);
+      },
+    );
 
     return () => {
       unsubscribeAppointments();
       unsubscribeCustomers();
       unsubscribeServices();
+      unsubscribeExpenses();
     };
   }, [isAdmin]);
 
@@ -392,8 +408,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
                   ? "Histórico"
                   : view === "services"
                     ? "Serviços"
-                    : view === "finance"
+                  : view === "finance"
                       ? "Financeiro"
+                      : view === "expenses"
+                        ? "Gastos"
                       : view === "availability"
                         ? "Disponibilidade"
                         : "Início"}
@@ -421,6 +439,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         <Link aria-current={view === "finance" ? "page" : undefined} href="/crm/financeiro">
           <WalletCards aria-hidden="true" />
           Financeiro
+        </Link>
+        <Link aria-current={view === "expenses" ? "page" : undefined} href="/crm/gastos">
+          <ReceiptText aria-hidden="true" />
+          Gastos
         </Link>
         <Link aria-current={view === "availability" ? "page" : undefined} href="/crm/disponibilidade">
           <ShieldCheck aria-hidden="true" />
@@ -472,7 +494,27 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         />
       )}
 
-      {view === "finance" && <FinanceView appointments={appointments} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} months={months} />}
+      {view === "finance" && <FinanceView appointments={appointments} expenses={expenses} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} months={months} />}
+
+      {view === "expenses" && (
+        <ExpensesView
+          appointments={appointments}
+          busy={busyId === "global"}
+          customers={customers}
+          expenses={expenses}
+          months={months}
+          onMonthChange={setSelectedMonth}
+          onSaveExpense={(expense) => runGlobalAction(async () => {
+            await saveExpense(expense);
+            return "Gasto salvo.";
+          })}
+          onUpdateExpense={(expenseId, expense) => runGlobalAction(async () => {
+            await updateExpense(expenseId, expense);
+            return "Gasto atualizado.";
+          })}
+          selectedMonth={selectedMonth}
+        />
+      )}
 
       {view === "availability" && (
         <AvailabilityView
@@ -489,6 +531,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         <DashboardView
           activeChartKey={activeChartKey}
           appointments={appointments}
+          expenses={expenses}
           monthAppointments={monthAppointments}
           monthMetrics={monthMetrics}
           months={months}
@@ -524,6 +567,10 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
           onEditAppointment={(appointmentId, values) => runAction(appointmentId, async () => {
             await updateAppointmentDetails(appointmentId, values);
             return "Atendimento atualizado.";
+          })}
+          onSaveChargeExpenses={(appointment, expenses) => runAction(appointment.id, async () => {
+            await updateAppointmentChargeExpenses(appointment, expenses);
+            return "Gastos do atendimento atualizados.";
           })}
           onPayment={(appointmentId, status, date) => runAction(appointmentId, () => updatePaymentStatus(appointmentId, status, date))}
           onSaveNotes={(appointmentId, values) => runAction(appointmentId, async () => {
