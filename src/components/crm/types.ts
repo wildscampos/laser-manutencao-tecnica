@@ -8,6 +8,7 @@ export type DashboardChartKey =
   | "receivedValue"
   | "pendingValue"
   | "averageValue"
+  | "averageHourlyValue"
   | "totalMinutes"
   | "averageMinutes"
   | "totalAppointments"

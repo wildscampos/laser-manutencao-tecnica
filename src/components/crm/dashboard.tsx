@@ -23,9 +23,14 @@ function getChartMetricValue(metrics: ReturnType<typeof calculateMetrics>, key: 
   if (key === "receivedValue") return metrics.receivedValue;
   if (key === "pendingValue") return metrics.pendingValue + metrics.scheduledPaymentValue;
   if (key === "averageValue") return metrics.averageValue;
+  if (key === "averageHourlyValue") return getAverageHourlyValue(metrics);
   if (key === "totalMinutes" || key === "totalGeneralMinutes") return metrics.totalMinutes;
   if (key === "averageMinutes") return metrics.averageMinutes;
   return 0;
+}
+
+function getAverageHourlyValue(metrics: ReturnType<typeof calculateMetrics>) {
+  return metrics.totalMinutes > 0 ? metrics.totalValue / (metrics.totalMinutes / 60) : 0;
 }
 
 function getChartMonths(selectedMonth: string) {
@@ -42,7 +47,8 @@ function buildDashboardCharts(appointments: CrmAppointment[], selectedMonth: str
     { key: "totalValue", title: "Valor total por mês", format: "currency" },
     { key: "receivedValue", title: "Recebido por mês", format: "currency" },
     { key: "pendingValue", title: "A receber por mês", format: "currency" },
-    { key: "averageValue", title: "Valor médio por mês", format: "currency" },
+    { key: "averageValue", title: "Valor médio por atendimento", format: "currency" },
+    { key: "averageHourlyValue", title: "Valor médio por hora", format: "currency" },
     { key: "totalMinutes", title: "Tempo total por mês", format: "duration" },
     { key: "averageMinutes", title: "Tempo médio por mês", format: "duration" },
     { key: "totalAppointments", title: "Atendimentos gerais acumulados", format: "number", cumulative: true },
@@ -149,9 +155,10 @@ export function DashboardView({
         <MetricCard active={activeChartKey === "totalValue"} chart={dashboardChartByKey.get("totalValue")} chartKey="totalValue" icon={DollarSign} label="Valor total no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.totalValue)} />
         <MetricCard active={activeChartKey === "receivedValue"} chart={dashboardChartByKey.get("receivedValue")} chartKey="receivedValue" icon={WalletCards} label="Recebido no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.receivedValue)} />
         <MetricCard active={activeChartKey === "pendingValue"} chart={dashboardChartByKey.get("pendingValue")} chartKey="pendingValue" icon={DollarSign} label="A receber no mês" onToggle={onToggleChart} value={formatCurrency(monthMetrics.pendingValue + monthMetrics.scheduledPaymentValue)} />
-        <MetricCard active={activeChartKey === "averageValue"} chart={dashboardChartByKey.get("averageValue")} chartKey="averageValue" icon={WalletCards} label="Valor médio" onToggle={onToggleChart} value={formatCurrency(monthMetrics.averageValue)} />
+        <MetricCard active={activeChartKey === "averageValue"} chart={dashboardChartByKey.get("averageValue")} chartKey="averageValue" icon={WalletCards} label="Valor médio por atendimento" onToggle={onToggleChart} value={formatCurrency(monthMetrics.averageValue)} />
         <MetricCard active={activeChartKey === "totalMinutes"} chart={dashboardChartByKey.get("totalMinutes")} chartKey="totalMinutes" icon={Clock3} label="Tempo total" onToggle={onToggleChart} value={formatDuration(monthMetrics.totalMinutes)} />
         <MetricCard active={activeChartKey === "averageMinutes"} chart={dashboardChartByKey.get("averageMinutes")} chartKey="averageMinutes" icon={BarChart3} label="Tempo médio" onToggle={onToggleChart} value={formatDuration(monthMetrics.averageMinutes)} />
+        <MetricCard active={activeChartKey === "averageHourlyValue"} chart={dashboardChartByKey.get("averageHourlyValue")} chartKey="averageHourlyValue" icon={DollarSign} label="Valor médio por hora" onToggle={onToggleChart} value={formatCurrency(getAverageHourlyValue(monthMetrics))} />
       </section>
 
       <section className="crm-dashboard crm-dashboard-total" aria-label="Métricas gerais">
