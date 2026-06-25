@@ -770,6 +770,13 @@ export function getMonthKey(dateValue: string) {
 export function formatServiceLabel(service: string) {
   const trimmedService = service.trim();
   if (!trimmedService) return "";
+  const normalizedService = trimmedService
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR");
+  if (normalizedService === "criacao de artes para corte e gravacao") {
+    return "Criação de arte para corte e gravação";
+  }
   return trimmedService.charAt(0).toLocaleUpperCase("pt-BR") + trimmedService.slice(1);
 }
 
