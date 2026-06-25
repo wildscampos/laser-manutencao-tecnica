@@ -42,6 +42,8 @@ import {
 import { ServicesView } from "@/components/crm/services";
 import { applyCrmTheme, getStoredCrmTheme, toggleStoredCrmTheme } from "@/components/crm/theme";
 import type { CrmView, DashboardChartKey } from "@/components/crm/types";
+import { getInvalidFieldMessage, isFirstInvalidField } from "@/components/ui/form-validation";
+import { AnimatePresence, MotionConfig, motion, softReveal } from "@/components/ui/motion";
 import {
   blockAvailability,
   calculateMetrics,
@@ -129,6 +131,25 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
     }, 3000);
     return () => window.clearTimeout(timerId);
   }, [error, success]);
+
+  useEffect(() => {
+    function handleInvalidField(event: Event) {
+      const field = event.target;
+      if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return;
+      if (!field.closest(".crm-shell")) return;
+      event.preventDefault();
+      if (!isFirstInvalidField(field)) return;
+      setSuccess("");
+      setError(getInvalidFieldMessage(field));
+      window.setTimeout(() => {
+        field.scrollIntoView({ behavior: "smooth", block: "center" });
+        field.focus({ preventScroll: true });
+      }, 0);
+    }
+
+    document.addEventListener("invalid", handleInvalidField, true);
+    return () => document.removeEventListener("invalid", handleInvalidField, true);
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -293,13 +314,13 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
     }
   }
 
-  async function runAction(appointmentId: string, action: () => Promise<string | void>) {
+  async function runAction(appointmentId: string, action: () => Promise<string | void>, fallbackMessage = "Ação concluída.") {
     setBusyId(appointmentId);
     setError("");
     setSuccess("");
     try {
       const message = await action();
-      if (message) setSuccess(message);
+      setSuccess(message || fallbackMessage);
       return true;
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Não foi possível atualizar o atendimento.");
@@ -309,13 +330,13 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
     }
   }
 
-  async function runGlobalAction(action: () => Promise<string | void>) {
+  async function runGlobalAction(action: () => Promise<string | void>, fallbackMessage = "Ação concluída.") {
     setBusyId("global");
     setError("");
     setSuccess("");
     try {
       const message = await action();
-      if (message) setSuccess(message);
+      setSuccess(message || fallbackMessage);
       return true;
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : "Não foi possível salvar os dados.");
@@ -364,6 +385,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
   }
 
   return (
+    <MotionConfig reducedMotion="user">
     <main className="crm-shell">
       <header className="crm-header">
         <div className="crm-header-content">
@@ -450,17 +472,22 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
         </Link>
       </section>
 
-      {(error || success) && (
-        <div className="crm-toast-layer">
-          <div
+      <AnimatePresence>
+        {(error || success) && (
+          <div className="crm-toast-layer">
+            <motion.div
+            {...softReveal}
             className={`crm-toast ${error ? "crm-toast-error" : "crm-toast-success"}`}
             role={error ? "alert" : "status"}
           >
             {error || success}
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
+      <AnimatePresence mode="wait">
+        <motion.section key={view} {...softReveal} className="crm-view-motion">
       {view === "customers" && (
         <CustomersView
           appointments={appointments}
@@ -563,7 +590,7 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
             await createReturnAppointment(appointment, input);
             return "Retorno agendado sem cobrança.";
           })}
-          onComplete={(appointment) => runAction(appointment.id, () => completeAppointment(appointment))}
+          onComplete={(appointment) => runAction(appointment.id, () => completeAppointment(appointment), "Atendimento encerrado e calculado.")}
           onEditAppointment={(appointmentId, values) => runAction(appointmentId, async () => {
             await updateAppointmentDetails(appointmentId, values);
             return "Atendimento atualizado.";
@@ -572,15 +599,18 @@ export function CrmApp({ view = "dashboard" }: { view?: CrmView }) {
             await updateAppointmentChargeExpenses(appointment, expenses);
             return "Gastos do atendimento atualizados.";
           })}
-          onPayment={(appointmentId, status, date) => runAction(appointmentId, () => updatePaymentStatus(appointmentId, status, date))}
+          onPayment={(appointmentId, status, date) => runAction(appointmentId, () => updatePaymentStatus(appointmentId, status, date), "Pagamento atualizado.")}
           onSaveNotes={(appointmentId, values) => runAction(appointmentId, async () => {
             await updateCrmNotes(appointmentId, values);
             return "Atendimento atualizado.";
           })}
-          onStart={(appointment) => runAction(appointment.id, () => startAppointment(appointment))}
+          onStart={(appointment) => runAction(appointment.id, () => startAppointment(appointment), "Atendimento iniciado.")}
           serviceOptions={serviceOptions}
         />
       )}
+        </motion.section>
+      </AnimatePresence>
     </main>
+    </MotionConfig>
   );
 }

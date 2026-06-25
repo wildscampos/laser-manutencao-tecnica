@@ -1678,7 +1678,8 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   font-size: 1rem;
 }
 
-.crm-toast-layer {
+.crm-toast-layer,
+.site-toast-layer {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -1707,6 +1708,15 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   color: #be123c;
 }
 
+.crm-view-motion,
+.crm-motion-panel {
+  min-width: 0;
+}
+
+.crm-motion-panel {
+  overflow: hidden;
+}
+
 @keyframes crm-toast-in {
   from {
     opacity: 0;
@@ -1716,6 +1726,18 @@ html[data-crm-theme="dark"] .crm-theme-icon-light {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crm-toast,
+  .crm-primary-button,
+  .crm-secondary-button,
+  .crm-home-actions a,
+  .crm-actions button,
+  .crm-actions a {
+    animation: none;
+    transition-duration: 0.01ms;
   }
 }
 

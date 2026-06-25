@@ -39,6 +39,7 @@ import {
   getCustomerPaymentDebts,
   normalizeWhatsAppNumber,
 } from "@/components/crm/whatsapp";
+import { AnimatePresence, motion, panelReveal } from "@/components/ui/motion";
 function parsePerformedServices(value: string | string[] = "") {
   return normalizeServiceText(value)
     .split(",")
@@ -693,7 +694,7 @@ function AppointmentCard({
   }
 
   return (
-    <article className={`crm-appointment-card crm-appointment-accordion ${isOpen ? "crm-appointment-open" : ""}`}>
+    <motion.article layout className={`crm-appointment-card crm-appointment-accordion ${isOpen ? "crm-appointment-open" : ""}`}>
       <button aria-expanded={isOpen} className="crm-appointment-summary" onClick={onToggle} type="button">
         <div>
           <div className="crm-card-heading">
@@ -707,8 +708,9 @@ function AppointmentCard({
         <strong>{isOpen ? "Recolher" : "Expandir"}</strong>
       </button>
 
+      <AnimatePresence initial={false}>
       {isOpen && (
-        <>
+        <motion.div {...panelReveal} className="crm-motion-panel">
           <div className="crm-appointment-main">
             <div>
               <p>{address}</p>
@@ -771,8 +773,9 @@ function AppointmentCard({
                 <span>Serviços realizados</span>
                 <strong>{selectedServices.length ? `${selectedServices.length} selecionado(s)` : "Selecionar"}</strong>
               </button>
+              <AnimatePresence initial={false}>
               {servicesOpen && (
-                <div className="crm-service-options">
+                <motion.div {...panelReveal} className="crm-service-options">
                   {serviceOptions.map((service) => (
                     <label key={service}>
                       <input
@@ -787,8 +790,9 @@ function AppointmentCard({
                     <Save aria-hidden="true" />
                     Salvar serviços
                   </button>
-                </div>
+                </motion.div>
               )}
+              </AnimatePresence>
             </div>
             <label>
               <span>Observações internas</span>
@@ -840,9 +844,10 @@ function AppointmentCard({
               </>
             )}
           </div>
-        </>
+        </motion.div>
       )}
-    </article>
+      </AnimatePresence>
+    </motion.article>
   );
 }
 

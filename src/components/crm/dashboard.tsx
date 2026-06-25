@@ -15,6 +15,7 @@ import {
   getStatusLabel,
 } from "@/components/crm/formatters";
 import type { ChartFormat, DashboardChart, DashboardChartKey } from "@/components/crm/types";
+import { AnimatePresence, motion, panelReveal, softReveal } from "@/components/ui/motion";
 
 function getChartMetricValue(metrics: ReturnType<typeof calculateMetrics>, key: DashboardChartKey) {
   if (key === "scheduled") return metrics.scheduled;
@@ -255,7 +256,7 @@ function DashboardGroup({
       <summary>
         <h2>{title}</h2>
       </summary>
-      <div className="crm-dashboard">{children}</div>
+      <motion.div {...softReveal} className="crm-dashboard">{children}</motion.div>
     </details>
   );
 }
@@ -289,7 +290,7 @@ export function MetricCard({
   }
 
   return (
-    <article className={`crm-metric-card ${active ? "crm-metric-card-expanded" : ""}`}>
+    <motion.article layout className={`crm-metric-card ${active ? "crm-metric-card-expanded" : ""}`}>
       <button
         aria-expanded={canExpand ? active : undefined}
         className="crm-metric-button"
@@ -301,9 +302,19 @@ export function MetricCard({
         <span>{label}</span>
         <strong>{value}</strong>
       </button>
-      {active && appointmentList && <MetricAppointmentList appointments={appointmentList} title={listTitle || label} />}
-      {active && chart && <MetricChart chart={chart} />}
-    </article>
+      <AnimatePresence initial={false}>
+        {active && appointmentList && (
+          <motion.div {...panelReveal} className="crm-motion-panel">
+            <MetricAppointmentList appointments={appointmentList} title={listTitle || label} />
+          </motion.div>
+        )}
+        {active && chart && (
+          <motion.div {...panelReveal} className="crm-motion-panel">
+            <MetricChart chart={chart} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.article>
   );
 }
 

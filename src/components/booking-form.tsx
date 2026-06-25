@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { type FieldErrors, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { createClientAppointment, getBookedTimesByDate, getFreeTimes, SlotAlreadyBookedError } from "@/lib/client-appointments";
 import { getAvailableTimesForDate, SERVICES, toBrazilianDate } from "@/lib/schedule";
 import { SERVICE_CITIES } from "@/lib/service-area";
 import { appointmentSchema, type AppointmentInput } from "@/lib/validation";
+import { AnimatePresence, MotionConfig, motion, softReveal } from "@/components/ui/motion";
 
 const monthNames = [
   "Janeiro",
@@ -73,6 +74,7 @@ export function BookingForm() {
   const [availabilityDate, setAvailabilityDate] = useState("");
   const [availabilityError, setAvailabilityError] = useState(false);
   const [confirmation, setConfirmation] = useState<string>("");
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [formStartedAt] = useState(() => Date.now());
 
   const {
@@ -112,6 +114,12 @@ export function BookingForm() {
       : selectedDate && availabilityDate !== selectedDate
         ? "loading"
         : "idle";
+
+  useEffect(() => {
+    if (!toast) return;
+    const timerId = window.setTimeout(() => setToast(null), 3000);
+    return () => window.clearTimeout(timerId);
+  }, [toast]);
 
   useEffect(() => {
     let active = true;
@@ -170,19 +178,23 @@ export function BookingForm() {
 
   async function onSubmit(values: AppointmentInput) {
     setConfirmation("");
+    setToast(null);
 
     try {
       const result = await createClientAppointment({ ...values, formStartedAt });
       setConfirmation(result.message);
+      setToast({ type: "success", message: result.message });
       window.open(result.whatsappUrl, "_blank", "noopener,noreferrer");
       setFreeTimes((times) => times.filter((time) => time !== values.horario));
     } catch (error) {
       if (error instanceof SlotAlreadyBookedError) {
         setError("horario", { type: "server", message: "Este horário acabou de ser reservado." });
+        setToast({ type: "error", message: "Este horário acabou de ser reservado. Escolha outro horário." });
         setFreeTimes((times) => times.filter((time) => time !== values.horario));
         return;
       }
 
+      setToast({ type: "error", message: "Não foi possível concluir o agendamento. Tente novamente." });
       setError("root", {
         type: "server",
         message: "Não foi possível concluir o agendamento. Tente novamente.",
@@ -190,11 +202,30 @@ export function BookingForm() {
     }
   }
 
+  function onInvalid(formErrors: FieldErrors<AppointmentInput>) {
+    const firstMessage = findFirstErrorMessage(formErrors);
+    setToast({ type: "error", message: firstMessage || "Revise os campos obrigatórios antes de enviar." });
+  }
+
   return (
+    <MotionConfig reducedMotion="user">
     <form
       className="booking-form-panel relative overflow-hidden rounded-[6px] border border-slate-700/80 bg-slate-950/88 p-5 shadow-2xl shadow-black/30 backdrop-blur md:p-7"
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
     >
+      <AnimatePresence>
+        {toast && (
+          <div className="site-toast-layer">
+            <motion.div
+              {...softReveal}
+              className={`crm-toast ${toast.type === "error" ? "crm-toast-error" : "crm-toast-success"}`}
+              role={toast.type === "error" ? "alert" : "status"}
+            >
+              {toast.message}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#00A8FF] to-transparent" />
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
@@ -265,8 +296,9 @@ export function BookingForm() {
               </span>
               <CalendarDays aria-hidden="true" />
             </button>
-            {calendarOpen && (
-              <div className="calendar-popover" role="dialog" aria-label="Selecionar data">
+            <AnimatePresence>
+              {calendarOpen && (
+              <motion.div {...softReveal} className="calendar-popover" role="dialog" aria-label="Selecionar data">
                 <div className="calendar-header">
                   <button type="button" onClick={() => changeMonth(-1)} aria-label="Mês anterior">
                     <ChevronLeft aria-hidden="true" />
@@ -317,8 +349,9 @@ export function BookingForm() {
                   <span><i className="available" /> Disponível</span>
                   <span><i className="unavailable" /> Indisponível</span>
                 </div>
-              </div>
-            )}
+              </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </Field>
       </div>
@@ -365,19 +398,23 @@ export function BookingForm() {
         </Field>
       </div>
 
-      {confirmation && (
-        <div className="mt-5 flex items-center gap-2 rounded-[4px] border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
+      <AnimatePresence>
+        {confirmation && (
+        <motion.div {...softReveal} className="mt-5 flex items-center gap-2 rounded-[4px] border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
           <CheckCircle2 aria-hidden="true" />
           {confirmation}
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
 
-      {errors.root?.message && (
-        <div className="mt-5 flex items-center gap-2 rounded-[4px] border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+      <AnimatePresence>
+        {errors.root?.message && (
+        <motion.div {...softReveal} className="mt-5 flex items-center gap-2 rounded-[4px] border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
           <AlertCircle aria-hidden="true" />
           {errors.root.message}
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
 
       <button className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[4px] bg-[#00A8FF] px-5 text-sm font-bold uppercase tracking-[0.12em] text-slate-950 transition hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A8FF] focus:ring-offset-2 focus:ring-offset-[#111111] disabled:cursor-not-allowed disabled:opacity-60" disabled={isSubmitting}>
         {isSubmitting ? (
@@ -388,7 +425,20 @@ export function BookingForm() {
         Enviar agendamento pelo WhatsApp
       </button>
     </form>
+    </MotionConfig>
   );
+}
+
+function findFirstErrorMessage(errors: FieldErrors<AppointmentInput>): string {
+  for (const error of Object.values(errors)) {
+    if (!error) continue;
+    if ("message" in error && typeof error.message === "string") return error.message;
+    if (typeof error === "object") {
+      const nestedMessage = findFirstErrorMessage(error as FieldErrors<AppointmentInput>);
+      if (nestedMessage) return nestedMessage;
+    }
+  }
+  return "";
 }
 
 function Field({
